@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:kali_studio/widgets/detail_box.dart';
+import 'package:kali_studio/widgets/google_fonts_helper.dart';
+import 'package:kali_studio/widgets/kali_button.dart';
+import 'package:kali_studio/widgets/section_label.dart';
 import '../theme/kali_theme.dart';
 import '../models/models.dart';
-import '../widgets/widgets.dart';
 
 class BookingDetailScreen extends StatefulWidget {
   final PilatesClass pilatesClass;
@@ -45,7 +48,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     return Container(
       color: KaliColors.warmWhite,
       padding: EdgeInsets.fromLTRB(
-        20, MediaQuery.of(context).padding.top + 16, 20, 0),
+          20, MediaQuery.of(context).padding.top + 16, 20, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -59,18 +62,18 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                     size: 12, color: KaliColors.clayDark),
                 const SizedBox(width: 4),
                 Text('Volver',
-                  style: KaliText.body(KaliColors.clayDark, size: 12)
-                      .copyWith(letterSpacing: 0.6)),
+                    style: KaliText.body(KaliColors.clayDark, size: 12)
+                        .copyWith(letterSpacing: 0.6)),
               ],
             ),
           ),
           const SizedBox(height: 12),
           Text(cls.name,
-            style: GoogleFontsHelper.cormorant(
-                KaliColors.espresso, 26, italic: true)),
+              style: GoogleFontsHelper.cormorant(KaliColors.espresso, 26,
+                  italic: true)),
           const SizedBox(height: 4),
           Text('Hoy, Miércoles 18 · ${cls.time} ${cls.period}',
-            style: KaliText.caption(KaliColors.clayDark)),
+              style: KaliText.caption(KaliColors.clayDark)),
           const SizedBox(height: 16),
         ],
       ),
@@ -93,9 +96,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: isActive
-                          ? KaliColors.clay
-                          : Colors.transparent,
+                      color: isActive ? KaliColors.clay : Colors.transparent,
                       width: 2,
                     ),
                   ),
@@ -133,7 +134,8 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             child: Row(
               children: [
                 Container(
-                  width: 48, height: 48,
+                  width: 48,
+                  height: 48,
                   decoration: const BoxDecoration(
                     color: KaliColors.clay,
                     shape: BoxShape.circle,
@@ -142,7 +144,8 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                     child: Text(
                       KaliData.luciana.initials,
                       style: GoogleFontsHelper.cormorant(
-                          KaliColors.warmWhite, 18, italic: true),
+                          KaliColors.warmWhite, 18,
+                          italic: true),
                     ),
                   ),
                 ),
@@ -151,12 +154,13 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(KaliData.luciana.name,
-                      style: KaliText.body(KaliColors.espresso,
-                          size: 14, weight: FontWeight.w400)),
+                        style: KaliText.body(KaliColors.espresso,
+                            size: 14, weight: FontWeight.w400)),
                     const SizedBox(height: 2),
-                    Text('${KaliData.luciana.certification} · '
+                    Text(
+                        '${KaliData.luciana.certification} · '
                         '${KaliData.luciana.yearsExp} años',
-                      style: KaliText.caption(KaliColors.clayDark)),
+                        style: KaliText.caption(KaliColors.clayDark)),
                   ],
                 ),
               ],
@@ -190,16 +194,19 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                 style: KaliText.caption(KaliColors.clayDark),
               ),
               Row(
-                children: List.generate(cls.totalSpots, (i) => Container(
-                  width: 10, height: 10,
-                  margin: const EdgeInsets.only(left: 5),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: i < cls.takenSpots
-                        ? KaliColors.clay
-                        : KaliColors.sageLight,
-                  ),
-                )),
+                children: List.generate(
+                    cls.totalSpots,
+                    (i) => Container(
+                          width: 10,
+                          height: 10,
+                          margin: const EdgeInsets.only(left: 5),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: i < cls.takenSpots
+                                ? KaliColors.clay
+                                : KaliColors.sageLight,
+                          ),
+                        )),
               ),
             ],
           ),
@@ -208,8 +215,8 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           // Description
           Text(
             cls.description,
-            style: KaliText.body(KaliColors.clayDark, size: 13,
-                weight: FontWeight.w300)
+            style: KaliText.body(KaliColors.clayDark,
+                    size: 13, weight: FontWeight.w300)
                 .copyWith(fontStyle: FontStyle.italic, height: 1.7),
           ),
           const SizedBox(height: 24),
@@ -218,8 +225,8 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           if (!cls.isBooked)
             KaliButton(text: 'Confirmar reserva', onPressed: _onBook)
           else
-            KaliButton(text: 'Cancelar reserva', onPressed: _onCancel,
-                outlined: true),
+            KaliButton(
+                text: 'Cancelar reserva', onPressed: _onCancel, outlined: true),
         ],
       ),
     );
@@ -236,7 +243,8 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             child: Column(
               children: [
                 Container(
-                  width: 80, height: 80,
+                  width: 80,
+                  height: 80,
                   decoration: BoxDecoration(
                     color: KaliColors.clay,
                     shape: BoxShape.circle,
@@ -244,16 +252,18 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                   ),
                   child: Center(
                     child: Text(inst.initials,
-                      style: GoogleFontsHelper.cormorant(
-                          KaliColors.warmWhite, 28, italic: true)),
+                        style: GoogleFontsHelper.cormorant(
+                            KaliColors.warmWhite, 28,
+                            italic: true)),
                   ),
                 ),
                 const SizedBox(height: 14),
                 Text(inst.name,
-                  style: GoogleFontsHelper.cormorant(KaliColors.espresso, 22)),
+                    style:
+                        GoogleFontsHelper.cormorant(KaliColors.espresso, 22)),
                 const SizedBox(height: 4),
                 Text(inst.certification,
-                  style: KaliText.caption(KaliColors.clayDark)),
+                    style: KaliText.caption(KaliColors.clayDark)),
               ],
             ),
           ),
@@ -262,9 +272,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           const SizedBox(height: 16),
           const SectionLabel('Sobre ella'),
           Text(inst.bio,
-            style: KaliText.body(KaliColors.clayDark, size: 13,
-                weight: FontWeight.w300)
-                .copyWith(height: 1.8)),
+              style: KaliText.body(KaliColors.clayDark,
+                      size: 13, weight: FontWeight.w300)
+                  .copyWith(height: 1.8)),
           const SizedBox(height: 20),
           _statRow('Años de experiencia', '${inst.yearsExp}'),
           _statRow('Clases por semana', '12'),
@@ -282,7 +292,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
         children: [
           Text(label, style: KaliText.caption(KaliColors.clayDark)),
           Text(value,
-            style: GoogleFontsHelper.cormorant(KaliColors.espresso, 18)),
+              style: GoogleFontsHelper.cormorant(KaliColors.espresso, 18)),
         ],
       ),
     );
@@ -305,19 +315,22 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.location_on_outlined,
-                    color: KaliColors.clay, size: 32),
+                      color: KaliColors.clay, size: 32),
                   const SizedBox(height: 8),
                   Text('Kali Studio · Palermo',
-                    style: GoogleFontsHelper.cormorant(
-                        KaliColors.espresso, 18, italic: true)),
+                      style: GoogleFontsHelper.cormorant(
+                          KaliColors.espresso, 18,
+                          italic: true)),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 20),
           _locationRow(Icons.location_on_outlined, 'El Salvador 4832, Palermo'),
-          _locationRow(Icons.directions_subway_outlined, '5 min de Scalabrini Ortiz'),
-          _locationRow(Icons.local_parking_outlined, 'Estacionamiento disponible'),
+          _locationRow(
+              Icons.directions_subway_outlined, '5 min de Scalabrini Ortiz'),
+          _locationRow(
+              Icons.local_parking_outlined, 'Estacionamiento disponible'),
         ],
       ),
     );
@@ -350,8 +363,8 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
   void _onCancel() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Reserva cancelada',
-          style: KaliText.body(KaliColors.clay)),
+        content:
+            Text('Reserva cancelada', style: KaliText.body(KaliColors.clay)),
         backgroundColor: KaliColors.espresso,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -373,7 +386,8 @@ class _ConfirmationSheet extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 40, height: 4,
+            width: 40,
+            height: 4,
             decoration: BoxDecoration(
               color: KaliColors.sand2,
               borderRadius: BorderRadius.circular(2),
@@ -381,7 +395,8 @@ class _ConfirmationSheet extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           Container(
-            width: 56, height: 56,
+            width: 56,
+            height: 56,
             decoration: const BoxDecoration(
               color: KaliColors.espresso,
               shape: BoxShape.circle,
@@ -390,11 +405,11 @@ class _ConfirmationSheet extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text('¡Reserva confirmada!',
-            style: GoogleFontsHelper.cormorant(KaliColors.espresso, 24)),
+              style: GoogleFontsHelper.cormorant(KaliColors.espresso, 24)),
           const SizedBox(height: 8),
           Text('${cls.name} · ${cls.time} ${cls.period}',
-            style: KaliText.caption(KaliColors.clayDark),
-            textAlign: TextAlign.center),
+              style: KaliText.caption(KaliColors.clayDark),
+              textAlign: TextAlign.center),
           const SizedBox(height: 24),
           KaliButton(
             text: 'Ver mis reservas',

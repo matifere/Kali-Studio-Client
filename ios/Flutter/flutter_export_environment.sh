@@ -1,7 +1,7 @@
 #!/bin/sh
 # This is a generated file; do not edit or check into version control.
-export "FLUTTER_ROOT=/Users/thiagoghianni/flutter"
-export "FLUTTER_APPLICATION_PATH=/Users/thiagoghianni/Downloads/kali_studio"
+export "FLUTTER_ROOT=/home/mati/.flutter-sdk"
+export "FLUTTER_APPLICATION_PATH=/mnt/juegos_steam/prog/Kali-Studio-Client"
 export "COCOAPODS_PARALLEL_CODE_SIGN=true"
 export "FLUTTER_TARGET=lib/main.dart"
 export "FLUTTER_BUILD_DIR=build"

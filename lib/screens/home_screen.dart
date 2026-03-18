@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:kali_studio/widgets/class_list_item.dart';
+import 'package:kali_studio/widgets/google_fonts_helper.dart';
+import 'package:kali_studio/widgets/section_label.dart';
+import 'package:kali_studio/widgets/week_strip.dart';
 import '../theme/kali_theme.dart';
 import '../models/models.dart';
-import '../widgets/widgets.dart';
 import 'booking_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -11,7 +14,8 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   int _selectedDay = 2; // Miércoles seleccionado
   late AnimationController _fadeCtrl;
   late Animation<double> _fade;
@@ -19,7 +23,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
-    _fadeCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
+    _fadeCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 600));
     _fade = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
     _fadeCtrl.forward();
   }
@@ -55,20 +60,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 const SizedBox(height: 20),
                 const SectionLabel('Hoy · Miércoles 18'),
                 ...KaliData.todayClasses.map((cls) => Column(
-                  children: [
-                    ClassListItem(
-                      cls: cls,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => BookingDetailScreen(pilatesClass: cls),
+                      children: [
+                        ClassListItem(
+                          cls: cls,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  BookingDetailScreen(pilatesClass: cls),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    if (cls != KaliData.todayClasses.last)
-                      Divider(color: KaliColors.sand2, height: 1),
-                  ],
-                )),
+                        if (cls != KaliData.todayClasses.last)
+                          Divider(color: KaliColors.sand2, height: 1),
+                      ],
+                    )),
               ]),
             ),
           ),
@@ -85,19 +91,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         children: [
           // Decorative circles
           Positioned(
-            top: -60, right: -60,
+            top: -60,
+            right: -60,
             child: _decorCircle(220, 0.18),
           ),
           Positioned(
-            top: 10, right: -20,
+            top: 10,
+            right: -20,
             child: _decorCircle(140, 0.12),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('Bienvenida de vuelta',
-                style: KaliText.label(KaliColors.clay)
-                    .copyWith(letterSpacing: 1.8)),
+                  style: KaliText.label(KaliColors.clay)
+                      .copyWith(letterSpacing: 1.8)),
               const SizedBox(height: 4),
               RichText(
                 text: TextSpan(
@@ -106,8 +114,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   children: [
                     TextSpan(
                       text: 'Valentina',
-                      style: GoogleFontsHelper.cormorant(
-                        KaliColors.clay, 28, italic: true),
+                      style: GoogleFontsHelper.cormorant(KaliColors.clay, 28,
+                          italic: true),
                     ),
                   ],
                 ),
@@ -115,7 +123,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               const SizedBox(height: 14),
               // Streak pill
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                 decoration: BoxDecoration(
                   color: KaliColors.clay.withOpacity(0.15),
                   border: Border.all(color: KaliColors.clay.withOpacity(0.3)),
@@ -125,7 +134,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      width: 6, height: 6,
+                      width: 6,
+                      height: 6,
                       decoration: const BoxDecoration(
                         color: KaliColors.clay,
                         shape: BoxShape.circle,
@@ -133,7 +143,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     ),
                     const SizedBox(width: 8),
                     Text('12 clases este mes',
-                      style: KaliText.caption(KaliColors.clay)),
+                        style: KaliText.caption(KaliColors.clay)),
                   ],
                 ),
               ),
@@ -146,7 +156,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   Widget _decorCircle(double size, double opacity) {
     return Container(
-      width: size, height: size,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
@@ -167,9 +178,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       child: Stack(
         children: [
           Positioned(
-            top: -50, right: -50,
+            top: -50,
+            right: -50,
             child: Container(
-              width: 180, height: 180,
+              width: 180,
+              height: 180,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: KaliColors.clay.withOpacity(0.07),
@@ -193,7 +206,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               ),
               const SizedBox(height: 4),
               Text('${next.name} · Hoy, Miércoles',
-                style: KaliText.caption(KaliColors.clay)),
+                  style: KaliText.caption(KaliColors.clay)),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -218,8 +231,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text('Ver clase',
-                        style: KaliText.body(KaliColors.espresso,
-                            size: 11, weight: FontWeight.w500)),
+                          style: KaliText.body(KaliColors.espresso,
+                              size: 11, weight: FontWeight.w500)),
                     ),
                   ),
                 ],
@@ -240,8 +253,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(text,
-        style: KaliText.caption(Colors.white.withOpacity(0.7))
-            .copyWith(fontSize: 10)),
+          style: KaliText.caption(Colors.white.withOpacity(0.7))
+              .copyWith(fontSize: 10)),
     );
   }
 }

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:kali_studio/widgets/google_fonts_helper.dart';
+import 'package:kali_studio/widgets/section_label.dart';
 import '../theme/kali_theme.dart';
-import '../widgets/widgets.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
 
@@ -22,10 +23,14 @@ class _MainShellState extends State<MainShell> {
   ];
 
   final List<_NavItem> _navItems = const [
-    _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: 'Inicio'),
-    _NavItem(icon: Icons.calendar_month_outlined,
-        activeIcon: Icons.calendar_month, label: 'Reservar'),
-    _NavItem(icon: Icons.person_outline, activeIcon: Icons.person, label: 'Perfil'),
+    _NavItem(
+        icon: Icons.home_outlined, activeIcon: Icons.home, label: 'Inicio'),
+    _NavItem(
+        icon: Icons.calendar_month_outlined,
+        activeIcon: Icons.calendar_month,
+        label: 'Reservar'),
+    _NavItem(
+        icon: Icons.person_outline, activeIcon: Icons.person, label: 'Perfil'),
   ];
 
   @override
@@ -98,7 +103,8 @@ class _NavItem {
   final IconData icon;
   final IconData activeIcon;
   final String label;
-  const _NavItem({required this.icon, required this.activeIcon, required this.label});
+  const _NavItem(
+      {required this.icon, required this.activeIcon, required this.label});
 }
 
 // ─── Pantalla de búsqueda/agenda ───────────────────────────────────────────────
@@ -116,8 +122,8 @@ class _ScheduleScreen extends StatelessWidget {
           pinned: true,
           flexibleSpace: FlexibleSpaceBar(
             title: Text('Reservar clase',
-              style: GoogleFontsHelper.cormorant(
-                  KaliColors.warmWhite, 20, italic: true)),
+                style: GoogleFontsHelper.cormorant(KaliColors.warmWhite, 20,
+                    italic: true)),
             centerTitle: true,
           ),
         ),
@@ -127,7 +133,8 @@ class _ScheduleScreen extends StatelessWidget {
             delegate: SliverChildListDelegate([
               // Search bar
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color: KaliColors.sand,
                   borderRadius: BorderRadius.circular(14),
@@ -137,7 +144,7 @@ class _ScheduleScreen extends StatelessWidget {
                     Icon(Icons.search, color: KaliColors.clay, size: 18),
                     const SizedBox(width: 10),
                     Text('Buscar clase o instructor…',
-                      style: KaliText.caption(KaliColors.clayDark)),
+                        style: KaliText.caption(KaliColors.clayDark)),
                   ],
                 ),
               ),
@@ -147,8 +154,13 @@ class _ScheduleScreen extends StatelessWidget {
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
-                  children: ['Todos', 'Reformer', 'Mat', 'Restaurativo', 'Avanzado']
-                      .asMap().entries.map((e) {
+                  children: [
+                    'Todos',
+                    'Reformer',
+                    'Mat',
+                    'Restaurativo',
+                    'Avanzado'
+                  ].asMap().entries.map((e) {
                     final isFirst = e.key == 0;
                     return Container(
                       margin: const EdgeInsets.only(right: 8),
@@ -159,9 +171,9 @@ class _ScheduleScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(e.value,
-                        style: KaliText.body(
-                          isFirst ? KaliColors.clay : KaliColors.clayDark,
-                          size: 12)),
+                          style: KaliText.body(
+                              isFirst ? KaliColors.clay : KaliColors.clayDark,
+                              size: 12)),
                     );
                   }).toList(),
                 ),
@@ -209,11 +221,11 @@ class _ClassCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(d.$1,
-                  style: KaliText.body(KaliColors.espresso,
-                      size: 14, weight: FontWeight.w400)),
+                    style: KaliText.body(KaliColors.espresso,
+                        size: 14, weight: FontWeight.w400)),
                 const SizedBox(height: 2),
                 Text('${d.$2} · ${d.$3}',
-                  style: KaliText.caption(KaliColors.clayDark)),
+                    style: KaliText.caption(KaliColors.clayDark)),
               ],
             ),
           ),
@@ -221,19 +233,20 @@ class _ClassCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: KaliColors.espresso,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text('Reservar',
-                  style: KaliText.body(KaliColors.clay,
-                      size: 11, weight: FontWeight.w500)),
+                    style: KaliText.body(KaliColors.clay,
+                        size: 11, weight: FontWeight.w500)),
               ),
               const SizedBox(height: 4),
               Text(d.$4,
-                style: KaliText.caption(KaliColors.sage)
-                    .copyWith(fontSize: 10)),
+                  style:
+                      KaliText.caption(KaliColors.sage).copyWith(fontSize: 10)),
             ],
           ),
         ],

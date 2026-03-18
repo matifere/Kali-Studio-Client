@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:kali_studio/widgets/google_fonts_helper.dart';
+import 'package:kali_studio/widgets/section_label.dart';
 import '../theme/kali_theme.dart';
-import '../widgets/widgets.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -16,20 +17,20 @@ class ProfileScreen extends StatelessWidget {
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               const SectionLabel('Mi cuenta'),
-              _menuItem(Icons.receipt_long_outlined,
-                  'Historial de clases', '47 clases completadas'),
+              _menuItem(Icons.receipt_long_outlined, 'Historial de clases',
+                  '47 clases completadas'),
               _divider(),
-              _menuItem(Icons.calendar_today_outlined,
-                  'Mis reservas', '3 próximas clases'),
+              _menuItem(Icons.calendar_today_outlined, 'Mis reservas',
+                  '3 próximas clases'),
               _divider(),
-              _menuItem(Icons.credit_card_outlined,
-                  'Mi plan', 'Mensual · Vence 31 mar'),
+              _menuItem(Icons.credit_card_outlined, 'Mi plan',
+                  'Mensual · Vence 31 mar'),
               _divider(),
-              _menuItem(Icons.notifications_outlined,
-                  'Notificaciones', 'Recordatorios activados'),
+              _menuItem(Icons.notifications_outlined, 'Notificaciones',
+                  'Recordatorios activados'),
               _divider(),
-              _menuItem(Icons.settings_outlined,
-                  'Configuración', 'Privacidad, cuenta'),
+              _menuItem(Icons.settings_outlined, 'Configuración',
+                  'Privacidad, cuenta'),
               const SizedBox(height: 24),
               const SectionLabel('Sesión'),
               _menuItem(Icons.logout, 'Cerrar sesión', '',
@@ -48,7 +49,8 @@ class ProfileScreen extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            width: 72, height: 72,
+            width: 72,
+            height: 72,
             decoration: BoxDecoration(
               color: KaliColors.clayDark,
               shape: BoxShape.circle,
@@ -56,17 +58,17 @@ class ProfileScreen extends StatelessWidget {
             ),
             child: Center(
               child: Text('V',
-                style: GoogleFontsHelper.cormorant(
-                    KaliColors.warmWhite, 30, italic: true)),
+                  style: GoogleFontsHelper.cormorant(KaliColors.warmWhite, 30,
+                      italic: true)),
             ),
           ),
           const SizedBox(height: 12),
           Text('Valentina Moreno',
-            style: GoogleFontsHelper.cormorant(KaliColors.warmWhite, 22)),
+              style: GoogleFontsHelper.cormorant(KaliColors.warmWhite, 22)),
           const SizedBox(height: 4),
           Text('Plan Mensual · 8 clases',
-            style: KaliText.label(KaliColors.clay)
-                .copyWith(letterSpacing: 1.2)),
+              style:
+                  KaliText.label(KaliColors.clay).copyWith(letterSpacing: 1.2)),
         ],
       ),
     );
@@ -94,10 +96,10 @@ class ProfileScreen extends StatelessWidget {
         child: Column(
           children: [
             Text(num,
-              style: GoogleFontsHelper.cormorant(KaliColors.espresso, 26)),
+                style: GoogleFontsHelper.cormorant(KaliColors.espresso, 26)),
             const SizedBox(height: 2),
             Text(label.toUpperCase(),
-              style: KaliText.label(KaliColors.clayDark)),
+                style: KaliText.label(KaliColors.clayDark)),
           ],
         ),
       ),
@@ -111,13 +113,13 @@ class ProfileScreen extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 36, height: 36,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
               color: KaliColors.sand,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, size: 18,
-                color: color ?? KaliColors.clay),
+            child: Icon(icon, size: 18, color: color ?? KaliColors.clay),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -125,18 +127,16 @@ class ProfileScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title,
-                  style: KaliText.body(color ?? KaliColors.espresso,
-                      size: 13, weight: FontWeight.w400)),
+                    style: KaliText.body(color ?? KaliColors.espresso,
+                        size: 13, weight: FontWeight.w400)),
                 if (subtitle.isNotEmpty) ...[
                   const SizedBox(height: 1),
-                  Text(subtitle,
-                    style: KaliText.caption(KaliColors.clayDark)),
+                  Text(subtitle, style: KaliText.caption(KaliColors.clayDark)),
                 ],
               ],
             ),
           ),
-          Icon(Icons.arrow_forward_ios,
-              size: 12, color: KaliColors.clay),
+          Icon(Icons.arrow_forward_ios, size: 12, color: KaliColors.clay),
         ],
       ),
     );
