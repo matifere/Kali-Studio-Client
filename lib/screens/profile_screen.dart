@@ -136,11 +136,11 @@ class ProfileScreen extends StatelessWidget {
               ],
             ),
           ),
-          Icon(Icons.arrow_forward_ios, size: 12, color: KaliColors.clay),
+          const Icon(Icons.arrow_forward_ios, size: 12, color: KaliColors.clay),
         ],
       ),
     );
   }
 
-  Widget _divider() => Divider(color: KaliColors.sand2, height: 1);
+  Widget _divider() => const Divider(color: KaliColors.sand2, height: 1);
 }
