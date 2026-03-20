@@ -141,7 +141,7 @@ class _ScheduleScreen extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.search, color: KaliColors.clay, size: 18),
+                    const Icon(Icons.search, color: KaliColors.clay, size: 18),
                     const SizedBox(width: 10),
                     Text('Buscar clase o instructor…',
                         style: KaliText.caption(KaliColors.clayDark)),

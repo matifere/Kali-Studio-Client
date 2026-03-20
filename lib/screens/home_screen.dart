@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:kali_studio/widgets/class_list_item.dart';
 import 'package:kali_studio/widgets/google_fonts_helper.dart';
@@ -72,7 +74,7 @@ class _HomeScreenState extends State<HomeScreen>
                           ),
                         ),
                         if (cls != KaliData.todayClasses.last)
-                          Divider(color: KaliColors.sand2, height: 1),
+                          const Divider(color: KaliColors.sand2, height: 1),
                       ],
                     )),
               ]),

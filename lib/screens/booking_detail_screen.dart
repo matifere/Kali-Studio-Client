@@ -233,7 +233,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
   }
 
   Widget _buildInstructorTab() {
-    final inst = KaliData.luciana;
+    const inst = KaliData.luciana;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -268,7 +268,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          Divider(color: KaliColors.sand2),
+          const Divider(color: KaliColors.sand2),
           const SizedBox(height: 16),
           const SectionLabel('Sobre ella'),
           Text(inst.bio,
@@ -314,7 +314,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.location_on_outlined,
+                  const Icon(Icons.location_on_outlined,
                       color: KaliColors.clay, size: 32),
                   const SizedBox(height: 8),
                   Text('Kali Studio · Palermo',
