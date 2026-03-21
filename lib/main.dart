@@ -22,7 +22,7 @@ class KaliApp extends StatelessWidget {
       title: 'Kali Studio',
       theme: KaliTheme.theme,
       debugShowCheckedModeBanner: false,
-      home: const LogIn(),
+      home: const Register(),
     );
   }
 }

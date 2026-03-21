@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kali_studio/auth/register.dart';
 import 'package:kali_studio/screens/main_shell.dart';
 import 'package:kali_studio/theme/kali_text_field.dart';
 import 'package:kali_studio/theme/kali_theme.dart';
@@ -112,7 +113,10 @@ class _LogInState extends State<LogIn> {
                     const Divider(),
                     TextButton(
                       child: const Text("crear cuenta"),
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.of(context).push(MaterialPageRoute(
+                            builder: (context) => const Register()));
+                      },
                     ),
                     const Spacer(),
                   ],
