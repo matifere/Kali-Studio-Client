@@ -22,12 +22,34 @@ class _LogInState extends State<LogIn> {
     return Scaffold(
       body: Stack(
         children: [
-          Align(
-            alignment: Alignment.centerRight,
-            child: Container(
-              color: KaliColors.background,
-              width: MediaQuery.of(context).size.width * .5,
-            ),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Align(
+                alignment: Alignment.topRight,
+                child: Container(
+                  width: 200,
+                  height: 200,
+                  decoration: const BoxDecoration(
+                    borderRadius:
+                        BorderRadius.only(bottomLeft: Radius.circular(200)),
+                    color: KaliColors.sand2,
+                  ),
+                ),
+              ),
+              Align(
+                alignment: Alignment.bottomLeft,
+                child: Container(
+                  width: 200,
+                  height: 200,
+                  decoration: const BoxDecoration(
+                    borderRadius:
+                        BorderRadius.only(topRight: Radius.circular(200)),
+                    color: KaliColors.sand2,
+                  ),
+                ),
+              ),
+            ],
           ),
           SafeArea(
             child: Center(

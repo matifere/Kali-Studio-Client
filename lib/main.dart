@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kali_studio/auth/log_in.dart';
+import 'package:kali_studio/auth/register.dart';
 import 'theme/kali_theme.dart';
 
 void main() {
