@@ -1,6 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:kali_studio/supabase/profile_manager.dart';
 import 'package:kali_studio/widgets/class_list_item.dart';
 import 'package:kali_studio/widgets/google_fonts_helper.dart';
 import 'package:kali_studio/widgets/section_label.dart';
@@ -109,19 +110,25 @@ class _HomeScreenState extends State<HomeScreen>
                   style: KaliText.label(KaliColors.clay)
                       .copyWith(letterSpacing: 1.8)),
               const SizedBox(height: 4),
-              RichText(
-                text: TextSpan(
-                  text: 'Hola, ',
-                  style: GoogleFontsHelper.cormorant(KaliColors.warmWhite, 28),
-                  children: [
-                    TextSpan(
-                      text: 'Valentina',
-                      style: GoogleFontsHelper.cormorant(KaliColors.clay, 28,
-                          italic: true),
-                    ),
-                  ],
-                ),
-              ),
+              FutureBuilder(
+                  future: obtenerPerfil(),
+                  builder: (context, asyncSnapshot) {
+                    return RichText(
+                      text: TextSpan(
+                        text: 'Hola, ',
+                        style: GoogleFontsHelper.cormorant(
+                            KaliColors.warmWhite, 28),
+                        children: [
+                          TextSpan(
+                            text: asyncSnapshot.data?.fullName ?? "...",
+                            style: GoogleFontsHelper.cormorant(
+                                KaliColors.clay, 28,
+                                italic: true),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
               const SizedBox(height: 14),
               // Streak pill
               Container(

@@ -17,9 +17,9 @@ class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
-    HomeScreen(),
+    const HomeScreen(),
     BookingDetailScreen(pilatesClass: KaliData.todayClasses.first),
-    ProfileScreen(),
+    const ProfileScreen(),
   ];
 
   final List<_NavItem> _navItems = const [
