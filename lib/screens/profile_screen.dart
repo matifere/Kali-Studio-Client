@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:kali_studio/widgets/google_fonts_helper.dart';
 import 'package:kali_studio/widgets/section_label.dart';
 import '../auth/register.dart';
-import '../supabase/supabase_service.dart';
+import '../supabase/supabase_auth_service.dart';
 import '../theme/kali_theme.dart';
 
 class ProfileScreen extends StatelessWidget {

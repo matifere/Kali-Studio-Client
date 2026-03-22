@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:kali_studio/auth/register.dart';
 import 'package:kali_studio/screens/main_shell.dart';
-import 'package:kali_studio/supabase/supabase_service.dart';
+import 'package:kali_studio/supabase/supabase_auth_service.dart';
 import 'package:kali_studio/theme/kali_text_field.dart';
 import 'package:kali_studio/theme/kali_theme.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

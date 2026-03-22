@@ -44,7 +44,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
       backgroundColor: const Color(0xFFFCF8F1),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 58),
+        padding: const EdgeInsets.only(bottom: 80),
         child: _buildFab(),
       ),
       body: SafeArea(
