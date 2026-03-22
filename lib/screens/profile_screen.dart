@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:kali_studio/widgets/google_fonts_helper.dart';
 import 'package:kali_studio/widgets/section_label.dart';
+import '../auth/register.dart';
+import '../supabase/supabase_service.dart';
 import '../theme/kali_theme.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -17,24 +19,50 @@ class ProfileScreen extends StatelessWidget {
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               const SectionLabel('Mi cuenta'),
-              _menuItem(Icons.receipt_long_outlined, 'Historial de clases',
-                  '47 clases completadas'),
+              _menuItem(
+                context,
+                Icons.receipt_long_outlined,
+                'Historial de clases',
+                '47 clases completadas',
+              ),
               _divider(),
-              _menuItem(Icons.calendar_today_outlined, 'Mis reservas',
-                  '3 próximas clases'),
+              _menuItem(
+                context,
+                Icons.calendar_today_outlined,
+                'Mis reservas',
+                '3 próximas clases',
+              ),
               _divider(),
-              _menuItem(Icons.credit_card_outlined, 'Mi plan',
-                  'Mensual · Vence 31 mar'),
+              _menuItem(
+                context,
+                Icons.credit_card_outlined,
+                'Mi plan',
+                'Mensual · Vence 31 mar',
+              ),
               _divider(),
-              _menuItem(Icons.notifications_outlined, 'Notificaciones',
-                  'Recordatorios activados'),
+              _menuItem(
+                context,
+                Icons.notifications_outlined,
+                'Notificaciones',
+                'Recordatorios activados',
+              ),
               _divider(),
-              _menuItem(Icons.settings_outlined, 'Configuración',
-                  'Privacidad, cuenta'),
+              _menuItem(
+                context,
+                Icons.settings_outlined,
+                'Configuración',
+                'Privacidad, cuenta',
+              ),
               const SizedBox(height: 24),
               const SectionLabel('Sesión'),
-              _menuItem(Icons.logout, 'Cerrar sesión', '',
-                  color: KaliColors.clay),
+              _menuItem(
+                context,
+                Icons.logout,
+                'Cerrar sesión',
+                '',
+                color: KaliColors.clay,
+                onTap: () => _signOut(context),
+              ),
             ]),
           ),
         ),
@@ -57,18 +85,26 @@ class ProfileScreen extends StatelessWidget {
               border: Border.all(color: KaliColors.clay, width: 2),
             ),
             child: Center(
-              child: Text('V',
-                  style: GoogleFontsHelper.cormorant(KaliColors.warmWhite, 30,
-                      italic: true)),
+              child: Text(
+                'V',
+                style: GoogleFontsHelper.cormorant(
+                  KaliColors.warmWhite,
+                  30,
+                  italic: true,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 12),
-          Text('Valentina Moreno',
-              style: GoogleFontsHelper.cormorant(KaliColors.warmWhite, 22)),
+          Text(
+            'Valentina Moreno',
+            style: GoogleFontsHelper.cormorant(KaliColors.warmWhite, 22),
+          ),
           const SizedBox(height: 4),
-          Text('Plan Mensual · 8 clases',
-              style:
-                  KaliText.label(KaliColors.clay).copyWith(letterSpacing: 1.2)),
+          Text(
+            'Plan Mensual · 8 clases',
+            style: KaliText.label(KaliColors.clay).copyWith(letterSpacing: 1.2),
+          ),
         ],
       ),
     );
@@ -95,52 +131,85 @@ class ProfileScreen extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 16),
         child: Column(
           children: [
-            Text(num,
-                style: GoogleFontsHelper.cormorant(KaliColors.espresso, 26)),
+            Text(
+              num,
+              style: GoogleFontsHelper.cormorant(KaliColors.espresso, 26),
+            ),
             const SizedBox(height: 2),
-            Text(label.toUpperCase(),
-                style: KaliText.label(KaliColors.clayDark)),
+            Text(
+              label.toUpperCase(),
+              style: KaliText.label(KaliColors.clayDark),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _menuItem(IconData icon, String title, String subtitle,
-      {Color? color}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: KaliColors.sand,
-              borderRadius: BorderRadius.circular(10),
+  Widget _menuItem(
+    BuildContext context,
+    IconData icon,
+    String title,
+    String subtitle, {
+    Color? color,
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: KaliColors.sand,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, size: 18, color: color ?? KaliColors.clay),
             ),
-            child: Icon(icon, size: 18, color: color ?? KaliColors.clay),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title,
-                    style: KaliText.body(color ?? KaliColors.espresso,
-                        size: 13, weight: FontWeight.w400)),
-                if (subtitle.isNotEmpty) ...[
-                  const SizedBox(height: 1),
-                  Text(subtitle, style: KaliText.caption(KaliColors.clayDark)),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: KaliText.body(
+                      color ?? KaliColors.espresso,
+                      size: 13,
+                      weight: FontWeight.w400,
+                    ),
+                  ),
+                  if (subtitle.isNotEmpty) ...[
+                    const SizedBox(height: 1),
+                    Text(
+                      subtitle,
+                      style: KaliText.caption(KaliColors.clayDark),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-          const Icon(Icons.arrow_forward_ios, size: 12, color: KaliColors.clay),
-        ],
+            const Icon(Icons.arrow_forward_ios,
+                size: 12, color: KaliColors.clay),
+          ],
+        ),
       ),
     );
   }
 
   Widget _divider() => const Divider(color: KaliColors.sand2, height: 1);
+
+  Future<void> _signOut(BuildContext context) async {
+    await const SupabaseAuthService().signOut();
+
+    if (!context.mounted) return;
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const Register()),
+      (route) => false,
+    );
+  }
 }

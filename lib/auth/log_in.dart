@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:kali_studio/auth/register.dart';
 import 'package:kali_studio/screens/main_shell.dart';
+import 'package:kali_studio/supabase/supabase_service.dart';
 import 'package:kali_studio/theme/kali_text_field.dart';
 import 'package:kali_studio/theme/kali_theme.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LogIn extends StatefulWidget {
   const LogIn({super.key});
@@ -13,10 +15,18 @@ class LogIn extends StatefulWidget {
 
 class _LogInState extends State<LogIn> {
   final _emailController = TextEditingController();
-
   final _passController = TextEditingController();
+  final _authService = const SupabaseAuthService();
 
   bool _showPassword = false;
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -89,11 +99,7 @@ class _LogInState extends State<LogIn> {
                       },
                     ),
                     FilledButton(
-                      onPressed: () {
-                        // TODO IMPLEMENTAR
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => const MainShell()));
-                      },
+                      onPressed: _isLoading ? null : _handleLogin,
                       child: SizedBox(
                           width: double.infinity,
                           child: Center(
@@ -102,11 +108,11 @@ class _LogInState extends State<LogIn> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                'Iniciar Sesión',
+                                _isLoading ? 'Ingresando...' : 'Iniciar Sesión',
                                 style:
                                     KaliText.buttonText(KaliColors.background),
                               ),
-                              const Icon(Icons.arrow_forward)
+                              if (!_isLoading) const Icon(Icons.arrow_forward)
                             ],
                           ))),
                     ),
@@ -125,6 +131,55 @@ class _LogInState extends State<LogIn> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _handleLogin() async {
+    final email = _emailController.text.trim();
+    final password = _passController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      _showMessage('Ingresa email y contraseña.');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await _authService.signIn(email: email, password: password);
+
+      if (!mounted) return;
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const MainShell()),
+        (route) => false,
+      );
+    } on AuthException catch (error) {
+      _showMessage(_humanizeError(error.message));
+    } catch (error) {
+      _showMessage(_humanizeError(error.toString()));
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  String _humanizeError(String message) {
+    final clean = message.replaceFirst('AuthException(message: ', '');
+    final normalized =
+        clean.replaceFirst(RegExp(r', statusCode:.*$'), '').trim();
+    return normalized.isEmpty
+        ? 'No pudimos iniciar sesion. Intenta de nuevo.'
+        : normalized;
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 5),
       ),
     );
   }
