@@ -55,8 +55,6 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildTopBar(),
-              const SizedBox(height: 22),
               _buildHeaderText(),
               const SizedBox(height: 28),
               if (hasReservations) ...[
@@ -73,41 +71,6 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildTopBar() {
-    return Row(
-      children: [
-        IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.menu_rounded, color: Color(0xFF2E1B16)),
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(),
-          splashRadius: 22,
-        ),
-        const SizedBox(width: 10),
-        Text(
-          'Sienna Wellness',
-          style: GoogleFontsHelper.cormorant(
-            const Color(0xFF2E1B16),
-            18,
-            italic: true,
-            weight: FontWeight.w400,
-          ),
-        ),
-        const Spacer(),
-        Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            color: const Color(0xFFF1E6D6),
-            borderRadius: BorderRadius.circular(17),
-          ),
-          child: const Icon(Icons.person_rounded,
-              size: 18, color: Color(0xFF8C6C54)),
-        ),
-      ],
     );
   }
 
