@@ -4,6 +4,7 @@ import 'package:kali_studio/screens/main_shell.dart';
 import 'package:kali_studio/supabase/supabase_auth_service.dart';
 import 'package:kali_studio/theme/kali_text_field.dart';
 import 'package:kali_studio/theme/kali_theme.dart';
+import 'package:kali_studio/utils/auth_utils.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LogIn extends StatefulWidget {
@@ -30,6 +31,7 @@ class _LogInState extends State<LogIn> {
 
   @override
   Widget build(BuildContext context) {
+    final decorationColor = KaliColors.sand2;
     return Scaffold(
       body: Stack(
         children: [
@@ -41,10 +43,11 @@ class _LogInState extends State<LogIn> {
                 child: Container(
                   width: 200,
                   height: 200,
-                  decoration: const BoxDecoration(
-                    borderRadius:
-                        BorderRadius.only(bottomLeft: Radius.circular(200)),
-                    color: KaliColors.sand2,
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(200),
+                    ),
+                    color: decorationColor,
                   ),
                 ),
               ),
@@ -53,10 +56,11 @@ class _LogInState extends State<LogIn> {
                 child: Container(
                   width: 200,
                   height: 200,
-                  decoration: const BoxDecoration(
-                    borderRadius:
-                        BorderRadius.only(topRight: Radius.circular(200)),
-                    color: KaliColors.sand2,
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.only(
+                      topRight: Radius.circular(200),
+                    ),
+                    color: decorationColor,
                   ),
                 ),
               ),
@@ -64,7 +68,9 @@ class _LogInState extends State<LogIn> {
           ),
           SafeArea(
             child: Center(
-              child: Padding(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 480),
+                child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 28.0),
                 child: Column(
                   spacing: 16,
@@ -91,9 +97,7 @@ class _LogInState extends State<LogIn> {
                       obscureText: !_showPassword,
                       controller: _passController,
                       actionLabel: '¿Olvidaste tu contraseña?',
-                      onActionTap: () {
-                        // navegar a recuperación
-                      },
+                      onActionTap: () => _showResetSheet(),
                       onSuffixTap: () {
                         setState(() => _showPassword = !_showPassword);
                       },
@@ -118,7 +122,7 @@ class _LogInState extends State<LogIn> {
                     ),
                     const Divider(),
                     TextButton(
-                      child: const Text("crear cuenta"),
+                      child: const Text("Crear cuenta"),
                       onPressed: () {
                         Navigator.of(context).push(MaterialPageRoute(
                             builder: (context) => const Register()));
@@ -128,10 +132,20 @@ class _LogInState extends State<LogIn> {
                   ],
                 ),
               ),
+              ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  void _showResetSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _ResetPasswordSheet(prefillEmail: _emailController.text.trim()),
     );
   }
 
@@ -156,23 +170,18 @@ class _LogInState extends State<LogIn> {
         (route) => false,
       );
     } on AuthException catch (error) {
-      _showMessage(_humanizeError(error.message));
+      if (!mounted) return;
+      _showMessage(humanizeAuthError(error.message,
+          fallback: 'No pudimos iniciar sesión. Intentá de nuevo.'));
     } catch (error) {
-      _showMessage(_humanizeError(error.toString()));
+      if (!mounted) return;
+      _showMessage(humanizeAuthError(error.toString(),
+          fallback: 'No pudimos iniciar sesión. Intentá de nuevo.'));
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
       }
     }
-  }
-
-  String _humanizeError(String message) {
-    final clean = message.replaceFirst('AuthException(message: ', '');
-    final normalized =
-        clean.replaceFirst(RegExp(r', statusCode:.*$'), '').trim();
-    return normalized.isEmpty
-        ? 'No pudimos iniciar sesion. Intenta de nuevo.'
-        : normalized;
   }
 
   void _showMessage(String message) {
@@ -185,10 +194,129 @@ class _LogInState extends State<LogIn> {
   }
 }
 
+class _ResetPasswordSheet extends StatefulWidget {
+  final String prefillEmail;
+  const _ResetPasswordSheet({required this.prefillEmail});
+
+  @override
+  State<_ResetPasswordSheet> createState() => _ResetPasswordSheetState();
+}
+
+class _ResetPasswordSheetState extends State<_ResetPasswordSheet> {
+  late final TextEditingController _emailCtrl;
+  bool _loading = false;
+  bool _sent = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailCtrl = TextEditingController(text: widget.prefillEmail);
+  }
+
+  @override
+  void dispose() {
+    _emailCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final email = _emailCtrl.text.trim();
+    if (email.isEmpty) return;
+    setState(() => _loading = true);
+    try {
+      await Supabase.instance.client.auth.resetPasswordForEmail(email);
+      if (!mounted) return;
+      setState(() { _loading = false; _sent = true; });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ocurrió un error. Intentá de nuevo.')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Container(
+        decoration: BoxDecoration(
+          color: KaliColors.warmWhite,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 36),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 36, height: 4,
+                decoration: BoxDecoration(
+                  color: KaliColors.sand2,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text('Recuperar contraseña',
+                style: KaliText.loginDisplay(KaliColors.espresso)
+                    .copyWith(fontSize: 26, fontStyle: FontStyle.italic)),
+            const SizedBox(height: 8),
+            Text(
+              _sent
+                  ? 'Te enviamos un email con las instrucciones para restablecer tu contraseña.'
+                  : 'Ingresá tu email y te enviamos un enlace para restablecer tu contraseña.',
+              style: KaliText.body(KaliColors.clayDark, size: 14).copyWith(height: 1.5),
+            ),
+            if (!_sent) ...[
+              const SizedBox(height: 20),
+              KaliTextField(
+                label: 'CORREO ELECTRÓNICO',
+                hint: 'tu@ejemplo.com',
+                suffixIcon: Icons.mail_outline_rounded,
+                controller: _emailCtrl,
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: _loading ? null : _submit,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: KaliColors.espresso,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: Text(
+                    _loading ? 'Enviando...' : 'Enviar enlace',
+                    style: KaliText.body(KaliColors.sand,
+                        size: 14, weight: FontWeight.w700),
+                  ),
+                ),
+              ),
+            ] else ...[
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Cerrar',
+                      style: KaliText.body(KaliColors.clayDark,
+                          size: 14, weight: FontWeight.w500)),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class UpperLogo extends StatelessWidget {
-  const UpperLogo({
-    super.key,
-  });
+  const UpperLogo({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -198,12 +326,12 @@ class UpperLogo extends StatelessWidget {
         Container(
           width: 48,
           height: 48,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: KaliColors.espresso,
           ),
         ),
-        const Icon(
+        Icon(
           Icons.self_improvement,
           color: KaliColors.background,
           size: 25,

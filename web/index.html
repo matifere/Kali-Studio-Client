@@ -23,16 +23,26 @@
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="kali_studio">
+  <meta name="apple-mobile-web-app-title" content="Chimpancé Turnos">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>kali_studio</title>
+  <title>Chimpancé Turnos</title>
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
+  <script src='https://cdn.jsdelivr.net/npm/pdfjs-dist@4.6.82/build/pdf.min.mjs' type='module'></script>
+  <script type='module'>
+  var { pdfjsLib } = globalThis;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.6.82/build/pdf.worker.mjs';
+
+  var pdfRenderOptions = {
+    cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.6.82/cmaps/',
+    cMapPacked: true,
+  }
+  </script>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader
@@ -42,5 +52,64 @@
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
   <script src="flutter_bootstrap.js" async></script>
+  <script>
+    window.kaliPush = (function () {
+      function urlBase64ToUint8Array(base64) {
+        var padding = '='.repeat((4 - (base64.length % 4)) % 4);
+        var b64 = (base64 + padding).replace(/-/g, '+').replace(/_/g, '/');
+        var raw = atob(b64);
+        return Uint8Array.from(Array.from(raw).map(function (c) { return c.charCodeAt(0); }));
+      }
+
+      return {
+        requestPermission: function () {
+          return Notification.requestPermission();
+        },
+        subscribe: function (vapidKey) {
+          console.log('[push] registering SW...');
+          return navigator.serviceWorker
+            .register('/push-sw.js', { scope: '/push/' })
+            .then(function (reg) {
+              console.log('[push] SW registered — active:', !!reg.active, 'installing:', !!reg.installing, 'waiting:', !!reg.waiting);
+              if (reg.active) return reg;
+              return new Promise(function (resolve, reject) {
+                var sw = reg.installing || reg.waiting;
+                if (!sw) { console.log('[push] no SW worker, proceeding'); resolve(reg); return; }
+                sw.addEventListener('statechange', function () {
+                  console.log('[push] SW statechange:', sw.state);
+                  if (sw.state === 'activated') resolve(reg);
+                  if (sw.state === 'redundant') reject(new Error('SW redundant'));
+                });
+              });
+            })
+            .then(function (reg) {
+              console.log('[push] calling pushManager.subscribe...');
+              return reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(vapidKey),
+              });
+            })
+            .then(function (sub) {
+              console.log('[push] subscribed OK');
+              return JSON.stringify(sub);
+            })
+            .catch(function (err) {
+              console.error('[push] subscribe error:', err);
+              throw err;
+            });
+        },
+        getSubscription: function () {
+          return navigator.serviceWorker
+            .getRegistration('/push/')
+            .then(function (reg) {
+              if (!reg) return null;
+              return reg.pushManager.getSubscription().then(function (sub) {
+                return sub ? JSON.stringify(sub) : null;
+              });
+            });
+        },
+      };
+    })();
+  </script>
 </body>
 </html>

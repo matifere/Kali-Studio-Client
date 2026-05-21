@@ -7,6 +7,9 @@
 *.env
 .buildlog/
 .history
+.DS_Store
+**/.DS_Store
+.firebase/
 
 
 

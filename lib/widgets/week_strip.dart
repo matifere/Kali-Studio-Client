@@ -23,6 +23,10 @@ class _WeekStripState extends State<WeekStrip> {
 
   @override
   Widget build(BuildContext context) {
+    final activeBackground = KaliColors.espresso;
+    final activeDayText = KaliColors.background;
+    final activeNumberText = KaliColors.background;
+
     return Row(
       children: List.generate(6, (i) {
         final isActive = i == widget.selectedIndex;
@@ -31,25 +35,24 @@ class _WeekStripState extends State<WeekStrip> {
             margin: EdgeInsets.only(right: i < 5 ? 6 : 0),
             padding: const EdgeInsets.symmetric(vertical: 10),
             decoration: BoxDecoration(
-              color: isActive ? KaliColors.espresso : KaliColors.sand2,
+              color: isActive ? activeBackground : KaliColors.sand2,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
               children: [
                 Text(days[i],
                     style: KaliText.label(
-                        isActive ? KaliColors.clay : KaliColors.clayDark)),
+                        isActive ? activeDayText : KaliColors.clayDark)),
                 const SizedBox(height: 4),
                 Text(nums[i],
                     style: GoogleFontsHelper.cormorant(
-                        isActive ? KaliColors.warmWhite : KaliColors.espresso,
-                        17)),
+                        isActive ? activeNumberText : KaliColors.espresso, 17)),
                 if (hasClass[i] && !isActive) ...[
                   const SizedBox(height: 4),
                   Container(
                     width: 4,
                     height: 4,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: KaliColors.clay,
                       shape: BoxShape.circle,
                     ),

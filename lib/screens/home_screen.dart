@@ -1,17 +1,36 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:kali_studio/supabase/booking_service.dart';
+import 'package:kali_studio/supabase/plan_service.dart';
 import 'package:kali_studio/supabase/profile_manager.dart';
-import 'package:kali_studio/widgets/class_list_item.dart';
 import 'package:kali_studio/widgets/google_fonts_helper.dart';
-import 'package:kali_studio/widgets/section_label.dart';
-import 'package:kali_studio/widgets/week_strip.dart';
-import '../theme/kali_theme.dart';
 import '../models/models.dart';
-import 'booking_detail_screen.dart';
+import '../theme/kali_theme.dart';
+import '../widgets/web_page_wrapper.dart';
+
+// ── Data ─────────────────────────────────────────────────────────────────────
+
+class _HomeData {
+  final Profile? profile;
+  final PilatesClass? nextClass;
+  final int monthlyCount;
+  final UserPlan? plan;
+
+  const _HomeData({
+    required this.profile,
+    required this.nextClass,
+    required this.monthlyCount,
+    required this.plan,
+  });
+}
+
+// ── Widget ────────────────────────────────────────────────────────────────────
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final VoidCallback? onGoToReservas;
+  final VoidCallback? onGoToPlanes;
+
+  const HomeScreen({super.key, this.onGoToReservas, this.onGoToPlanes});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -19,15 +38,23 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
-  int _selectedDay = 2; // Miércoles seleccionado
-  late AnimationController _fadeCtrl;
-  late Animation<double> _fade;
+  late final AnimationController _fadeCtrl;
+  late final Animation<double> _fade;
+  late final Future<_HomeData> _dataFuture;
+
+  static _HomeData? _cache;
+  static DateTime? _cacheTime;
+
+  // ── Lifecycle ──────────────────────────────────────────────────────────────
 
   @override
   void initState() {
     super.initState();
+    _dataFuture = _loadAll();
     _fadeCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 600));
+      vsync: this,
+      duration: const Duration(milliseconds: 650),
+    );
     _fade = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
     _fadeCtrl.forward();
   }
@@ -38,214 +65,140 @@ class _HomeScreenState extends State<HomeScreen>
     super.dispose();
   }
 
+  Future<_HomeData> _loadAll() async {
+    final now = DateTime.now();
+    if (_cache != null &&
+        _cacheTime != null &&
+        now.difference(_cacheTime!).inSeconds < 30) {
+      return _cache!;
+    }
+    final results = await Future.wait<Object?>([
+      obtenerPerfil().catchError((_) => null),
+      BookingService.fetchNextReservation().catchError((_) => null),
+      BookingService.fetchMonthlyReservationCount(now.year, now.month)
+          .catchError((_) => 0),
+      PlanService.fetchActivePlan().catchError((_) => null),
+    ]);
+    _cache = _HomeData(
+      profile: results[0] as Profile?,
+      nextClass: results[1] as PilatesClass?,
+      monthlyCount: (results[2] as int?) ?? 0,
+      plan: results[3] as UserPlan?,
+    );
+    _cacheTime = now;
+    return _cache!;
+  }
+
+  // ── Build ──────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _fade,
-      child: CustomScrollView(
-        slivers: [
-          // ── Hero header ──────────────────────────────────────────────────
-          SliverToBoxAdapter(child: _buildHero()),
-
-          // ── Body ─────────────────────────────────────────────────────────
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                const SectionLabel('Tu próxima clase'),
-                _buildNextClassCard(),
-                const SizedBox(height: 20),
-                const SectionLabel('Semana actual'),
-                WeekStrip(
-                  selectedIndex: _selectedDay,
-                  onDaySelected: (i) => setState(() => _selectedDay = i),
-                ),
-                const SizedBox(height: 20),
-                const SectionLabel('Hoy · Miércoles 18'),
-                ...KaliData.todayClasses.map((cls) => Column(
-                      children: [
-                        ClassListItem(
-                          cls: cls,
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  BookingDetailScreen(pilatesClass: cls),
-                            ),
-                          ),
+    return Scaffold(
+      backgroundColor: KaliColors.warmWhite,
+      body: FadeTransition(
+        opacity: _fade,
+        child: SafeArea(
+          bottom: false,
+          child: WebPageWrapper(
+            child: FutureBuilder<_HomeData>(
+              future: _dataFuture,
+              builder: (context, snapshot) {
+                final data = snapshot.data;
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.only(bottom: 104),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildHero(data),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _sectionLabel('Tu próxima clase'),
+                            const SizedBox(height: 14),
+                            data?.nextClass != null
+                                ? _buildNextClassCard(data!.nextClass!)
+                                : _buildEmptyCard(
+                                    title: 'Sin próxima clase',
+                                    subtitle: 'Todavía no tenés clases reservadas.',
+                                  ),
+                            const SizedBox(height: 28),
+                            _sectionLabel('Tu plan'),
+                            const SizedBox(height: 14),
+                            data?.plan != null
+                                ? _buildPlanCard(data!.plan!)
+                                : _buildEmptyCard(
+                                    title: 'Sin plan activo',
+                                    subtitle: 'Todavía no tenés un plan activo.',
+                                  ),
+                          ],
                         ),
-                        if (cls != KaliData.todayClasses.last)
-                          const Divider(color: KaliColors.sand2, height: 1),
-                      ],
-                    )),
-              ]),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHero() {
-    return Container(
-      color: KaliColors.espresso,
-      padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
-      child: Stack(
-        children: [
-          // Decorative circles
-          Positioned(
-            top: -60,
-            right: -60,
-            child: _decorCircle(220, 0.18),
-          ),
-          Positioned(
-            top: 10,
-            right: -20,
-            child: _decorCircle(140, 0.12),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Bienvenida de vuelta',
-                  style: KaliText.label(KaliColors.clay)
-                      .copyWith(letterSpacing: 1.8)),
-              const SizedBox(height: 4),
-              FutureBuilder(
-                  future: obtenerPerfil(),
-                  builder: (context, asyncSnapshot) {
-                    return RichText(
-                      text: TextSpan(
-                        text: 'Hola, ',
-                        style: GoogleFontsHelper.cormorant(
-                            KaliColors.warmWhite, 28),
-                        children: [
-                          TextSpan(
-                            text: asyncSnapshot.data?.fullName ?? "...",
-                            style: GoogleFontsHelper.cormorant(
-                                KaliColors.clay, 28,
-                                italic: true),
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
-              const SizedBox(height: 14),
-              // Streak pill
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                decoration: BoxDecoration(
-                  color: KaliColors.clay.withOpacity(0.15),
-                  border: Border.all(color: KaliColors.clay.withOpacity(0.3)),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: const BoxDecoration(
-                        color: KaliColors.clay,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text('12 clases este mes',
-                        style: KaliText.caption(KaliColors.clay)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _decorCircle(double size, double opacity) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: KaliColors.clay.withOpacity(opacity),
         ),
       ),
     );
   }
 
-  Widget _buildNextClassCard() {
-    final next = KaliData.todayClasses.first;
+  // ── Sections ───────────────────────────────────────────────────────────────
+
+  Widget _buildHero(_HomeData? data) {
+    final name = data?.profile?.fullName.split(' ').first ?? '';
+    final count = data?.monthlyCount ?? 0;
+    final countLabel = count == 0
+        ? 'Sin clases este mes'
+        : count == 1
+            ? '1 clase este mes'
+            : '$count clases este mes';
+
     return Container(
-      padding: const EdgeInsets.all(18),
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 22, 20, 28),
       decoration: BoxDecoration(
         color: KaliColors.espresso,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(36),
+          bottomRight: Radius.circular(36),
+        ),
       ),
       child: Stack(
         children: [
           Positioned(
-            top: -50,
+            top: -48,
             right: -50,
-            child: Container(
-              width: 180,
-              height: 180,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: KaliColors.clay.withOpacity(0.07),
-              ),
-            ),
+            child: _decorativeCircle(150, alpha: 0.15),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text(
+                'BIENVENIDA DE VUELTA',
+                style: KaliText.label(KaliColors.clay)
+                    .copyWith(fontSize: 10, letterSpacing: 1.8),
+              ),
+              const SizedBox(height: 8),
               RichText(
                 text: TextSpan(
-                  text: next.time,
-                  style: GoogleFontsHelper.cormorant(KaliColors.warmWhite, 36),
+                  text: 'Hola, ',
+                  style: GoogleFontsHelper.cormorant(KaliColors.warmWhite, 34,
+                      weight: FontWeight.w400),
                   children: [
                     TextSpan(
-                      text: '  ${next.period}',
-                      style: KaliText.body(KaliColors.clay, size: 14),
+                      text: name.isNotEmpty ? name : '...',
+                      style: GoogleFontsHelper.cormorant(KaliColors.clay, 34,
+                          italic: true, weight: FontWeight.w400),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 4),
-              Text('${next.name} · Hoy, Miércoles',
-                  style: KaliText.caption(KaliColors.clay)),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  _tag(next.instructor.split(' ').first),
-                  const SizedBox(width: 8),
-                  _tag('${next.durationMin} min'),
-                  const SizedBox(width: 8),
-                  _tag(next.room),
-                  const Spacer(),
-                  GestureDetector(
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => BookingDetailScreen(pilatesClass: next),
-                      ),
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: KaliColors.clay,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text('Ver clase',
-                          style: KaliText.body(KaliColors.espresso,
-                              size: 11, weight: FontWeight.w500)),
-                    ),
-                  ),
-                ],
-              ),
+              const SizedBox(height: 18),
+              _statPill(countLabel),
             ],
           ),
         ],
@@ -253,17 +206,228 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  Widget _tag(String text) {
+  Widget _buildNextClassCard(PilatesClass cls) {
+    return _buildDarkCard(
+      onTap: widget.onGoToReservas,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          RichText(
+            text: TextSpan(
+              text: cls.time,
+              style: GoogleFontsHelper.cormorant(KaliColors.warmWhite, 42,
+                  weight: FontWeight.w400),
+              children: [
+                TextSpan(
+                  text: ' ${cls.period}',
+                  style: KaliText.body(
+                    KaliColors.warmWhite.withValues(alpha: 0.72),
+                    size: 18,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(cls.name,
+              style: KaliText.body(KaliColors.warmWhite, size: 26,
+                  weight: FontWeight.w500)),
+          const SizedBox(height: 6),
+          Text(
+              cls.sessionDate != null
+                  ? _capitalize(DateFormat("EEEE d 'de' MMM", 'es').format(cls.sessionDate!))
+                  : '',
+              style: KaliText.body(
+                  KaliColors.warmWhite.withValues(alpha: 0.65), size: 14)),
+          const SizedBox(height: 22),
+          Row(children: [
+            _infoPill(cls.instructor.split(' ').first),
+            const SizedBox(width: 8),
+            _infoPill('${cls.durationMin} min'),
+          ]),
+          const SizedBox(height: 14),
+          _ctaButton(label: 'Ver clase', onTap: widget.onGoToReservas),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlanCard(UserPlan plan) {
+    final vence = DateFormat("d 'de' MMMM", 'es').format(plan.endDate);
+    final days = plan.daysRemaining;
+    final daysLabel = days == 0
+        ? 'Vence hoy'
+        : days == 1
+            ? 'Vence mañana'
+            : 'Vence en $days días';
+
+    return _buildDarkCard(
+      onTap: widget.onGoToPlanes,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(plan.name,
+              style: GoogleFontsHelper.cormorant(KaliColors.warmWhite, 38,
+                  weight: FontWeight.w400)),
+          const SizedBox(height: 8),
+          Text('Vence el $vence',
+              style: KaliText.body(
+                  KaliColors.warmWhite.withValues(alpha: 0.65), size: 14)),
+          const SizedBox(height: 22),
+          Row(children: [
+            _infoPill(daysLabel),
+            if (plan.maxReservations != null) ...[
+              const SizedBox(width: 8),
+              _infoPill('${plan.maxReservations} clases'),
+            ],
+          ]),
+          const SizedBox(height: 14),
+          _ctaButton(label: 'Ver plan', onTap: widget.onGoToPlanes),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyCard({required String title, required String subtitle}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.07),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
-        borderRadius: BorderRadius.circular(20),
+        color: KaliColors.espresso,
+        borderRadius: BorderRadius.circular(32),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title,
+              style: GoogleFontsHelper.cormorant(KaliColors.warmWhite, 28,
+                  weight: FontWeight.w400)),
+          const SizedBox(height: 8),
+          Text(subtitle,
+              style: KaliText.body(
+                      KaliColors.warmWhite.withValues(alpha: 0.72), size: 14)
+                  .copyWith(height: 1.5)),
+        ],
+      ),
+    );
+  }
+
+  // ── Shared card shell ──────────────────────────────────────────────────────
+
+  Widget _buildDarkCard({required Widget child, VoidCallback? onTap}) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+          decoration: BoxDecoration(
+            color: KaliColors.espresso,
+            borderRadius: BorderRadius.circular(32),
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                right: -58,
+                top: 12,
+                child: _decorativeCircle(160, alpha: 0.52),
+              ),
+              child,
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Small helpers ──────────────────────────────────────────────────────────
+
+  Widget _decorativeCircle(double size, {required double alpha}) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: KaliColors.espressoL.withValues(alpha: alpha),
+      ),
+    );
+  }
+
+  Widget _ctaButton({required String label, VoidCallback? onTap}) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: KaliColors.clay,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(label,
+              style: KaliText.body(KaliColors.background, size: 14,
+                  weight: FontWeight.w700)),
+        ),
+      ),
+    );
+  }
+
+  Widget _infoPill(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(999),
       ),
       child: Text(text,
-          style: KaliText.caption(Colors.white.withOpacity(0.7))
-              .copyWith(fontSize: 10)),
+          style: KaliText.body(KaliColors.warmWhite.withValues(alpha: 0.72),
+              size: 11, weight: FontWeight.w500)),
+    );
+  }
+
+  Widget _statPill(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: const BoxDecoration(
+              color: Color(0xFFD7C2B4),
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Flexible(
+            child: Text(label,
+                overflow: TextOverflow.ellipsis,
+                style: KaliText.body(
+                    KaliColors.warmWhite.withValues(alpha: 0.88),
+                    size: 13, weight: FontWeight.w500)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _capitalize(String s) =>
+      s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
+
+  Widget _sectionLabel(String text) {
+    return Text(
+      text.toUpperCase(),
+      style: KaliText.label(KaliColors.clayDark)
+          .copyWith(fontSize: 10, letterSpacing: 2.1),
     );
   }
 }

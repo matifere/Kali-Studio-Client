@@ -25,6 +25,15 @@ class KaliTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final labelColor = KaliColors.espresso;
+    final actionColor = KaliColors.clayDark;
+    final textColor = KaliColors.espresso;
+    final hintColor = KaliColors.clay;
+    final fillColor = KaliColors.sand;
+    final borderColor = KaliColors.sand2;
+    final focusedBorderColor = KaliColors.clay;
+    final iconColor = KaliColors.clayDark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -34,14 +43,14 @@ class KaliTextField extends StatelessWidget {
           children: [
             Text(
               label,
-              style: KaliText.label(KaliColors.espresso),
+              style: KaliText.label(labelColor),
             ),
             if (actionLabel != null)
               GestureDetector(
                 onTap: onActionTap,
                 child: Text(
                   actionLabel!,
-                  style: KaliText.caption(KaliColors.clayDark),
+                  style: KaliText.caption(actionColor),
                 ),
               ),
           ],
@@ -53,30 +62,30 @@ class KaliTextField extends StatelessWidget {
         TextField(
           controller: controller,
           obscureText: obscureText,
-          style: KaliText.body(KaliColors.espresso, size: 14),
-          cursorColor: KaliColors.clay,
+          style: KaliText.body(textColor, size: 14),
+          cursorColor: focusedBorderColor,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: KaliText.body(KaliColors.clay, size: 14),
+            hintStyle: KaliText.body(hintColor, size: 14),
 
             // Fondo del campo
             filled: true,
-            fillColor: KaliColors.sand,
+            fillColor: fillColor,
 
             // Icono derecho
             suffixIcon: GestureDetector(
               onTap: onSuffixTap,
               child: Icon(
                 suffixIcon,
-                color: KaliColors.clayDark,
+                color: iconColor,
                 size: 18,
               ),
             ),
 
             // Bordes
-            border: _border(KaliColors.sand2),
-            enabledBorder: _border(KaliColors.sand2),
-            focusedBorder: _border(KaliColors.clay),
+            border: _border(borderColor),
+            enabledBorder: _border(borderColor),
+            focusedBorder: _border(focusedBorderColor),
 
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 20,

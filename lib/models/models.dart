@@ -1,3 +1,86 @@
+// ─── Modelo: Plan disponible (catálogo) ──────────────────────────────────────
+class Plan {
+  final String id;
+  final String name;
+  final String description;
+  final double price;
+  final String currency;
+  final int? weeklyClasses;
+
+  const Plan({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.price,
+    required this.currency,
+    this.weeklyClasses,
+  });
+
+  factory Plan.fromMap(Map<String, dynamic> m) => Plan(
+        id: m['id'] as String,
+        name: m['name'] as String? ?? '',
+        description: m['description'] as String? ?? '',
+        price: (m['price'] as num?)?.toDouble() ?? 0,
+        currency: m['currency'] as String? ?? 'ARS',
+        weeklyClasses: m['max_reservations_per_week'] as int?,
+      );
+
+  List<String> get features {
+    if (description.trim().isEmpty) return [];
+    return description
+        .split('\n')
+        .map((l) => l.trim())
+        .where((l) => l.isNotEmpty)
+        .toList();
+  }
+
+  String get formattedPrice {
+    final n = price.toStringAsFixed(0);
+    final buf = StringBuffer();
+    for (var i = 0; i < n.length; i++) {
+      if (i > 0 && (n.length - i) % 3 == 0) buf.write('.');
+      buf.write(n[i]);
+    }
+    return buf.toString();
+  }
+}
+
+// ─── Modelo: Plan / Suscripción ───────────────────────────────────────────────
+class UserPlan {
+  final String id;
+  final String planId;
+  final String name;
+  final String description;
+  final double price;
+  final String currency;
+  final int? maxReservations;
+  final int? weeklyClasses;
+  final DateTime startDate;
+  final DateTime endDate;
+  final String status;
+
+  const UserPlan({
+    required this.id,
+    required this.planId,
+    required this.name,
+    required this.description,
+    required this.price,
+    required this.currency,
+    required this.startDate,
+    required this.endDate,
+    required this.status,
+    this.maxReservations,
+    this.weeklyClasses,
+  });
+
+  bool get isActive => status == 'active';
+
+  int get daysRemaining {
+    final diff = endDate.difference(DateTime.now()).inDays;
+    return diff < 0 ? 0 : diff;
+  }
+}
+
 // ─── Modelo: Clase de pilates ─────────────────────────────────────────────────
 class PilatesClass {
   final String id;
@@ -13,6 +96,10 @@ class PilatesClass {
   final String equipment;
   final String description;
   final bool isBooked;
+  final String? reservationId;
+  final DateTime? sessionDate;
+  final bool isInWaitlist;
+  final String? waitlistId;
 
   const PilatesClass({
     required this.id,
@@ -28,105 +115,11 @@ class PilatesClass {
     required this.equipment,
     required this.description,
     this.isBooked = false,
+    this.reservationId,
+    this.sessionDate,
+    this.isInWaitlist = false,
+    this.waitlistId,
   });
 
   int get availableSpots => totalSpots - takenSpots;
-}
-
-// ─── Modelo: Instructor ───────────────────────────────────────────────────────
-class Instructor {
-  final String name;
-  final String initials;
-  final String certification;
-  final int yearsExp;
-  final String bio;
-
-  const Instructor({
-    required this.name,
-    required this.initials,
-    required this.certification,
-    required this.yearsExp,
-    required this.bio,
-  });
-}
-
-// ─── Datos de ejemplo ─────────────────────────────────────────────────────────
-class KaliData {
-  static const List<PilatesClass> todayClasses = [
-    PilatesClass(
-      id: '1',
-      name: 'hole peep',
-      instructor: 'Luciana Paz',
-      time: '7:30',
-      period: 'AM',
-      room: 'Sala 2',
-      level: 'Intermedio',
-      durationMin: 55,
-      totalSpots: 8,
-      takenSpots: 8,
-      equipment: 'Reformer',
-      description: 'Clase de reformer para alumnas con base sólida. Trabajamos '
-          'coordinación, control y fluidez de movimiento con secuencias dinámicas.',
-      isBooked: true,
-    ),
-    PilatesClass(
-      id: '2',
-      name: 'Mat Pilates Flow',
-      instructor: 'Sofía Ríos',
-      time: '10:00',
-      period: 'AM',
-      room: 'Sala 1',
-      level: 'Todos los niveles',
-      durationMin: 50,
-      totalSpots: 10,
-      takenSpots: 6,
-      equipment: 'Mat',
-      description:
-          'Clase fluida en mat que combina principios clásicos del pilates '
-          'con elementos de movilidad. Ideal para todos los niveles.',
-    ),
-    PilatesClass(
-      id: '3',
-      name: 'Pilates Restaurativo',
-      instructor: 'Camila Ortiz',
-      time: '12:00',
-      period: 'PM',
-      room: 'Sala 3',
-      level: 'Principiante',
-      durationMin: 60,
-      totalSpots: 8,
-      takenSpots: 0,
-      equipment: 'Mat + accesorios',
-      description:
-          'Sesión de pilates suave enfocada en recuperación, respiración '
-          'y reconexión corporal. Perfecta para comenzar o como descanso activo.',
-    ),
-    PilatesClass(
-      id: '4',
-      name: 'Reformer Avanzado',
-      instructor: 'Luciana Paz',
-      time: '6:30',
-      period: 'PM',
-      room: 'Sala 2',
-      level: 'Avanzado',
-      durationMin: 55,
-      totalSpots: 8,
-      takenSpots: 6,
-      equipment: 'Reformer',
-      description:
-          'Clase de alta intensidad diseñada para alumnas con sólida base. '
-          'Trabajaremos fuerza, control y precisión con variaciones avanzadas.',
-    ),
-  ];
-
-  static const Instructor luciana = Instructor(
-    name: 'Luciana Paz',
-    initials: 'LP',
-    certification: 'STOTT Pilates certificada',
-    yearsExp: 8,
-    bio:
-        'Especialista en reformer y Pilates clínico. Formada en Buenos Aires y '
-        'certificada internacionalmente por STOTT. Su enfoque combina técnica '
-        'precisa con una mirada holística del movimiento.',
-  );
 }
