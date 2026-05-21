@@ -392,6 +392,11 @@ class _RegisterState extends State<Register> {
       return;
     }
 
+    if (password.length < 8) {
+      _showMessage('La contraseña debe tener al menos 8 caracteres.');
+      return;
+    }
+
     if (password != confirmPassword) {
       _showMessage('Las contraseñas no coinciden.');
       return;

@@ -3,6 +3,20 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/models.dart';
 import 'profile_manager.dart';
 
+sealed class PaymentPreference {
+  const PaymentPreference();
+}
+
+class MercadoPagoPayment extends PaymentPreference {
+  final String url;
+  const MercadoPagoPayment(this.url) : super();
+}
+
+class TransferPayment extends PaymentPreference {
+  final String alias;
+  const TransferPayment(this.alias) : super();
+}
+
 class PlanService {
   static final _supabase = Supabase.instance.client;
 
@@ -24,7 +38,7 @@ class PlanService {
     }
   }
 
-  static Future<String> createPaymentPreference(String planId) async {
+  static Future<PaymentPreference> createPaymentPreference(String planId) async {
     if (_supabase.auth.currentSession == null) throw Exception('No autenticado');
 
     final response = await _supabase.functions.invoke(
@@ -38,9 +52,15 @@ class PlanService {
       throw Exception(err);
     }
 
-    final url = (response.data as Map<String, dynamic>?)?['url'] as String?;
-    if (url == null) throw Exception('URL de pago no disponible');
-    return url;
+    final data = response.data as Map<String, dynamic>?;
+
+    final alias = data?['alias'] as String?;
+    if (alias != null) return TransferPayment(alias);
+
+    final url = data?['url'] as String?;
+    if (url != null) return MercadoPagoPayment(url);
+
+    throw Exception('Respuesta de pago no válida');
   }
 
   static Future<UserPlan?> fetchActivePlan() async {

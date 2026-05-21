@@ -71,11 +71,14 @@ class NotificationService {
   }
 
   static Future<void> markAsRead(String id) async {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) return;
     try {
       await _supabase
           .from('notifications')
           .update({'is_read': true})
-          .eq('id', id);
+          .eq('id', id)
+          .eq('user_id', userId);
     } catch (e) {
       debugPrint('NotificationService.markAsRead error: $e');
     }

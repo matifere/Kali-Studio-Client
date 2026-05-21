@@ -1,8 +1,6 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:kali_studio/auth/new_password_screen.dart';
 import 'package:kali_studio/auth/register_success_screen.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -17,16 +15,8 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('es');
 
-  final String url;
-  final String anon;
-  if (kIsWeb) {
-    url = 'https://tmfcnvtjzmtpqhzvfxos.supabase.co';
-    anon = 'sb_publishable_TkebjBTlimQS7Uu4HWE-tQ_v3ylhC_b';
-  } else {
-    await dotenv.load(fileName: "config.env");
-    url = dotenv.env['URL'] ?? '';
-    anon = dotenv.env['ANON'] ?? '';
-  }
+  const url = String.fromEnvironment('SUPABASE_URL');
+  const anon = String.fromEnvironment('SUPABASE_ANON');
 
   await ThemeController.instance.load();
   await Supabase.initialize(url: url, anonKey: anon);

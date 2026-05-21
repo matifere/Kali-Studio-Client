@@ -231,12 +231,18 @@ class BookingService {
       throw Exception('Respuesta inesperada del servidor.');
     }
 
-    if (result['ok'] != true) {
-      if (result['error'] == 'full') throw Exception('La clase está llena.');
-      if (result['error'] == 'no_plan') throw Exception('Necesitás un plan activo para reservar.');
-      if (result['error'] == 'already_booked') throw Exception('Ya tenés una reserva para esta clase.');
-      throw Exception('No se pudo reservar.');
-    }
+    throwIfBookingFailed(result);
+  }
+
+  @visibleForTesting
+  static void throwIfBookingFailed(Map<String, dynamic> result) {
+    if (result['ok'] == true) return;
+    final error = result['error'] as String?;
+    if (error == 'full') throw Exception('La clase está llena.');
+    if (error == 'no_plan') throw Exception('Necesitás un plan activo para reservar.');
+    if (error == 'already_booked') throw Exception('Ya tenés una reserva para esta clase.');
+    if (error == 'weekly_limit_exceeded') throw Exception('Alcanzaste el límite de clases semanales de tu plan.');
+    throw Exception('No se pudo reservar.');
   }
 
 
@@ -312,10 +318,12 @@ class BookingService {
   }
 
   static Future<void> cancelReservation(String reservationId) async {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) return;
     await _supabase.from('reservations').update({
       'status': 'cancelled',
       'cancelled_at': DateTime.now().toIso8601String(),
-    }).eq('id', reservationId);
+    }).eq('id', reservationId).eq('user_id', userId);
   }
 
 

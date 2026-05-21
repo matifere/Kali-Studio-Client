@@ -26,8 +26,12 @@ class WaitlistService {
   }
 
   static Future<void> leaveWaitlist(String waitlistId) async {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) return;
     try {
-      await _supabase.from('waitlist').delete().eq('id', waitlistId);
+      await _supabase.from('waitlist').delete()
+          .eq('id', waitlistId)
+          .eq('user_id', userId);
     } catch (e) {
       debugPrint('WaitlistService.leaveWaitlist error: $e');
     }

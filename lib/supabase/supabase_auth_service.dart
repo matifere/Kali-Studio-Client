@@ -139,7 +139,6 @@ class SupabaseAuthService {
       {
         'id': userId,
         'full_name': fullName,
-        'is_active': true,
         if (institutionId != null) 'institution_id': institutionId,
       },
       onConflict: 'id',

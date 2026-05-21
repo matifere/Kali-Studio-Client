@@ -32,8 +32,8 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
       _showSnack('Completá ambos campos.');
       return;
     }
-    if (pass.length < 6) {
-      _showSnack('La contraseña debe tener al menos 6 caracteres.');
+    if (pass.length < 8) {
+      _showSnack('La contraseña debe tener al menos 8 caracteres.');
       return;
     }
     if (pass != confirm) {

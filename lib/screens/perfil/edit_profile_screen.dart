@@ -374,6 +374,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
+  static const _allowedImageTypes = {'image/jpeg', 'image/png', 'image/webp'};
+  static const _maxAvatarBytes = 5 * 1024 * 1024; // 5 MB
+
+  static String _mimeTypeFromDataUrl(String dataUrl) {
+    final start = dataUrl.indexOf(':') + 1;
+    final end = dataUrl.indexOf(';');
+    if (start > 0 && end > start) return dataUrl.substring(start, end);
+    return 'image/jpeg';
+  }
+
   Future<void> _pickAvatar() async {
     try {
       final file = await ImagePicker().pickImage(
@@ -384,11 +394,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       if (file == null) return;
 
+      final mimeType = file.mimeType ?? '';
+      if (!_allowedImageTypes.contains(mimeType)) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Solo se permiten imágenes JPG, PNG o WebP.')),
+        );
+        return;
+      }
+
       final bytes = await file.readAsBytes();
-      final extension = file.name.toLowerCase().endsWith('.png')
-          ? 'png'
-          : file.mimeType?.split('/').last ?? 'jpeg';
-      final dataUrl = 'data:image/$extension;base64,${base64Encode(bytes)}';
+      if (bytes.length > _maxAvatarBytes) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('La imagen no puede superar los 5 MB.')),
+        );
+        return;
+      }
+
+      final extension = mimeType.split('/').last;
+      final dataUrl = 'data:$mimeType;base64,${base64Encode(bytes)}';
 
       if (!mounted) return;
 
@@ -399,7 +424,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudo seleccionar la imagen: $error')),
+        const SnackBar(content: Text('No se pudo seleccionar la imagen.')),
       );
     }
   }
@@ -418,13 +443,37 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final user = client.auth.currentUser;
     if (user == null) return;
 
+    final newEmail = _emailController.text.trim();
+    if (newEmail != (user.email ?? '')) {
+      final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+      if (!emailRegex.hasMatch(newEmail)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('El correo no tiene un formato válido.')),
+        );
+        return;
+      }
+    }
+
     setState(() => _isSaving = true);
 
     try {
-      if (_emailController.text.trim() != (user.email ?? '')) {
-        await client.auth.updateUser(
-          UserAttributes(email: _emailController.text.trim()),
+      if (newEmail != (user.email ?? '')) {
+        await client.auth.updateUser(UserAttributes(email: newEmail));
+      }
+
+      // Upload new avatar to Storage; if none selected keep existing URL as-is
+      String? finalAvatarUrl = _avatarDataUrl;
+      final newBytes = _selectedAvatarBytes;
+      if (newBytes != null && _avatarDataUrl != null) {
+        final mimeType = _mimeTypeFromDataUrl(_avatarDataUrl!);
+        final extension = mimeType.split('/').last;
+        final path = '${user.id}/avatar.$extension';
+        await client.storage.from('avatars').uploadBinary(
+          path,
+          newBytes,
+          fileOptions: FileOptions(contentType: mimeType, upsert: true),
         );
+        finalAvatarUrl = client.storage.from('avatars').getPublicUrl(path);
       }
 
       await client.from('profiles').update({
@@ -432,7 +481,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         'phone': _phoneController.text.trim().isEmpty
             ? null
             : _phoneController.text.trim(),
-        'avatar_url': _avatarDataUrl,
+        'avatar_url': finalAvatarUrl,
         'patologias': _selectedPatologias,
       }).eq('id', user.id);
 
@@ -444,7 +493,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudo guardar: $error')),
+        const SnackBar(content: Text('No se pudo guardar el perfil. Intentá de nuevo.')),
       );
     } finally {
       if (mounted) {
@@ -478,8 +527,8 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
     final newPass = _newPasswordCtrl.text.trim();
     final confirm = _confirmPasswordCtrl.text.trim();
 
-    if (newPass.length < 6) {
-      setState(() => _error = 'La contraseña debe tener al menos 6 caracteres.');
+    if (newPass.length < 8) {
+      setState(() => _error = 'La contraseña debe tener al menos 8 caracteres.');
       return;
     }
     if (newPass != confirm) {

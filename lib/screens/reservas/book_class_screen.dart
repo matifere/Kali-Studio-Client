@@ -5,7 +5,6 @@ import '../../models/models.dart';
 import '../../services/push_notification_service.dart';
 import '../../supabase/booking_service.dart';
 import '../../supabase/waitlist_service.dart';
-import '../../utils/auth_utils.dart';
 import '../../theme/kali_theme.dart';
 import '../../widgets/web_page_wrapper.dart';
 
@@ -71,7 +70,7 @@ class _BookClassScreenState extends State<BookClassScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudieron cargar las clases: $e')),
+        const SnackBar(content: Text('No se pudieron cargar las clases. Intentá de nuevo.')),
       );
     } finally {
       if (mounted) setState(() => _isLoadingSessions = false);
@@ -467,7 +466,10 @@ class _BookClassScreenState extends State<BookClassScreen> {
       await _loadSessionsForDate(_selectedDate);
     } catch (e) {
       if (!mounted) return;
-      final msg = humanizeAuthError(e.toString(), fallback: 'No se pudo reservar. Intentá de nuevo.');
+      final raw = e.toString();
+      final msg = raw.startsWith('Exception: ')
+          ? raw.substring('Exception: '.length)
+          : 'No se pudo reservar. Intentá de nuevo.';
       if (msg == 'La clase está llena.') {
         setState(() => _fullSessionIds.add(cls.id));
       }

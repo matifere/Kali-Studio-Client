@@ -105,7 +105,19 @@ serve(async (req) => {
     }
 
     if (!mpAccessToken) {
-      console.error('No MP token found for institutionId:', institutionId);
+      if (institutionId) {
+        const { data: inst } = await supabase
+          .from('institutions')
+          .select('payment_alias')
+          .eq('id', institutionId)
+          .maybeSingle();
+        if (inst?.payment_alias) {
+          return new Response(JSON.stringify({ alias: inst.payment_alias }), {
+            status: 200, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
+          });
+        }
+      }
+      console.error('No MP token and no alias for institutionId:', institutionId);
       return new Response(JSON.stringify({ error: 'Institución sin configuración de pago' }), {
         status: 503, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
       });

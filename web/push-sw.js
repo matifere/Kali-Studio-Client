@@ -1,12 +1,26 @@
 self.addEventListener('push', function (event) {
   if (!event.data) return;
-  const data = event.data.json();
+
+  let data;
+  try {
+    data = event.data.json();
+  } catch (_) {
+    return;
+  }
+
+  if (typeof data !== 'object' || data === null) return;
+
+  const title = typeof data.title === 'string' && data.title.trim()
+      ? data.title.trim()
+      : 'Kali Studio';
+  const body = typeof data.body === 'string' ? data.body : '';
+
   event.waitUntil(
-    self.registration.showNotification(data.title || 'Kali Studio', {
-      body: data.body || '',
+    self.registration.showNotification(title, {
+      body: body,
       icon: '/icons/Icon-192.png',
       badge: '/icons/Icon-192.png',
-      data: { session_id: data.session_id, url: '/' },
+      data: { session_id: data.session_id ?? null, url: '/' },
     })
   );
 });

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 import '../../models/models.dart';
@@ -630,17 +631,20 @@ class _ActivatePlanSheet extends StatefulWidget {
 class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
   bool _loading = false;
   bool _awaitingVerification = false;
+  String? _alias;
 
   Future<void> _pay() async {
     setState(() => _loading = true);
     try {
-      final url = await PlanService.createPaymentPreference(widget.plan.id);
+      final preference = await PlanService.createPaymentPreference(widget.plan.id);
       if (!mounted) return;
-      setState(() {
-        _loading = false;
-        _awaitingVerification = true;
-      });
-      launchUrl(Uri.parse(url), webOnlyWindowName: '_blank');
+      switch (preference) {
+        case MercadoPagoPayment(:final url):
+          setState(() { _loading = false; _awaitingVerification = true; });
+          launchUrl(Uri.parse(url), webOnlyWindowName: '_blank');
+        case TransferPayment(:final alias):
+          setState(() { _loading = false; _alias = alias; });
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);
@@ -777,9 +781,11 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      _awaitingVerification
-                          ? 'Una vez aprobado el pago, tu plan se activa automáticamente.'
-                          : 'Serás redirigido a MercadoPago para completar el pago de forma segura.',
+                      _alias != null
+                          ? 'Hacé la transferencia al alias indicado y avisale a tu instructor para activar tu plan.'
+                          : _awaitingVerification
+                              ? 'Una vez aprobado el pago, tu plan se activa automáticamente.'
+                              : 'Serás redirigido a MercadoPago para completar el pago de forma segura.',
                       style: KaliText.body(KaliColors.clayDark, size: 13)
                           .copyWith(height: 1.5),
                     ),
@@ -788,7 +794,73 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
               ),
             ),
             const SizedBox(height: 24),
-            if (!_awaitingVerification)
+            if (_alias != null) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: KaliColors.sand,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Alias de transferencia',
+                            style: KaliText.body(KaliColors.clayDark,
+                                size: 12, weight: FontWeight.w500),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _alias!,
+                            style: KaliText.body(KaliColors.espresso,
+                                size: 16, weight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: _alias!));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Alias copiado')),
+                        );
+                      },
+                      icon: const Icon(Icons.copy_rounded, size: 18),
+                      color: KaliColors.espresso,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: _loading ? null : _verify,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: KaliColors.espresso,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: _loading
+                      ? const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white),
+                        )
+                      : Text(
+                          'Ya pagué, verificar',
+                          style: KaliText.body(KaliColors.sand,
+                              size: 14, weight: FontWeight.w700),
+                        ),
+                ),
+              ),
+            ] else if (!_awaitingVerification)
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
