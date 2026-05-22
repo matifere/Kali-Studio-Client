@@ -92,31 +92,36 @@ serve(async (req) => {
     let mpAccessToken: string | null = null;
 
     if (institutionId) {
+      // 1. Try institution-specific MP token from vault
       const { data: vaultToken, error: vaultError } = await supabase.rpc('get_institution_mp_token', {
         p_institution_id: institutionId,
       });
       console.log('vaultToken present:', !!vaultToken, 'vaultError:', vaultError?.message);
       mpAccessToken = vaultToken as string | null;
-    }
 
-    if (!mpAccessToken) {
-      mpAccessToken = Deno.env.get('MP_ACCESS_TOKEN') ?? null;
-      console.log('fallback env token present:', !!mpAccessToken);
-    }
-
-    if (!mpAccessToken) {
-      if (institutionId) {
+      // 2. If no MP token, check institution alias (takes priority over global env fallback)
+      if (!mpAccessToken) {
         const { data: inst } = await supabase
           .from('institutions')
           .select('payment_alias')
           .eq('id', institutionId)
           .maybeSingle();
+        console.log('payment_alias present:', !!inst?.payment_alias);
         if (inst?.payment_alias) {
           return new Response(JSON.stringify({ alias: inst.payment_alias }), {
             status: 200, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
           });
         }
       }
+    }
+
+    // 3. Fall back to global env MP token
+    if (!mpAccessToken) {
+      mpAccessToken = Deno.env.get('MP_ACCESS_TOKEN') ?? null;
+      console.log('fallback env token present:', !!mpAccessToken);
+    }
+
+    if (!mpAccessToken) {
       console.error('No MP token and no alias for institutionId:', institutionId);
       return new Response(JSON.stringify({ error: 'Institución sin configuración de pago' }), {
         status: 503, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
