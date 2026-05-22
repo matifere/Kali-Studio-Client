@@ -26,7 +26,11 @@ jobs:
         run: flutter test
 
       - name: Build web
-        run: flutter build web --release --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} --dart-define=SUPABASE_ANON=${{ secrets.SUPABASE_ANON }} --dart-define=VAPID_PUBLIC_KEY=${{ secrets.VAPID_PUBLIC_KEY }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON: ${{ secrets.SUPABASE_ANON }}
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+        run: flutter build web --release "--dart-define=SUPABASE_URL=${SUPABASE_URL}" "--dart-define=SUPABASE_ANON=${SUPABASE_ANON}" "--dart-define=VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}"
 
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
