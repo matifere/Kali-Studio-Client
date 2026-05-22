@@ -30,7 +30,7 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON: ${{ secrets.SUPABASE_ANON }}
           VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
-        run: flutter build web --release "--dart-define=SUPABASE_URL=${SUPABASE_URL}" "--dart-define=SUPABASE_ANON=${SUPABASE_ANON}" "--dart-define=VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}"
+        run: flutter build web --release "--dart-define=SUPABASE_URL=$(echo -n "${SUPABASE_URL}" | tr -d '\r\n')" "--dart-define=SUPABASE_ANON=$(echo -n "${SUPABASE_ANON}" | tr -d '\r\n')" "--dart-define=VAPID_PUBLIC_KEY=$(echo -n "${VAPID_PUBLIC_KEY}" | tr -d '\r\n')"
 
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
