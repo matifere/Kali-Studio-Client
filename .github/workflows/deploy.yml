@@ -11,26 +11,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Flutter
-        run: |
-          git clone https://github.com/flutter/flutter.git --branch stable --depth 1 $HOME/flutter
-          echo "$HOME/flutter/bin" >> $GITHUB_PATH
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
 
-      - name: Flutter version
-        run: flutter --version
+      - run: flutter pub get
 
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Run tests
-        run: flutter test
+      - run: flutter test
 
       - name: Build web
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON: ${{ secrets.SUPABASE_ANON }}
           VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
-        run: flutter build web --release "--dart-define=SUPABASE_URL=$(echo -n "${SUPABASE_URL}" | tr -d '\r\n')" "--dart-define=SUPABASE_ANON=$(echo -n "${SUPABASE_ANON}" | tr -d '\r\n')" "--dart-define=VAPID_PUBLIC_KEY=$(echo -n "${VAPID_PUBLIC_KEY}" | tr -d '\r\n')"
+        run: |
+          URL=$(echo -n "$SUPABASE_URL" | tr -d '\r\n')
+          ANON=$(echo -n "$SUPABASE_ANON" | tr -d '\r\n')
+          VAPID=$(echo -n "$VAPID_PUBLIC_KEY" | tr -d '\r\n')
+          flutter build web --release \
+            "--dart-define=SUPABASE_URL=$URL" \
+            "--dart-define=SUPABASE_ANON=$ANON" \
+            "--dart-define=VAPID_PUBLIC_KEY=$VAPID"
 
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
