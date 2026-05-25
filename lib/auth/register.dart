@@ -384,8 +384,8 @@ class _RegisterState extends State<Register> {
   Future<void> _handleRegister() async {
     final fullName = _fullNameController.text.trim();
     final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
-    final confirmPassword = _confirmPasswordController.text.trim();
+    final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
 
     if (fullName.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
       _showMessage('Completa todos los campos.');

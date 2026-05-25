@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
+import '../home_screen.dart';
 import '../../models/models.dart';
 import '../../supabase/plan_service.dart';
 import '../../theme/kali_theme.dart';
+import '../../utils/auth_utils.dart';
 import '../../widgets/google_fonts_helper.dart';
 import '../../widgets/web_page_wrapper.dart';
 
@@ -66,7 +68,10 @@ class _PlanesScreenState extends State<PlanesScreen> {
       isScrollControlled: true,
       builder: (_) => _ActivatePlanSheet(plan: plan),
     );
-    if (confirmed == true) _refreshActivePlan();
+    if (confirmed == true) {
+      HomeScreen.invalidateCache();
+      _refreshActivePlan();
+    }
   }
 
   @override
@@ -650,7 +655,7 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
       setState(() => _loading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
+          content: Text(humanizeAuthError(e.toString())),
           backgroundColor: KaliColors.espresso,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -885,7 +890,7 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
                                 size: 16, color: Colors.white),
                             const SizedBox(width: 8),
                             Text(
-                              'Ir a pagar con MercadoPago',
+                              'Continuar con el pago',
                               style: KaliText.body(KaliColors.sand,
                                   size: 14, weight: FontWeight.w700),
                             ),

@@ -36,10 +36,10 @@ class KaliApp extends StatelessWidget {
       animation: ThemeController.instance,
       builder: (context, _) {
         return MaterialApp(
-          title: 'Chimpancé Turnos',
+          title: 'Kali Studio',
           theme: KaliTheme.theme,
           darkTheme: KaliTheme.darkTheme,
-          themeMode: ThemeController.instance.themeMode, //bloc
+          themeMode: ThemeController.instance.themeMode,
           debugShowCheckedModeBanner: false,
           home: const _AuthGate(),
         );

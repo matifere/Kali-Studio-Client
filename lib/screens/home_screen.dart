@@ -32,6 +32,14 @@ class HomeScreen extends StatefulWidget {
 
   const HomeScreen({super.key, this.onGoToReservas, this.onGoToPlanes});
 
+  static _HomeData? _cache;
+  static DateTime? _cacheTime;
+
+  static void invalidateCache() {
+    _cache = null;
+    _cacheTime = null;
+  }
+
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -41,9 +49,6 @@ class _HomeScreenState extends State<HomeScreen>
   late final AnimationController _fadeCtrl;
   late final Animation<double> _fade;
   late final Future<_HomeData> _dataFuture;
-
-  static _HomeData? _cache;
-  static DateTime? _cacheTime;
 
   // ── Lifecycle ──────────────────────────────────────────────────────────────
 
@@ -67,10 +72,10 @@ class _HomeScreenState extends State<HomeScreen>
 
   Future<_HomeData> _loadAll() async {
     final now = DateTime.now();
-    if (_cache != null &&
-        _cacheTime != null &&
-        now.difference(_cacheTime!).inSeconds < 30) {
-      return _cache!;
+    if (HomeScreen._cache != null &&
+        HomeScreen._cacheTime != null &&
+        now.difference(HomeScreen._cacheTime!).inSeconds < 30) {
+      return HomeScreen._cache!;
     }
     final results = await Future.wait<Object?>([
       obtenerPerfil().catchError((_) => null),
@@ -79,14 +84,14 @@ class _HomeScreenState extends State<HomeScreen>
           .catchError((_) => 0),
       PlanService.fetchActivePlan().catchError((_) => null),
     ]);
-    _cache = _HomeData(
+    HomeScreen._cache = _HomeData(
       profile: results[0] as Profile?,
       nextClass: results[1] as PilatesClass?,
       monthlyCount: (results[2] as int?) ?? 0,
       plan: results[3] as UserPlan?,
     );
-    _cacheTime = now;
-    return _cache!;
+    HomeScreen._cacheTime = now;
+    return HomeScreen._cache!;
   }
 
   // ── Build ──────────────────────────────────────────────────────────────────

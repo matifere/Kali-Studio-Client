@@ -28,10 +28,11 @@ class Profile {
 }
 
 String? _cachedInstitutionId;
+bool _institutionIdCached = false;
 Future<String?>? _institutionIdFuture;
 
 Future<String?> getInstitutionId() {
-  if (_cachedInstitutionId != null) return Future.value(_cachedInstitutionId);
+  if (_institutionIdCached) return Future.value(_cachedInstitutionId);
   _institutionIdFuture ??= _fetchInstitutionId();
   return _institutionIdFuture!;
 }
@@ -46,6 +47,7 @@ Future<String?> _fetchInstitutionId() async {
         .eq('id', userId)
         .maybeSingle();
     _cachedInstitutionId = data?['institution_id'] as String?;
+    _institutionIdCached = true;
     return _cachedInstitutionId;
   } catch (_) {
     return null;
@@ -56,6 +58,7 @@ Future<String?> _fetchInstitutionId() async {
 
 void clearProfileCache() {
   _cachedInstitutionId = null;
+  _institutionIdCached = false;
   _institutionIdFuture = null;
 }
 

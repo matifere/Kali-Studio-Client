@@ -56,7 +56,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudieron cargar las reservas: $e')),
+        const SnackBar(content: Text('No se pudieron cargar las reservas. Intentá de nuevo.')),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);

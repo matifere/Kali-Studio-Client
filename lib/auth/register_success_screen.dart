@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:kali_studio/auth/log_in.dart';
 import 'package:kali_studio/auth/register.dart';
 import 'package:kali_studio/screens/main_shell.dart';
+import 'package:kali_studio/supabase/studio_service.dart';
 import 'package:kali_studio/supabase/supabase_auth_service.dart';
 import 'package:kali_studio/theme/kali_theme.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -25,6 +26,7 @@ class RegisterSuccessScreen extends StatefulWidget {
 class _RegisterSuccessScreenState extends State<RegisterSuccessScreen> {
   final TextEditingController _notesController = TextEditingController();
   final Set<String> _selectedConditions = <String>{};
+  String? _studioName;
 
   static const List<_ConditionOption> _conditionOptions = [
     _ConditionOption(
@@ -53,6 +55,14 @@ class _RegisterSuccessScreenState extends State<RegisterSuccessScreen> {
     final parts =
         widget.fullName.trim().split(' ').where((part) => part.isNotEmpty);
     return parts.isEmpty ? 'vos' : parts.first;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    StudioService.fetchCurrentInstitution().then((studio) {
+      if (mounted && studio != null) setState(() => _studioName = studio.name);
+    });
   }
 
   @override
@@ -171,7 +181,7 @@ class _RegisterSuccessScreenState extends State<RegisterSuccessScreen> {
                             ),
                             Expanded(
                               child: Text(
-                                'Kali Studio',
+                                _studioName ?? '',
                                 textAlign: TextAlign.center,
                                 style: KaliText.headingItalic(primary, size: 24)
                                     .copyWith(fontStyle: FontStyle.italic),

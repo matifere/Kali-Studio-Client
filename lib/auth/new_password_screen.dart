@@ -25,8 +25,8 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
   }
 
   Future<void> _submit() async {
-    final pass = _passCtrl.text.trim();
-    final confirm = _confirmCtrl.text.trim();
+    final pass = _passCtrl.text;
+    final confirm = _confirmCtrl.text;
 
     if (pass.isEmpty || confirm.isEmpty) {
       _showSnack('Completá ambos campos.');

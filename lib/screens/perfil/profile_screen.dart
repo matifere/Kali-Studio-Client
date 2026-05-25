@@ -39,7 +39,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Theme.of(context); // subscribe for dark-mode rebuilds
     final email =
         Supabase.instance.client.auth.currentUser?.email ?? 'sin correo';
 
@@ -53,7 +52,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildTopBar(context),
               const SizedBox(height: 26),
               _buildProfileHeader(email),
               const SizedBox(height: 28),
@@ -125,15 +123,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildTopBar(BuildContext context) {
-    return const Row(
-      children: [
-        Spacer(),
-        SizedBox(width: 30),
-      ],
     );
   }
 

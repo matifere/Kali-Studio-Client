@@ -151,7 +151,7 @@ class _LogInState extends State<LogIn> {
 
   Future<void> _handleLogin() async {
     final email = _emailController.text.trim();
-    final password = _passController.text.trim();
+    final password = _passController.text;
 
     if (email.isEmpty || password.isEmpty) {
       _showMessage('Ingresa email y contraseña.');

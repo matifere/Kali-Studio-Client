@@ -79,7 +79,6 @@ class _BookClassScreenState extends State<BookClassScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Theme.of(context); // subscribe for dark-mode rebuilds
     return Scaffold(
       backgroundColor: _pageBackground,
       body: SafeArea(
@@ -633,7 +632,6 @@ class _BookConfirmButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final bg = filled ? KaliColors.espresso : Colors.transparent;
     final fg = filled ? KaliColors.background : KaliColors.espresso;
-    final border = filled ? KaliColors.espresso : KaliColors.espresso;
 
     return GestureDetector(
       onTap: onTap,
@@ -642,7 +640,7 @@ class _BookConfirmButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
           color: bg,
-          border: Border.all(color: border),
+          border: Border.all(color: KaliColors.espresso),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Text(

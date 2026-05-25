@@ -85,7 +85,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Theme.of(context); // subscribe for dark-mode rebuilds
     return Scaffold(
       backgroundColor: _pageBackground,
       body: SafeArea(
@@ -412,7 +411,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         return;
       }
 
-      final extension = mimeType.split('/').last;
       final dataUrl = 'data:$mimeType;base64,${base64Encode(bytes)}';
 
       if (!mounted) return;
@@ -524,8 +522,8 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
   }
 
   Future<void> _submit() async {
-    final newPass = _newPasswordCtrl.text.trim();
-    final confirm = _confirmPasswordCtrl.text.trim();
+    final newPass = _newPasswordCtrl.text;
+    final confirm = _confirmPasswordCtrl.text;
 
     if (newPass.length < 8) {
       setState(() => _error = 'La contraseña debe tener al menos 8 caracteres.');
@@ -557,7 +555,7 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
       );
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = 'No se pudo actualizar: $e');
+      setState(() => _error = 'No se pudo actualizar la contraseña. Intentá de nuevo.');
     } finally {
       if (mounted) setState(() => _saving = false);
     }
