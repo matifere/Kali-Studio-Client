@@ -21,15 +21,12 @@ serve(async (req) => {
   console.log('request:', req.method, req.url, 'origin:', req.headers.get('Origin'));
 
   if (req.method === 'OPTIONS') {
-    console.log('OPTIONS preflight - returning CORS headers');
     return new Response('ok', { headers: corsHeaders(req) });
   }
 
   try {
     const authHeader = req.headers.get('Authorization');
-    console.log('authHeader present:', !!authHeader);
     if (!authHeader) {
-      console.error('No auth header');
       return new Response(JSON.stringify({ error: 'No autenticado' }), {
         status: 401, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
       });
@@ -55,13 +52,11 @@ serve(async (req) => {
       });
     }
 
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile } = await supabase
       .from('profiles')
       .select('institution_id')
       .eq('id', user.id)
       .single();
-
-    console.log('profile:', JSON.stringify(profile), 'profileError:', profileError?.message);
 
     const { data: plan, error: planError } = await supabase
       .from('plans')
@@ -70,17 +65,13 @@ serve(async (req) => {
       .eq('is_active', true)
       .single();
 
-    console.log('plan:', JSON.stringify(plan), 'planError:', planError?.message);
-
     if (planError || !plan) {
-      console.error('Plan no encontrado, plan_id:', plan_id);
       return new Response(JSON.stringify({ error: 'Plan no encontrado' }), {
         status: 404, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
       });
     }
 
     if (profile?.institution_id && plan.institution_id !== profile.institution_id) {
-      console.error('Institution mismatch - profile:', profile.institution_id, 'plan:', plan.institution_id);
       return new Response(JSON.stringify({ error: 'Plan no disponible' }), {
         status: 403, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
       });
@@ -89,50 +80,49 @@ serve(async (req) => {
     const institutionId = plan.institution_id ?? profile?.institution_id;
     console.log('institutionId:', institutionId);
 
+    // ── Determine payment method ──────────────────────────────────────────────
     let mpAccessToken: string | null = null;
+    let transferAlias: string | null = null;
 
     if (institutionId) {
-      // 1. Try institution-specific MP token from vault
+      // 1. Try institution MP token from vault
       const { data: vaultToken, error: vaultError } = await supabase.rpc('get_institution_mp_token', {
         p_institution_id: institutionId,
       });
       console.log('vaultToken present:', !!vaultToken, 'vaultError:', vaultError?.message);
       mpAccessToken = vaultToken as string | null;
 
-      // 2. If no MP token, check institution alias (takes priority over global env fallback)
+      // 2. If no MP token, check institution alias
       if (!mpAccessToken) {
         const { data: inst } = await supabase
           .from('institutions')
           .select('payment_alias')
           .eq('id', institutionId)
           .maybeSingle();
-        console.log('payment_alias present:', !!inst?.payment_alias);
-        if (inst?.payment_alias) {
-          return new Response(JSON.stringify({ alias: inst.payment_alias }), {
-            status: 200, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
-          });
-        }
+        transferAlias = inst?.payment_alias ?? null;
+        console.log('payment_alias present:', !!transferAlias);
       }
     }
 
-    // 3. Fall back to global env MP token
-    if (!mpAccessToken) {
+    // 3. Fall back to global env MP token only if no alias configured
+    if (!mpAccessToken && !transferAlias) {
       mpAccessToken = Deno.env.get('MP_ACCESS_TOKEN') ?? null;
       console.log('fallback env token present:', !!mpAccessToken);
     }
 
-    if (!mpAccessToken) {
-      console.error('No MP token and no alias for institutionId:', institutionId);
+    if (!mpAccessToken && !transferAlias) {
+      console.error('No payment method found for institutionId:', institutionId);
       return new Response(JSON.stringify({ error: 'Institución sin configuración de pago' }), {
         status: 503, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
       });
     }
+
+    // ── Create pending subscription + payment (both paths) ───────────────────
     const toDate = (d: Date) => d.toISOString().substring(0, 10);
     const startDate = new Date();
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + 30);
 
-    // Create pending subscription
     const { data: subscription, error: subError } = await supabase
       .from('subscriptions')
       .insert({
@@ -152,7 +142,6 @@ serve(async (req) => {
       });
     }
 
-    // Create pending payment linked to subscription
     const { data: paymentRecord, error: paymentInsertError } = await supabase
       .from('payments')
       .insert({
@@ -176,6 +165,14 @@ serve(async (req) => {
 
     console.log('subscription:', subscription.id, 'payment:', paymentRecord.id);
 
+    // ── Alias / transfer path ─────────────────────────────────────────────────
+    if (transferAlias) {
+      return new Response(JSON.stringify({ alias: transferAlias }), {
+        status: 200, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
+      });
+    }
+
+    // ── MercadoPago path ──────────────────────────────────────────────────────
     const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
       headers: {
@@ -220,6 +217,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({ url: preference.init_point }), {
       status: 200, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
     });
+
   } catch (e) {
     console.error(e);
     return new Response(JSON.stringify({ error: 'Error interno' }), {
