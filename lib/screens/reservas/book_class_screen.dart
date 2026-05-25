@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:kali_studio/widgets/google_fonts_helper.dart';
 import '../../models/models.dart';
-import '../../services/push_notification_service.dart';
 import '../../supabase/booking_service.dart';
 import '../../supabase/waitlist_service.dart';
 import '../../theme/kali_theme.dart';
@@ -374,20 +373,12 @@ class _BookClassScreenState extends State<BookClassScreen> {
   }
 
   Future<void> _joinWaitlist(PilatesClass cls) async {
-    final granted = await PushNotificationService.requestPermission();
-    if (granted) {
-      final existing = await PushNotificationService.getExistingSubscription();
-      final subJson = existing ?? await PushNotificationService.subscribe();
-      if (subJson != null) await WaitlistService.savePushSubscription(subJson);
-    }
     final id = await WaitlistService.joinWaitlist(cls.id);
     if (!mounted) return;
     if (id != null) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(
-          granted
-              ? 'Te anotaste en la lista de espera. Te avisamos si se libera un cupo.'
-              : 'Estás en la lista de espera. Activá las notificaciones para recibir avisos.',
+          'Te anotaste en la lista de espera. Si se libera un lugar, te inscribimos automáticamente.',
           style: KaliText.body(KaliColors.clay),
         ),
         backgroundColor: KaliColors.espresso,
