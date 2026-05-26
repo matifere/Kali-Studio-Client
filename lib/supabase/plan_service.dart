@@ -28,10 +28,9 @@ class PlanService {
           .select('id, name, description, price, currency, max_reservations_per_week')
           .eq('is_active', true);
       if (institutionId != null) query = query.eq('institution_id', institutionId);
-      final data = await query.order('price', ascending: true);
-      return (data as List)
-          .map((e) => Plan.fromMap(e as Map<String, dynamic>))
-          .toList();
+      final Object? raw = await query.order('price', ascending: true);
+      if (raw is! List) return [];
+      return raw.map((e) => Plan.fromMap(e as Map<String, dynamic>)).toList();
     } catch (e) {
       debugPrint('PlanService.fetchAvailablePlans error: $e');
       return [];

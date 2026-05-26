@@ -57,12 +57,13 @@ class StudioService {
 
   static Future<List<Studio>> fetchStudios() async {
     try {
-      final data = await _supabase
+      final Object? raw = await _supabase
           .from('institutions')
           .select('id, name, slug, address, phone, logo_url')
           .eq('is_active', true)
           .order('name');
-      return ((data as List?) ?? [])
+      if (raw is! List) return [];
+      return raw
           .map((e) => Studio.fromMap(e as Map<String, dynamic>))
           .toList();
     } catch (e) {

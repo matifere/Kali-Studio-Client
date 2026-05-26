@@ -43,9 +43,9 @@ class NotificationService {
           .order('created_at', ascending: false)
           .limit(50);
 
-      return (data as List)
-          .map((e) => AppNotification.fromMap(e as Map<String, dynamic>))
-          .toList();
+      final Object? raw = data;
+      if (raw is! List) return [];
+      return raw.map((e) => AppNotification.fromMap(e as Map<String, dynamic>)).toList();
     } catch (e) {
       debugPrint('NotificationService.fetchNotifications error: $e');
       return [];
