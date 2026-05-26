@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 // import '../supabase/notification_service.dart';
 import '../supabase/studio_service.dart';
 import '../theme/kali_theme.dart';
+import '../theme/theme_controller.dart';
 import '../utils/responsive.dart';
 // import 'notifications_screen.dart';
 import 'reservas/book_class_screen.dart';
@@ -145,6 +146,13 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: ThemeController.instance,
+      builder: (context, _) => _buildShell(context),
+    );
+  }
+
+  Widget _buildShell(BuildContext context) {
     final isDesktop = Responsive.isDesktop(context);
 
     if (isDesktop) {
