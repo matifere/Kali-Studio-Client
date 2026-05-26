@@ -63,7 +63,7 @@ class NotificationService {
           .eq('user_id', userId)
           .eq('is_read', false);
 
-      return (data as List).length;
+      return ((data as List?) ?? []).length;
     } catch (e) {
       debugPrint('NotificationService.fetchUnreadCount error: $e');
       return 0;

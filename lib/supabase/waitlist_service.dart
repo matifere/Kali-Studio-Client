@@ -52,7 +52,7 @@ class WaitlistService {
           .inFilter('session_id', sessionIds);
 
       return {
-        for (final row in (data as List))
+        for (final row in ((data as List?) ?? []))
           row['session_id'] as String: row['id'] as String,
       };
     } catch (e) {

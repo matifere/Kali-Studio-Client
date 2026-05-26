@@ -62,7 +62,7 @@ class StudioService {
           .select('id, name, slug, address, phone, logo_url')
           .eq('is_active', true)
           .order('name');
-      return (data as List)
+      return ((data as List?) ?? [])
           .map((e) => Studio.fromMap(e as Map<String, dynamic>))
           .toList();
     } catch (e) {

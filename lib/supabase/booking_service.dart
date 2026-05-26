@@ -27,7 +27,7 @@ class BookingService {
       if (institutionId != null) query = query.eq('institution_id', institutionId);
       final data = await query.order('start_time', ascending: true);
 
-      final sessions = (data as List)
+      final sessions = ((data as List?) ?? [])
           .map((row) => _fromSessionRow(row as Map<String, dynamic>, userId))
           .toList();
 
@@ -99,7 +99,7 @@ class BookingService {
       if (institutionId != null) query = query.eq('class_sessions.institution_id', institutionId);
       final data = await query.limit(1);
 
-      final list = (data as List)
+      final list = ((data as List?) ?? [])
           .map((row) => _fromReservationRow(row as Map<String, dynamic>, userId))
           .toList()
         ..sort((a, b) => a.sessionDate!.compareTo(b.sessionDate!));
@@ -133,7 +133,7 @@ class BookingService {
       final today = DateTime.now();
       final todayDate = DateTime(today.year, today.month, today.day);
 
-      final list = (data as List)
+      final list = ((data as List?) ?? [])
           .where((row) => (row as Map<String, dynamic>)['class_sessions'] != null)
           .map((row) =>
               _fromReservationRow(row as Map<String, dynamic>, userId))
@@ -167,7 +167,7 @@ class BookingService {
         },
       );
 
-      return (data as List)
+      return ((data as List?) ?? [])
           .map((d) => (d as Map<String, dynamic>)['date'] as String)
           .toSet();
     } catch (e) {
@@ -275,7 +275,7 @@ class BookingService {
       if (institutionId != null) query = query.eq('class_sessions.institution_id', institutionId);
       final data = await query;
 
-      final list = (data as List)
+      final list = ((data as List?) ?? [])
           .where((row) {
             final session = (row as Map<String, dynamic>)['class_sessions'];
             if (session == null) return false;
@@ -310,7 +310,7 @@ class BookingService {
           .eq('status', 'confirmed')
           .gte('class_sessions.date', _dateStr(first))
           .lte('class_sessions.date', _dateStr(last));
-      return (data as List).length;
+      return ((data as List?) ?? []).length;
     } catch (e) {
       debugPrint('BookingService.fetchMonthlyReservationCount error: $e');
       return 0;
