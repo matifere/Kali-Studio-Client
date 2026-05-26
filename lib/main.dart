@@ -16,8 +16,14 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('es');
 
-  const url = String.fromEnvironment('SUPABASE_URL');
-  const anon = String.fromEnvironment('SUPABASE_ANON');
+  const url = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: 'https://tmfcnvtjzmtpqhzvfxos.supabase.co',
+  );
+  const anon = String.fromEnvironment(
+    'SUPABASE_ANON',
+    defaultValue: 'sb_publishable_TkebjBTlimQS7Uu4HWE-tQ_v3ylhC_b',
+  );
 
   await ThemeController.instance.load();
   await Supabase.initialize(url: url, anonKey: anon);
