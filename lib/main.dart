@@ -7,6 +7,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:kali_studio/auth/register.dart';
 import 'package:kali_studio/screens/main_shell.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'supabase/profile_manager.dart';
 import 'supabase/supabase_auth_service.dart';
 import 'theme/kali_theme.dart';
 import 'theme/theme_controller.dart';
@@ -57,20 +58,44 @@ class _AuthGate extends StatefulWidget {
 
 class _AuthGateState extends State<_AuthGate> {
   bool _isPasswordRecovery = false;
+  bool _checkingProfile = false;
   late final StreamSubscription<AuthState> _authSub;
 
   @override
   void initState() {
     super.initState();
+    _checkProfile();
     _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((state) {
       if (!mounted) return;
       if (state.event == AuthChangeEvent.passwordRecovery) {
         setState(() => _isPasswordRecovery = true);
+      } else if (state.event == AuthChangeEvent.signedIn) {
+        _checkProfile();
       } else if (state.event == AuthChangeEvent.userUpdated ||
           state.event == AuthChangeEvent.signedOut) {
         setState(() => _isPasswordRecovery = false);
       }
     });
+  }
+
+  Future<void> _checkProfile() async {
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null) return;
+    setState(() => _checkingProfile = true);
+    final profile = await obtenerPerfil();
+    if (!mounted) return;
+    if (profile == null) {
+      await Supabase.instance.client.auth.signOut();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Tu cuenta no está habilitada. Contactá al estudio.'),
+            duration: Duration(seconds: 5),
+          ),
+        );
+      }
+    }
+    if (mounted) setState(() => _checkingProfile = false);
   }
 
   @override
@@ -96,6 +121,12 @@ class _AuthGateState extends State<_AuthGate> {
 
         if (_isPasswordRecovery) {
           return const NewPasswordScreen();
+        }
+
+        if (_checkingProfile) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
 
         final Session? session = Supabase.instance.client.auth.currentSession;
