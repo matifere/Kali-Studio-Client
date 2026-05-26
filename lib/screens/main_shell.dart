@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 // import '../supabase/notification_service.dart';
 import '../supabase/studio_service.dart';
 import '../theme/kali_theme.dart';
-import '../theme/theme_controller.dart';
 import '../utils/responsive.dart';
 // import 'notifications_screen.dart';
 import 'reservas/book_class_screen.dart';
@@ -104,13 +103,13 @@ class _MainShellState extends State<MainShell> {
           onGoToPlanes: () => setState(() => _currentIndex = 3),
         );
       case 1:
-        return const BookingDetailScreen();
+        return BookingDetailScreen();
       case 2:
-        return const BookClassScreen();
+        return BookClassScreen();
       case 3:
-        return const PlanesScreen();
+        return PlanesScreen();
       case 4:
-        return const ProfileScreen();
+        return ProfileScreen();
       default:
         return const SizedBox.shrink();
     }
@@ -146,10 +145,7 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: ThemeController.instance,
-      builder: (context, _) => _buildShell(context),
-    );
+    return _buildShell(context);
   }
 
   Widget _buildShell(BuildContext context) {
