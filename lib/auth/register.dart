@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:kali_studio/auth/log_in.dart';
+import 'package:kali_studio/auth/log_in.dart' show LogIn, UpperLogo;
 import 'package:kali_studio/supabase/studio_service.dart';
 import 'package:kali_studio/supabase/supabase_auth_service.dart';
 import 'package:kali_studio/theme/kali_text_field.dart';
@@ -124,6 +124,8 @@ class _RegisterState extends State<Register> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 24),
+          const Center(child: UpperLogo()),
+          const SizedBox(height: 20),
           Text(
             'Elegí tu estudio',
             style: KaliText.loginDisplay(KaliColors.espresso),
@@ -293,6 +295,7 @@ class _RegisterState extends State<Register> {
         spacing: 16,
         children: [
           const SizedBox(height: 8),
+          const UpperLogo(),
           Row(
             children: [
               IconButton(
