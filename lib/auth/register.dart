@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kali_studio/auth/log_in.dart' show LogIn, UpperLogo;
+import 'package:kali_studio/auth/register_success_screen.dart';
 import 'package:kali_studio/supabase/studio_service.dart';
 import 'package:kali_studio/supabase/supabase_auth_service.dart';
 import 'package:kali_studio/theme/kali_text_field.dart';
@@ -414,6 +415,20 @@ class _RegisterState extends State<Register> {
         password: password,
         studioId: _selectedStudio!.id,
       );
+      if (!mounted) return;
+      final pending = SupabaseAuthService.pendingRegistration;
+      if (pending != null) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (_) => RegisterSuccessScreen(
+              fullName: pending.fullName,
+              email: pending.email,
+              requiresEmailConfirmation: pending.requiresEmailConfirmation,
+            ),
+          ),
+          (route) => false,
+        );
+      }
     } on AuthException catch (error) {
       if (!mounted) return;
       _showMessage(humanizeAuthError(error.message,
