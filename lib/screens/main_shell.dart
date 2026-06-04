@@ -183,7 +183,7 @@ class _MainShellState extends State<MainShell> {
           ),
         ),
         title: Text(
-            _navItems[_currentIndex].label,
+            'argrity',
             style: KaliText.body(KaliColors.espresso, size: 15, weight: FontWeight.w600),
           ),
         // actions: [_bellIcon()],

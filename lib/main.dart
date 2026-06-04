@@ -43,7 +43,7 @@ class KaliApp extends StatelessWidget {
       animation: ThemeController.instance,
       builder: (context, _) {
         return MaterialApp(
-          title: 'Kali Studio',
+          title: 'argrity',
           theme: KaliTheme.theme,
           darkTheme: KaliTheme.darkTheme,
           themeMode: ThemeController.instance.themeMode,
