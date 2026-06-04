@@ -102,14 +102,20 @@ class _MainShellState extends State<MainShell> {
           onGoToReservas: () => setState(() => _currentIndex = 1),
           onGoToPlanes: () => setState(() => _currentIndex = 3),
         );
+      // const omitido intencionalmente: causa "Trying to render a disposed
+      // EngineFlutterView" en Flutter web al cambiar de tema (ver commit 430c155)
       case 1:
-        return const BookingDetailScreen();
+        // ignore: prefer_const_constructors
+        return BookingDetailScreen();
       case 2:
-        return const BookClassScreen();
+        // ignore: prefer_const_constructors
+        return BookClassScreen();
       case 3:
-        return const PlanesScreen();
+        // ignore: prefer_const_constructors
+        return PlanesScreen();
       case 4:
-        return const ProfileScreen();
+        // ignore: prefer_const_constructors
+        return ProfileScreen();
       default:
         return const SizedBox.shrink();
     }
@@ -247,7 +253,7 @@ class _MainShellState extends State<MainShell> {
                   height: 200,
                   fit: BoxFit.contain,
                   alignment: Alignment.center,
-                  errorBuilder: (_, __, ___) => _assetLogo(isDark),
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                 );
                 return ClipRect(
                   child: Align(
@@ -275,52 +281,12 @@ class _MainShellState extends State<MainShell> {
                   ),
                 );
               }
-              return _assetLogo(isDark);
+              return const SizedBox.shrink();
             },
           ),
         ),
         Divider(color: KaliColors.sand2, thickness: 1, height: 1),
       ],
-    );
-  }
-
-  Widget _assetLogo(bool isDark) {
-    final image = Image.asset(
-      'assets/images/logo.png',
-      width: double.infinity,
-      height: 200,
-      fit: BoxFit.contain,
-      alignment: Alignment.center,
-    );
-    if (isDark) {
-      return ClipRect(
-        child: Align(
-          alignment: Alignment.topCenter,
-          heightFactor: 0.82,
-          child: ColorFiltered(
-            colorFilter: ColorFilter.mode(KaliColors.warmWhite, BlendMode.screen),
-            child: ColorFiltered(
-              colorFilter: const ColorFilter.matrix(<double>[
-                -20, 0, 0, 0, 4720,
-                  0,-20, 0, 0, 4720,
-                  0,  0,-20, 0, 4720,
-                  0,  0,  0, 1,    0,
-              ]),
-              child: image,
-            ),
-          ),
-        ),
-      );
-    }
-    return ClipRect(
-      child: Align(
-        alignment: Alignment.topCenter,
-        heightFactor: 0.82,
-        child: ColorFiltered(
-          colorFilter: ColorFilter.mode(KaliColors.warmWhite, BlendMode.multiply),
-          child: image,
-        ),
-      ),
     );
   }
 

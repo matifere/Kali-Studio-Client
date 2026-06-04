@@ -8,6 +8,7 @@ import 'package:kali_studio/auth/register.dart';
 import 'package:kali_studio/screens/main_shell.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'supabase/profile_manager.dart';
+import 'supabase/studio_service.dart';
 import 'supabase/supabase_auth_service.dart';
 import 'theme/kali_theme.dart';
 import 'theme/theme_controller.dart';
@@ -76,9 +77,18 @@ class _AuthGateState extends State<_AuthGate> {
       if (state.event == AuthChangeEvent.passwordRecovery) {
         setState(() => _isPasswordRecovery = true);
       } else if (state.event == AuthChangeEvent.signedIn) {
-        _checkProfile();
+        clearProfileCache();
+        StudioService.clearCache();
+        // During registration the profile is created by signUp() right after
+        // the session is established. Calling _checkProfile() here would race
+        // against that upsert, find no profile yet, and sign the user out.
+        if (SupabaseAuthService.pendingRegistration == null) {
+          _checkProfile();
+        }
       } else if (state.event == AuthChangeEvent.userUpdated ||
           state.event == AuthChangeEvent.signedOut) {
+        clearProfileCache();
+        StudioService.clearCache();
         setState(() => _isPasswordRecovery = false);
       }
     });

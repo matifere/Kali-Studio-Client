@@ -17,10 +17,10 @@ void main() {
       );
     });
 
-    test('strips AuthException wrapper and statusCode suffix', () {
+    test('strips AuthException wrapper and returns humanized login error', () {
       const raw =
           'AuthException(message: Invalid login credentials, statusCode: 400, errorCode: invalid_credentials)';
-      expect(humanizeAuthError(raw), 'Invalid login credentials');
+      expect(humanizeAuthError(raw), 'Email o contraseña incorrectos.');
     });
 
     test('strips Exception: prefix', () {
@@ -37,10 +37,13 @@ void main() {
       );
     });
 
-    test('strips AuthException with email-not-confirmed message', () {
+    test('humanizes email-not-confirmed to Spanish message', () {
       const raw =
           'AuthException(message: Email not confirmed, statusCode: 401, errorCode: email_not_confirmed)';
-      expect(humanizeAuthError(raw), 'Email not confirmed');
+      expect(
+        humanizeAuthError(raw),
+        'Necesitás confirmar tu email antes de ingresar. Revisá tu bandeja de entrada.',
+      );
     });
 
     test('returns fallback for whitespace-only input', () {
