@@ -320,23 +320,11 @@ class UpperLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: KaliColors.espresso,
-          ),
-        ),
-        Icon(
-          Icons.self_improvement,
-          color: KaliColors.background,
-          size: 25,
-        )
-      ],
+    return Image.asset(
+      'assets/images/argrity_logo.png',
+      width: 90,
+      height: 90,
+      fit: BoxFit.contain,
     );
   }
 }

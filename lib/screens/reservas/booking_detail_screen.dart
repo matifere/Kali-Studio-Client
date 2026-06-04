@@ -65,7 +65,6 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Theme.of(context); 
     final hasReservations = _reservations.isNotEmpty;
     final heroClass = hasReservations ? _reservations.first : null;
     final detailsClass = _selectedReservation ?? heroClass;

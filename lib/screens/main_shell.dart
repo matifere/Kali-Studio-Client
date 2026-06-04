@@ -103,13 +103,13 @@ class _MainShellState extends State<MainShell> {
           onGoToPlanes: () => setState(() => _currentIndex = 3),
         );
       case 1:
-        return BookingDetailScreen();
+        return const BookingDetailScreen();
       case 2:
-        return BookClassScreen();
+        return const BookClassScreen();
       case 3:
-        return PlanesScreen();
+        return const PlanesScreen();
       case 4:
-        return ProfileScreen();
+        return const ProfileScreen();
       default:
         return const SizedBox.shrink();
     }

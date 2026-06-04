@@ -57,7 +57,7 @@ class StudioService {
 
   static Future<List<Studio>> fetchStudios() async {
     try {
-      final Object? raw = await _supabase
+      final Object raw = await _supabase
           .from('institutions')
           .select('id, name, slug, address, phone, logo_url')
           .eq('is_active', true)

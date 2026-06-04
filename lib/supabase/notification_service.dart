@@ -43,7 +43,7 @@ class NotificationService {
           .order('created_at', ascending: false)
           .limit(50);
 
-      final Object? raw = data;
+      final Object raw = data;
       if (raw is! List) return [];
       return raw.map((e) => AppNotification.fromMap(e as Map<String, dynamic>)).toList();
     } catch (e) {
