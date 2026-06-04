@@ -1,11 +1,11 @@
 {
-    "name": "argrity",
-    "short_name": "argrity",
+    "name": "Argity",
+    "short_name": "Argity",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#F5EFE8",
     "theme_color": "#2C1F14",
-    "description": "argrity — gestion de turnos y clases",
+    "description": "Argity — gestion de turnos y clases",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
