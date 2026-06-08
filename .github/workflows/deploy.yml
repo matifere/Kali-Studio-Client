@@ -1,4 +1,4 @@
-name: Build & Deploy to Firebase Hosting
+name: Build & Deploy to Netlify
 
 on:
   workflow_dispatch: # solo manual, Firebase project fue eliminado — hosting migrado a Netlify
@@ -32,9 +32,8 @@ jobs:
             "--dart-define=SUPABASE_ANON=$ANON" \
             "--dart-define=VAPID_PUBLIC_KEY=$VAPID"
 
-      - uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_CHIMPACE_TURNOS }}
-          channelId: live
-          projectId: chimpace-turnos
+      - name: Deploy to Netlify
+        run: npx netlify-cli deploy --prod --dir=build/web --message "Deploy from GitHub Actions"
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: "c3722abe-663d-4393-ba38-a1a4204a8929"
