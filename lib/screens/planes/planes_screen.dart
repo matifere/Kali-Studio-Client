@@ -634,25 +634,31 @@ class _ActivatePlanSheet extends StatefulWidget {
 }
 
 class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
+  bool _loadingMethod = true; // fetching payment method on open
   bool _loading = false;
   bool _awaitingVerification = false;
   String? _alias;
+  String? _mpUrl;
 
-  Future<void> _pay() async {
-    setState(() => _loading = true);
+  @override
+  void initState() {
+    super.initState();
+    _fetchPaymentMethod();
+  }
+
+  Future<void> _fetchPaymentMethod() async {
     try {
       final preference = await PlanService.createPaymentPreference(widget.plan.id);
       if (!mounted) return;
       switch (preference) {
         case MercadoPagoPayment(:final url):
-          setState(() { _loading = false; _awaitingVerification = true; });
-          launchUrl(Uri.parse(url), webOnlyWindowName: '_blank');
+          setState(() { _loadingMethod = false; _mpUrl = url; });
         case TransferPayment(:final alias):
-          setState(() { _loading = false; _alias = alias; });
+          setState(() { _loadingMethod = false; _alias = alias; });
       }
     } catch (e) {
       if (!mounted) return;
-      setState(() => _loading = false);
+      setState(() => _loadingMethod = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(humanizeAuthError(e.toString())),
@@ -662,6 +668,12 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
         ),
       );
     }
+  }
+
+  void _openMp() {
+    if (_mpUrl == null) return;
+    setState(() => _awaitingVerification = true);
+    launchUrl(Uri.parse(_mpUrl!), webOnlyWindowName: '_blank');
   }
 
   Future<void> _verify() async {
@@ -698,6 +710,12 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
       if (!mounted) return;
       setState(() => _loading = false);
     }
+  }
+
+  String get _infoText {
+    if (_alias != null) return 'Hacé la transferencia al alias indicado y avisale a tu instructor para activar tu plan.';
+    if (_awaitingVerification) return 'Una vez aprobado el pago, tu plan se activa automáticamente.';
+    return 'Serás redirigido a MercadoPago para completar el pago de forma segura.';
   }
 
   @override
@@ -772,34 +790,38 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
               ),
               const SizedBox(height: 12),
             ],
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: KaliColors.sand,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.lock_outline_rounded,
-                      size: 16, color: KaliColors.clayDark),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      _alias != null
-                          ? 'Hacé la transferencia al alias indicado y avisale a tu instructor para activar tu plan.'
-                          : _awaitingVerification
-                              ? 'Una vez aprobado el pago, tu plan se activa automáticamente.'
-                              : 'Serás redirigido a MercadoPago para completar el pago de forma segura.',
-                      style: KaliText.body(KaliColors.clayDark, size: 13)
-                          .copyWith(height: 1.5),
+            if (!_loadingMethod)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: KaliColors.sand,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.lock_outline_rounded,
+                        size: 16, color: KaliColors.clayDark),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        _infoText,
+                        style: KaliText.body(KaliColors.clayDark, size: 13)
+                            .copyWith(height: 1.5),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
             const SizedBox(height: 24),
-            if (_alias != null) ...[
+            if (_loadingMethod)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            else if (_alias != null) ...[
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -859,7 +881,7 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
                               strokeWidth: 2, color: Colors.white),
                         )
                       : Text(
-                          'Ya pagué, verificar',
+                          'Ya transferí, verificar',
                           style: KaliText.body(KaliColors.sand,
                               size: 14, weight: FontWeight.w700),
                         ),
@@ -869,33 +891,26 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: _loading ? null : _pay,
+                  onPressed: _loading ? null : _openMp,
                   style: FilledButton.styleFrom(
                     backgroundColor: KaliColors.espresso,
                     padding: const EdgeInsets.symmetric(vertical: 18),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16)),
                   ),
-                  child: _loading
-                      ? const SizedBox(
-                          height: 18,
-                          width: 18,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white),
-                        )
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.open_in_new_rounded,
-                                size: 16, color: Colors.white),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Continuar con el pago',
-                              style: KaliText.body(KaliColors.sand,
-                                  size: 14, weight: FontWeight.w700),
-                            ),
-                          ],
-                        ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.open_in_new_rounded,
+                          size: 16, color: Colors.white),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Continuar con el pago',
+                        style: KaliText.body(KaliColors.sand,
+                            size: 14, weight: FontWeight.w700),
+                      ),
+                    ],
+                  ),
                 ),
               )
             else

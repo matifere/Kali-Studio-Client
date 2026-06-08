@@ -82,7 +82,7 @@ BEGIN
   BEGIN
     v_session_id := gen_random_uuid();
 
-    INSERT INTO class_sessions (id, institution_id, schedule_template_id, date, start_time, end_time, capacity, status)
+    INSERT INTO class_sessions (id, institution_id, template_id, date, start_time, end_time, capacity, status)
     VALUES (v_session_id, v_inst_id, v_tmpl_id, v_class_date, '10:00', '11:00', 1, 'scheduled');
 
     INSERT INTO reservations (user_id, session_id, status)
@@ -134,7 +134,7 @@ BEGIN
   BEGIN
     v_session_id := gen_random_uuid();
 
-    INSERT INTO class_sessions (id, institution_id, schedule_template_id, date, start_time, end_time, capacity, status)
+    INSERT INTO class_sessions (id, institution_id, template_id, date, start_time, end_time, capacity, status)
     VALUES (v_session_id, v_inst_id, v_tmpl_id, v_class_date, '10:00', '11:00', 1, 'scheduled');
 
     INSERT INTO reservations (user_id, session_id, status)
@@ -191,7 +191,7 @@ BEGIN
       v_extra_s1 UUID := gen_random_uuid();
       v_extra_s2 UUID := gen_random_uuid();
     BEGIN
-      INSERT INTO class_sessions (id, institution_id, schedule_template_id, date, start_time, end_time, capacity, status)
+      INSERT INTO class_sessions (id, institution_id, template_id, date, start_time, end_time, capacity, status)
       VALUES
         (v_session_id, v_inst_id, v_tmpl_id, v_class_date,        '10:00', '11:00', 1, 'scheduled'),
         (v_extra_s1,   v_inst_id, v_tmpl_id, v_week_start,         '08:00', '09:00', 5, 'scheduled'),
@@ -252,7 +252,7 @@ BEGIN
       v_extra_s1 UUID := gen_random_uuid();
       v_extra_s2 UUID := gen_random_uuid();
     BEGIN
-      INSERT INTO class_sessions (id, institution_id, schedule_template_id, date, start_time, end_time, capacity, status)
+      INSERT INTO class_sessions (id, institution_id, template_id, date, start_time, end_time, capacity, status)
       VALUES
         (v_session_id, v_inst_id, v_tmpl_id, v_class_date,    '10:00', '11:00', 1, 'scheduled'),
         (v_extra_s1,   v_inst_id, v_tmpl_id, v_week_start,     '08:00', '09:00', 5, 'scheduled'),
@@ -327,12 +327,12 @@ BEGIN
       v_extra_id UUID;
       v_day_offset INT := 0;
     BEGIN
-      INSERT INTO class_sessions (id, institution_id, schedule_template_id, date, start_time, end_time, capacity, status)
+      INSERT INTO class_sessions (id, institution_id, template_id, date, start_time, end_time, capacity, status)
       VALUES (v_session_id, v_inst_id, v_tmpl_id, v_class_date, '10:00', '11:00', 1, 'scheduled');
 
       -- Crear 10 sesiones extra en la misma semana
       FOREACH v_extra_id IN ARRAY v_extra_ids LOOP
-        INSERT INTO class_sessions (id, institution_id, schedule_template_id, date, start_time, end_time, capacity, status)
+        INSERT INTO class_sessions (id, institution_id, template_id, date, start_time, end_time, capacity, status)
         VALUES (v_extra_id, v_inst_id, v_tmpl_id,
                 v_week_start + (v_day_offset % 7),
                 '08:00', '09:00', 20, 'scheduled');
@@ -387,7 +387,7 @@ BEGIN
   BEGIN
     v_session_id := gen_random_uuid();
 
-    INSERT INTO class_sessions (id, institution_id, schedule_template_id, date, start_time, end_time, capacity, status)
+    INSERT INTO class_sessions (id, institution_id, template_id, date, start_time, end_time, capacity, status)
     VALUES (v_session_id, v_inst_id, v_tmpl_id, v_class_date, '10:00', '11:00', 1, 'scheduled');
 
     INSERT INTO reservations (user_id, session_id, status)
@@ -422,7 +422,7 @@ BEGIN
   BEGIN
     v_session_id := gen_random_uuid();
 
-    INSERT INTO class_sessions (id, institution_id, schedule_template_id, date, start_time, end_time, capacity, status)
+    INSERT INTO class_sessions (id, institution_id, template_id, date, start_time, end_time, capacity, status)
     VALUES (v_session_id, v_inst_id, v_tmpl_id, v_class_date, '10:00', '11:00', 2, 'scheduled');
 
     -- Reserva ya cancelada previamente (OLD.status = 'cancelled')

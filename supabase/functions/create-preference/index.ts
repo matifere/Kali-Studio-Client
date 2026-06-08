@@ -104,12 +104,6 @@ serve(async (req) => {
       }
     }
 
-    // 3. Fall back to global env MP token only if no alias configured
-    if (!mpAccessToken && !transferAlias) {
-      mpAccessToken = Deno.env.get('MP_ACCESS_TOKEN') ?? null;
-      console.log('fallback env token present:', !!mpAccessToken);
-    }
-
     if (!mpAccessToken && !transferAlias) {
       console.error('No payment method found for institutionId:', institutionId);
       return new Response(JSON.stringify({ error: 'Institución sin configuración de pago' }), {
