@@ -1,6 +1,4 @@
-[build]
-  command   = "flutter build web --release --dart-define=SUPABASE_URL=$SUPABASE_URL --dart-define=SUPABASE_ANON=$SUPABASE_ANON --dart-define=VAPID_PUBLIC_KEY=$VAPID_PUBLIC_KEY"
-  publish   = "build/web"
-
-[build.environment]
-  FLUTTER_VERSION = "3.41.9"
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
