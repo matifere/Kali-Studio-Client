@@ -661,7 +661,10 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
       setState(() => _loadingMethod = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(humanizeAuthError(e.toString())),
+          content: Text(humanizeError(
+            e,
+            fallback: 'No pudimos iniciar el pago. Intentá de nuevo.',
+          )),
           backgroundColor: KaliColors.espresso,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

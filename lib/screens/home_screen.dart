@@ -109,6 +109,9 @@ class _HomeScreenState extends State<HomeScreen>
               future: _dataFuture,
               builder: (context, snapshot) {
                 final data = snapshot.data;
+                // mientras carga mostramos placeholders, no "Sin plan activo"
+                final isLoading =
+                    snapshot.connectionState == ConnectionState.waiting;
                 return SingleChildScrollView(
                   padding: const EdgeInsets.only(bottom: 104),
                   child: Column(
@@ -122,21 +125,27 @@ class _HomeScreenState extends State<HomeScreen>
                           children: [
                             _sectionLabel('Tu próxima clase'),
                             const SizedBox(height: 14),
-                            data?.nextClass != null
-                                ? _buildNextClassCard(data!.nextClass!)
-                                : _buildEmptyCard(
-                                    title: 'Sin próxima clase',
-                                    subtitle: 'Todavía no tenés clases reservadas.',
-                                  ),
+                            if (isLoading)
+                              _buildLoadingCard()
+                            else if (data?.nextClass != null)
+                              _buildNextClassCard(data!.nextClass!)
+                            else
+                              _buildEmptyCard(
+                                title: 'Sin próxima clase',
+                                subtitle: 'Todavía no tenés clases reservadas.',
+                              ),
                             const SizedBox(height: 28),
                             _sectionLabel('Tu plan'),
                             const SizedBox(height: 14),
-                            data?.plan != null
-                                ? _buildPlanCard(data!.plan!)
-                                : _buildEmptyCard(
-                                    title: 'Sin plan activo',
-                                    subtitle: 'Todavía no tenés un plan activo.',
-                                  ),
+                            if (isLoading)
+                              _buildLoadingCard()
+                            else if (data?.plan != null)
+                              _buildPlanCard(data!.plan!)
+                            else
+                              _buildEmptyCard(
+                                title: 'Sin plan activo',
+                                subtitle: 'Todavía no tenés un plan activo.',
+                              ),
                           ],
                         ),
                       ),
@@ -246,8 +255,10 @@ class _HomeScreenState extends State<HomeScreen>
                   KaliColors.warmWhite.withValues(alpha: 0.65), size: 14)),
           const SizedBox(height: 22),
           Row(children: [
-            _infoPill(cls.instructor.split(' ').first),
-            const SizedBox(width: 8),
+            if (cls.instructor.isNotEmpty) ...[
+              _infoPill(cls.instructor.split(' ').first),
+              const SizedBox(width: 8),
+            ],
             _infoPill('${cls.durationMin} min'),
           ]),
           const SizedBox(height: 14),
@@ -281,14 +292,25 @@ class _HomeScreenState extends State<HomeScreen>
           const SizedBox(height: 22),
           Row(children: [
             _infoPill(daysLabel),
-            if (plan.maxReservations != null) ...[
+            if (plan.weeklyClasses != null) ...[
               const SizedBox(width: 8),
-              _infoPill('${plan.maxReservations} clases'),
+              _infoPill('${plan.weeklyClasses} cl/sem'),
             ],
           ]),
           const SizedBox(height: 14),
           _ctaButton(label: 'Ver plan', onTap: widget.onGoToPlanes),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingCard() {
+    return Container(
+      width: double.infinity,
+      height: 140,
+      decoration: BoxDecoration(
+        color: KaliColors.sand,
+        borderRadius: BorderRadius.circular(32),
       ),
     );
   }

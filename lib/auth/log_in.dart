@@ -224,7 +224,10 @@ class _ResetPasswordSheetState extends State<_ResetPasswordSheet> {
     if (email.isEmpty) return;
     setState(() => _loading = true);
     try {
-      await Supabase.instance.client.auth.resetPasswordForEmail(email);
+      await Supabase.instance.client.auth.resetPasswordForEmail(
+        email,
+        redirectTo: 'https://turnos.argity.com',
+      );
       if (!mounted) return;
       setState(() { _loading = false; _sent = true; });
     } catch (e) {

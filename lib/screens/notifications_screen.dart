@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../supabase/notification_service.dart';
 import '../theme/kali_theme.dart';
+import '../widgets/web_page_wrapper.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -42,7 +43,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           child: Divider(color: KaliColors.sand2, thickness: 1, height: 1),
         ),
       ),
-      body: FutureBuilder<List<AppNotification>>(
+      body: WebPageWrapper(
+        child: FutureBuilder<List<AppNotification>>(
         future: _future,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -79,6 +81,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             },
           );
         },
+        ),
       ),
     );
   }

@@ -82,6 +82,15 @@ class UserPlan {
 }
 
 // ─── Modelo: Clase de pilates ─────────────────────────────────────────────────
+
+/// Acción principal que la tarjeta de una clase ofrece al usuario.
+///
+/// La promoción desde la lista de espera es automática (trigger en la BD):
+/// al liberarse un cupo se inscribe al primero en orden de llegada que tenga
+/// plan activo y no supere su límite semanal. Por eso el cliente solo ofrece
+/// anotarse / salir de la lista; nunca "reservar desde la espera".
+enum ClassCardAction { book, joinWaitlist, leaveWaitlist, booked }
+
 class PilatesClass {
   final String id;
   final String name;
@@ -121,5 +130,22 @@ class PilatesClass {
     this.waitlistId,
   });
 
-  int get availableSpots => totalSpots - takenSpots;
+  int get availableSpots {
+    final free = totalSpots - takenSpots;
+    return free < 0 ? 0 : free;
+  }
+
+  bool get isFull => totalSpots - takenSpots <= 0;
+
+  /// Decide qué acción mostrar en la tarjeta de la clase.
+  ///
+  /// [forceFull] permite a la UI marcar la clase como llena cuando el
+  /// servidor rechazó una reserva por capacidad aunque el conteo local
+  /// todavía no se haya refrescado.
+  ClassCardAction cardAction({bool forceFull = false}) {
+    if (isBooked) return ClassCardAction.booked;
+    if (isInWaitlist) return ClassCardAction.leaveWaitlist;
+    if (isFull || forceFull) return ClassCardAction.joinWaitlist;
+    return ClassCardAction.book;
+  }
 }

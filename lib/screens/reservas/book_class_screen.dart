@@ -5,6 +5,7 @@ import '../../models/models.dart';
 import '../../supabase/booking_service.dart';
 import '../../supabase/waitlist_service.dart';
 import '../../theme/kali_theme.dart';
+import '../../utils/auth_utils.dart';
 import '../../widgets/web_page_wrapper.dart';
 
 class BookClassScreen extends StatefulWidget {
@@ -287,16 +288,22 @@ class _BookClassScreenState extends State<BookClassScreen> {
           ..._sessions.asMap().entries.map((entry) {
             final index = entry.key;
             final cls = entry.value;
-            final isFull = cls.availableSpots == 0 || _fullSessionIds.contains(cls.id);
+            final action =
+                cls.cardAction(forceFull: _fullSessionIds.contains(cls.id));
             return Padding(
               padding: EdgeInsets.only(
                   bottom: index == _sessions.length - 1 ? 0 : 14),
               child: _ScheduleCard(
                 cls: cls,
-                isFull: isFull,
-                onBook: (isFull || cls.isBooked) ? null : () => _showBookConfirmation(cls),
-                onJoinWaitlist: (isFull && !cls.isBooked && !cls.isInWaitlist) ? () => _joinWaitlist(cls) : null,
-                onLeaveWaitlist: cls.isInWaitlist ? () => _leaveWaitlist(cls) : null,
+                action: action,
+                onTap: switch (action) {
+                  ClassCardAction.book => () => _showBookConfirmation(cls),
+                  ClassCardAction.joinWaitlist => () =>
+                      _showJoinWaitlistConfirmation(cls),
+                  ClassCardAction.leaveWaitlist => () =>
+                      _showLeaveWaitlistConfirmation(cls),
+                  ClassCardAction.booked => null,
+                },
               ),
             );
           }),
@@ -372,35 +379,55 @@ class _BookClassScreenState extends State<BookClassScreen> {
     if (confirmed == true) _bookClass(cls);
   }
 
+  Future<void> _showJoinWaitlistConfirmation(PilatesClass cls) async {
+    final confirmed = await showModalBottomSheet<bool>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _WaitlistSheet.join(cls: cls),
+    );
+    if (confirmed == true) _joinWaitlist(cls);
+  }
+
+  Future<void> _showLeaveWaitlistConfirmation(PilatesClass cls) async {
+    final confirmed = await showModalBottomSheet<bool>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _WaitlistSheet.leave(cls: cls),
+    );
+    if (confirmed == true) _leaveWaitlist(cls);
+  }
+
   Future<void> _joinWaitlist(PilatesClass cls) async {
     final id = await WaitlistService.joinWaitlist(cls.id);
     if (!mounted) return;
     if (id != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(
-          'Te anotaste en la lista de espera. Si se libera un lugar, te inscribimos automáticamente.',
-          style: KaliText.body(KaliColors.clay),
-        ),
-        backgroundColor: KaliColors.espresso,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ));
+      _showSnack(
+          'Te anotaste en la lista de espera. Si se libera un lugar, te inscribimos automáticamente.');
       await _loadSessionsForDate(_selectedDate);
+    } else {
+      _showSnack('No pudimos anotarte en la lista. Intentá de nuevo.');
     }
   }
 
   Future<void> _leaveWaitlist(PilatesClass cls) async {
     if (cls.waitlistId == null) return;
-    await WaitlistService.leaveWaitlist(cls.waitlistId!);
+    final ok = await WaitlistService.leaveWaitlist(cls.waitlistId!);
     if (!mounted) return;
+    _showSnack(ok
+        ? 'Saliste de la lista de espera.'
+        : 'No pudimos sacarte de la lista. Intentá de nuevo.');
+    if (ok) await _loadSessionsForDate(_selectedDate);
+  }
+
+  void _showSnack(String message) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('Saliste de la lista de espera.',
-          style: KaliText.body(KaliColors.clay)),
+      content: Text(message, style: KaliText.body(KaliColors.clay)),
       backgroundColor: KaliColors.espresso,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ));
-    await _loadSessionsForDate(_selectedDate);
   }
 
   Future<void> _bookClass(PilatesClass cls) async {
@@ -456,10 +483,10 @@ class _BookClassScreenState extends State<BookClassScreen> {
       await _loadSessionsForDate(_selectedDate);
     } catch (e) {
       if (!mounted) return;
-      final raw = e.toString();
-      final msg = raw.startsWith('Exception: ')
-          ? raw.substring('Exception: '.length)
-          : 'No se pudo reservar. Intentá de nuevo.';
+      final msg = humanizeError(
+        e,
+        fallback: 'No se pudo reservar. Intentá de nuevo.',
+      );
       if (msg == 'La clase está llena.') {
         setState(() => _fullSessionIds.add(cls.id));
       }
@@ -608,6 +635,143 @@ class _BookConfirmSheet extends StatelessWidget {
   }
 }
 
+class _WaitlistSheet extends StatelessWidget {
+  final PilatesClass cls;
+  final bool isJoin;
+
+  const _WaitlistSheet.join({required this.cls}) : isJoin = true;
+  const _WaitlistSheet.leave({required this.cls}) : isJoin = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final primaryText = KaliColors.espresso;
+    final mutedText = KaliColors.clayDark;
+
+    final dateStr = cls.sessionDate != null
+        ? DateFormat("EEEE d 'de' MMMM", 'es').format(cls.sessionDate!)
+        : '';
+
+    final title = isJoin ? 'Lista de espera' : 'Salir de la lista';
+    final info = isJoin
+        ? 'La clase está completa. Si se libera un lugar, te inscribimos '
+            'automáticamente por orden de llegada, siempre que no superes el '
+            'límite de clases semanales de tu plan. Te avisamos con una notificación.'
+        : 'Vas a perder tu posición en el orden de espera. Si te anotás de '
+            'nuevo más tarde, entrás al final de la lista.';
+    final confirmLabel = isJoin ? 'Anotarme en la lista' : 'Salir de la lista';
+    final cancelLabel = isJoin ? 'Cancelar' : 'Seguir en espera';
+
+    return Container(
+      decoration: BoxDecoration(
+        color: KaliColors.warmWhite,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+        24,
+        24,
+        24,
+        24 + MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: KaliColors.sand2,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            title,
+            style: GoogleFontsHelper.cormorant(
+              primaryText,
+              30,
+              weight: FontWeight.w400,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            cls.name,
+            style: KaliText.body(
+              mutedText,
+              size: 14,
+              weight: FontWeight.w500,
+            ),
+          ),
+          if (dateStr.isNotEmpty || cls.time.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              [
+                if (dateStr.isNotEmpty)
+                  dateStr[0].toUpperCase() + dateStr.substring(1),
+                if (cls.time.isNotEmpty) '${cls.time} ${cls.period}',
+              ].join(' · '),
+              style: KaliText.body(
+                mutedText,
+                size: 13,
+                weight: FontWeight.w400,
+              ),
+            ),
+          ],
+          const SizedBox(height: 20),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: KaliColors.sand,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                  color: KaliColors.clay.withValues(alpha: 0.4)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  isJoin
+                      ? Icons.hourglass_top_rounded
+                      : Icons.info_outline_rounded,
+                  size: 18,
+                  color: KaliColors.clay,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    info,
+                    style: KaliText.body(
+                      primaryText,
+                      size: 13,
+                      weight: FontWeight.w400,
+                    ).copyWith(height: 1.5),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          _BookConfirmButton(
+            label: confirmLabel,
+            filled: true,
+            onTap: () => Navigator.pop(context, true),
+          ),
+          const SizedBox(height: 12),
+          _BookConfirmButton(
+            label: cancelLabel,
+            filled: false,
+            onTap: () => Navigator.pop(context, false),
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+}
+
 class _BookConfirmButton extends StatelessWidget {
   final String label;
   final bool filled;
@@ -647,17 +811,13 @@ class _BookConfirmButton extends StatelessWidget {
 
 class _ScheduleCard extends StatelessWidget {
   final PilatesClass cls;
-  final bool isFull;
-  final VoidCallback? onBook;
-  final VoidCallback? onJoinWaitlist;
-  final VoidCallback? onLeaveWaitlist;
+  final ClassCardAction action;
+  final VoidCallback? onTap;
 
   const _ScheduleCard({
     required this.cls,
-    required this.isFull,
-    required this.onBook,
-    this.onJoinWaitlist,
-    this.onLeaveWaitlist,
+    required this.action,
+    required this.onTap,
   });
 
   @override
@@ -666,51 +826,54 @@ class _ScheduleCard extends StatelessWidget {
     final primaryText = KaliColors.espresso;
     final secondaryText = KaliColors.clayDark;
     final dotColor = KaliColors.clayDark.withValues(alpha: 0.72);
-    final buttonBackground = KaliColors.espresso;
-    final buttonForeground = KaliColors.background;
 
-    final Widget button;
-    if (cls.isBooked) {
-      button = Text(
-        'Reservada',
-        style: KaliText.label(buttonBackground)
-            .copyWith(fontSize: 9, letterSpacing: 1.2),
-      );
-    } else if (cls.isInWaitlist) {
-      button = _HoverPill(
-        label: 'En espera',
-        background: KaliColors.clayDark,
-        foreground: KaliColors.warmWhite,
-        onTap: onLeaveWaitlist,
-      );
-    } else if (isFull) {
-      button = _HoverPill(
-        label: 'En espera',
-        background: KaliColors.sand2,
-        foreground: KaliColors.espresso,
-        onTap: onJoinWaitlist,
-      );
-    } else {
-      button = _HoverPill(
-        label: 'Reservar',
-        background: buttonBackground,
-        foreground: buttonForeground,
-        onTap: onBook,
-      );
-    }
-
-    return Opacity(
-      opacity: isFull ? 0.58 : 1,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-        decoration: BoxDecoration(
-          color: surfaceColor,
-          borderRadius: BorderRadius.circular(22),
+    final Widget button = switch (action) {
+      ClassCardAction.booked => Text(
+          'Reservada',
+          style: KaliText.label(KaliColors.espresso)
+              .copyWith(fontSize: 9, letterSpacing: 1.2),
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
+      ClassCardAction.leaveWaitlist => _HoverPill(
+          label: 'En espera',
+          icon: Icons.hourglass_top_rounded,
+          background: KaliColors.clayDark,
+          foreground: KaliColors.warmWhite,
+          onTap: onTap,
+        ),
+      ClassCardAction.joinWaitlist => _HoverPill(
+          label: 'Anotarme',
+          icon: Icons.add_rounded,
+          background: KaliColors.sand2,
+          foreground: KaliColors.espresso,
+          onTap: onTap,
+        ),
+      ClassCardAction.book => _HoverPill(
+          label: 'Reservar',
+          background: KaliColors.espresso,
+          foreground: KaliColors.background,
+          onTap: onTap,
+        ),
+    };
+
+    // La tarjeta solo se atenúa si está llena y el usuario no participa:
+    // si ya está en la lista de espera, su estado debe verse activo.
+    final dimmed = action == ClassCardAction.joinWaitlist;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(22),
+        border: action == ClassCardAction.leaveWaitlist
+            ? Border.all(color: KaliColors.clayDark.withValues(alpha: 0.35))
+            : null,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Opacity(
+              opacity: dimmed ? 0.58 : 1,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -731,6 +894,23 @@ class _ScheduleCard extends StatelessWidget {
                         style: KaliText.label(secondaryText)
                             .copyWith(fontSize: 9, letterSpacing: 1.1),
                       ),
+                      if (action == ClassCardAction.joinWaitlist ||
+                          action == ClassCardAction.leaveWaitlist) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: KaliColors.clayDark.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            'Completa',
+                            style: KaliText.label(secondaryText)
+                                .copyWith(fontSize: 8, letterSpacing: 1.1),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 4),
@@ -772,10 +952,10 @@ class _ScheduleCard extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 12),
-            button,
-          ],
-        ),
+          ),
+          const SizedBox(width: 12),
+          button,
+        ],
       ),
     );
   }
@@ -783,12 +963,14 @@ class _ScheduleCard extends StatelessWidget {
 
 class _HoverPill extends StatefulWidget {
   final String label;
+  final IconData? icon;
   final Color background;
   final Color foreground;
   final VoidCallback? onTap;
 
   const _HoverPill({
     required this.label,
+    this.icon,
     required this.background,
     required this.foreground,
     required this.onTap,
@@ -818,10 +1000,19 @@ class _HoverPillState extends State<_HoverPill> {
               color: widget.background,
               borderRadius: BorderRadius.circular(999),
             ),
-            child: Text(
-              widget.label,
-              style: KaliText.label(widget.foreground)
-                  .copyWith(fontSize: 10, letterSpacing: 1.2),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (widget.icon != null) ...[
+                  Icon(widget.icon, size: 12, color: widget.foreground),
+                  const SizedBox(width: 5),
+                ],
+                Text(
+                  widget.label,
+                  style: KaliText.label(widget.foreground)
+                      .copyWith(fontSize: 10, letterSpacing: 1.2),
+                ),
+              ],
             ),
           ),
         ),

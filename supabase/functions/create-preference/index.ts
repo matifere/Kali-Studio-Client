@@ -2,10 +2,8 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const allowedOrigins = [
-  'http://localhost:56078',
+  'https://turnos.argity.com',
   'https://tmfcnvtjzmtpqhzvfxos.supabase.co',
-  'https://chimpace-turnos.web.app',
-  'https://chimpace-turnos.firebaseapp.com',
 ];
 
 function corsHeaders(req: Request) {
@@ -27,7 +25,7 @@ serve(async (req) => {
   try {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'No autenticado' }), {
+      return new Response(JSON.stringify({ error: 'Tu sesión expiró. Volvé a iniciar sesión.' }), {
         status: 401, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
       });
     }
@@ -40,14 +38,14 @@ serve(async (req) => {
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'No autenticado' }), {
+      return new Response(JSON.stringify({ error: 'Tu sesión expiró. Volvé a iniciar sesión.' }), {
         status: 401, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
       });
     }
 
     const { plan_id } = await req.json();
     if (!plan_id) {
-      return new Response(JSON.stringify({ error: 'plan_id requerido' }), {
+      return new Response(JSON.stringify({ error: 'No pudimos identificar el plan. Actualizá la pantalla e intentá de nuevo.' }), {
         status: 400, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
       });
     }
@@ -66,13 +64,13 @@ serve(async (req) => {
       .single();
 
     if (planError || !plan) {
-      return new Response(JSON.stringify({ error: 'Plan no encontrado' }), {
+      return new Response(JSON.stringify({ error: 'Este plan ya no está disponible. Actualizá la pantalla y elegí otro.' }), {
         status: 404, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
       });
     }
 
     if (profile?.institution_id && plan.institution_id !== profile.institution_id) {
-      return new Response(JSON.stringify({ error: 'Plan no disponible' }), {
+      return new Response(JSON.stringify({ error: 'Este plan no está disponible para tu estudio.' }), {
         status: 403, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
       });
     }
@@ -106,58 +104,110 @@ serve(async (req) => {
 
     if (!mpAccessToken && !transferAlias) {
       console.error('No payment method found for institutionId:', institutionId);
-      return new Response(JSON.stringify({ error: 'Institución sin configuración de pago' }), {
+      return new Response(JSON.stringify({ error: 'Tu estudio todavía no configuró un método de pago. Consultá con tu instructor.' }), {
         status: 503, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
       });
     }
 
-    // ── Create pending subscription + payment (both paths) ───────────────────
+    // ── Create or reuse pending subscription + payment (both paths) ──────────
+    // Reabrir la pantalla de pago no debe acumular filas: si ya hay una
+    // suscripción pendiente de este usuario para este plan, reusamos esa y su
+    // pago pendiente en vez de insertar duplicados.
     const toDate = (d: Date) => d.toISOString().substring(0, 10);
     const startDate = new Date();
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + 30);
 
-    const { data: subscription, error: subError } = await supabase
+    let subscriptionId: string | null = null;
+    let paymentId: string | null = null;
+    let createdSubscription = false;
+    let createdPayment = false;
+
+    const { data: existingSub } = await supabase
       .from('subscriptions')
-      .insert({
-        user_id: user.id,
-        plan_id: plan.id,
-        status: 'pending',
-        start_date: toDate(startDate),
-        end_date: toDate(endDate),
-      })
       .select('id')
-      .single();
+      .eq('user_id', user.id)
+      .eq('plan_id', plan.id)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    if (subError || !subscription) {
-      console.error('Subscription insert error:', subError?.message);
-      return new Response(JSON.stringify({ error: 'Error al registrar la suscripción' }), {
-        status: 500, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
-      });
+    if (existingSub) {
+      subscriptionId = existingSub.id;
+      await supabase.from('subscriptions')
+        .update({ start_date: toDate(startDate), end_date: toDate(endDate) })
+        .eq('id', subscriptionId);
+
+      const { data: existingPayment } = await supabase
+        .from('payments')
+        .select('id')
+        .eq('subscription_id', subscriptionId)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (existingPayment) {
+        paymentId = existingPayment.id;
+        // por si cambió el precio del plan desde la última vez
+        await supabase.from('payments')
+          .update({ amount: Number(plan.price), currency: plan.currency ?? 'ARS' })
+          .eq('id', paymentId);
+      }
     }
 
-    const { data: paymentRecord, error: paymentInsertError } = await supabase
-      .from('payments')
-      .insert({
-        user_id: user.id,
-        subscription_id: subscription.id,
-        amount: Number(plan.price),
-        currency: plan.currency ?? 'ARS',
-        status: 'pending',
-        institution_id: institutionId ?? null,
-      })
-      .select('id')
-      .single();
+    if (!subscriptionId) {
+      const { data: subscription, error: subError } = await supabase
+        .from('subscriptions')
+        .insert({
+          user_id: user.id,
+          plan_id: plan.id,
+          status: 'pending',
+          start_date: toDate(startDate),
+          end_date: toDate(endDate),
+        })
+        .select('id')
+        .single();
 
-    if (paymentInsertError || !paymentRecord) {
-      console.error('Payment insert error:', paymentInsertError?.message);
-      await supabase.from('subscriptions').delete().eq('id', subscription.id);
-      return new Response(JSON.stringify({ error: 'Error al registrar el pago' }), {
-        status: 500, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
-      });
+      if (subError || !subscription) {
+        console.error('Subscription insert error:', subError?.message);
+        return new Response(JSON.stringify({ error: 'No pudimos registrar tu suscripción. Intentá de nuevo en unos segundos.' }), {
+          status: 500, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
+        });
+      }
+      subscriptionId = subscription.id;
+      createdSubscription = true;
     }
 
-    console.log('subscription:', subscription.id, 'payment:', paymentRecord.id);
+    if (!paymentId) {
+      const { data: paymentRecord, error: paymentInsertError } = await supabase
+        .from('payments')
+        .insert({
+          user_id: user.id,
+          subscription_id: subscriptionId,
+          amount: Number(plan.price),
+          currency: plan.currency ?? 'ARS',
+          status: 'pending',
+          institution_id: institutionId ?? null,
+        })
+        .select('id')
+        .single();
+
+      if (paymentInsertError || !paymentRecord) {
+        console.error('Payment insert error:', paymentInsertError?.message);
+        if (createdSubscription) {
+          await supabase.from('subscriptions').delete().eq('id', subscriptionId);
+        }
+        return new Response(JSON.stringify({ error: 'No pudimos registrar el pago. Intentá de nuevo en unos segundos.' }), {
+          status: 500, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
+        });
+      }
+      paymentId = paymentRecord.id;
+      createdPayment = true;
+    }
+
+    console.log('subscription:', subscriptionId, 'payment:', paymentId, 'reused:', !createdSubscription);
 
     // ── Alias / transfer path ─────────────────────────────────────────────────
     if (transferAlias) {
@@ -181,11 +231,11 @@ serve(async (req) => {
           unit_price: Number(plan.price),
           currency_id: plan.currency ?? 'ARS',
         }],
-        external_reference: paymentRecord.id,
+        external_reference: paymentId,
         back_urls: {
-          success: 'https://chimpace-turnos.web.app',
-          failure: 'https://chimpace-turnos.web.app',
-          pending: 'https://chimpace-turnos.web.app',
+          success: 'https://turnos.argity.com',
+          failure: 'https://turnos.argity.com',
+          pending: 'https://turnos.argity.com',
         },
         auto_return: 'approved',
         notification_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/mp-webhook`,
@@ -195,9 +245,14 @@ serve(async (req) => {
     if (!mpResponse.ok) {
       const mpErr = await mpResponse.text();
       console.error('MP error:', mpErr);
-      await supabase.from('payments').delete().eq('id', paymentRecord.id);
-      await supabase.from('subscriptions').delete().eq('id', subscription.id);
-      return new Response(JSON.stringify({ error: 'Error al crear el pago' }), {
+      // solo borramos lo creado en esta llamada; las filas reusadas quedan
+      if (createdPayment) {
+        await supabase.from('payments').delete().eq('id', paymentId);
+      }
+      if (createdSubscription) {
+        await supabase.from('subscriptions').delete().eq('id', subscriptionId);
+      }
+      return new Response(JSON.stringify({ error: 'No pudimos generar el link de pago. Intentá de nuevo en unos segundos.' }), {
         status: 500, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
       });
     }
@@ -206,7 +261,7 @@ serve(async (req) => {
 
     await supabase.from('payments')
       .update({ preference_id: preference.id })
-      .eq('id', paymentRecord.id);
+      .eq('id', paymentId);
 
     return new Response(JSON.stringify({ url: preference.init_point }), {
       status: 200, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
@@ -214,7 +269,7 @@ serve(async (req) => {
 
   } catch (e) {
     console.error(e);
-    return new Response(JSON.stringify({ error: 'Error interno' }), {
+    return new Response(JSON.stringify({ error: 'Algo salió mal de nuestro lado. Intentá de nuevo en unos segundos.' }), {
       status: 500, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
     });
   }

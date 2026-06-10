@@ -38,7 +38,9 @@ class PlanService {
   }
 
   static Future<PaymentPreference> createPaymentPreference(String planId) async {
-    if (_supabase.auth.currentSession == null) throw Exception('No autenticado');
+    if (_supabase.auth.currentSession == null) {
+      throw Exception('Tu sesión expiró. Volvé a iniciar sesión.');
+    }
 
     final response = await _supabase.functions.invoke(
       'create-preference',
@@ -47,7 +49,7 @@ class PlanService {
 
     if (response.status != 200) {
       final err = (response.data as Map<String, dynamic>?)?['error'] as String?
-          ?? 'Error al crear el pago';
+          ?? 'No pudimos iniciar el pago. Intentá de nuevo.';
       throw Exception(err);
     }
 
@@ -59,7 +61,7 @@ class PlanService {
     final url = data?['url'] as String?;
     if (url != null) return MercadoPagoPayment(url);
 
-    throw Exception('Respuesta de pago no válida');
+    throw Exception('No pudimos procesar la respuesta del pago. Intentá de nuevo.');
   }
 
   static Future<UserPlan?> fetchActivePlan() async {
@@ -67,6 +69,9 @@ class PlanService {
     if (userId == null) return null;
 
     try {
+      final now = DateTime.now();
+      final todayStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+      // mismo criterio que el servidor: activo y cubriendo la fecha de hoy
       final data = await _supabase
           .from('subscriptions')
           .select(
@@ -75,6 +80,8 @@ class PlanService {
           )
           .eq('user_id', userId)
           .eq('status', 'active')
+          .lte('start_date', todayStr)
+          .gte('end_date', todayStr)
           .order('end_date', ascending: false)
           .limit(1)
           .maybeSingle();

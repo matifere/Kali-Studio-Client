@@ -5,6 +5,7 @@ import 'package:kali_studio/widgets/kali_button.dart';
 import '../../models/models.dart';
 import '../../supabase/booking_service.dart';
 import '../../theme/kali_theme.dart';
+import '../../utils/auth_utils.dart';
 import 'booking_history_screen.dart';
 import '../../widgets/web_page_wrapper.dart';
 
@@ -568,7 +569,12 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudo cancelar: $e')),
+        SnackBar(
+          content: Text(humanizeError(
+            e,
+            fallback: 'No se pudo cancelar la reserva. Intentá de nuevo.',
+          )),
+        ),
       );
     } finally {
       if (mounted) setState(() => _isCancelling = false);

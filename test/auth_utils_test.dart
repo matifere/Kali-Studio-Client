@@ -53,4 +53,46 @@ void main() {
       );
     });
   });
+
+  group('humanizeError', () {
+    test('maps offline socket errors to a connectivity message', () {
+      const raw =
+          "ClientException with SocketException: Failed host lookup: 'tmfcnvtjzmtpqhzvfxos.supabase.co'";
+      expect(
+        humanizeError(Exception(raw)),
+        'No pudimos conectarnos. Revisá tu conexión a internet e intentá de nuevo.',
+      );
+    });
+
+    test('maps timeouts to a friendly message', () {
+      expect(
+        humanizeError(Exception('TimeoutException after 0:00:30.000000')),
+        'La conexión tardó demasiado. Intentá de nuevo en unos segundos.',
+      );
+    });
+
+    test('never shows raw PostgrestException details, uses fallback', () {
+      const raw =
+          'PostgrestException(message: duplicate key value violates unique constraint, code: 23505, details: , hint: null)';
+      expect(
+        humanizeError(Exception(raw), fallback: 'No se pudo reservar. Intentá de nuevo.'),
+        'No se pudo reservar. Intentá de nuevo.',
+      );
+    });
+
+    test('never shows type errors, uses fallback', () {
+      const raw = "type 'Null' is not a subtype of type 'String'";
+      expect(
+        humanizeError(Exception(raw)),
+        'Algo salió mal. Intentá de nuevo.',
+      );
+    });
+
+    test('passes through app-thrown Spanish messages', () {
+      expect(
+        humanizeError(Exception('La clase está llena.')),
+        'La clase está llena.',
+      );
+    });
+  });
 }

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-// import 'package:supabase_flutter/supabase_flutter.dart';
-// import '../supabase/notification_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../supabase/notification_service.dart';
 import '../supabase/studio_service.dart';
 import '../theme/kali_theme.dart';
 import '../utils/responsive.dart';
-// import 'notifications_screen.dart';
+import 'notifications_screen.dart';
 import 'reservas/book_class_screen.dart';
 import 'reservas/booking_detail_screen.dart';
 import 'home_screen.dart';
@@ -22,78 +22,78 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
   late final Future<Studio?> _institutionFuture;
-  // int _unreadCount = 0;
-  // RealtimeChannel? _notifChannel;
+  int _unreadCount = 0;
+  RealtimeChannel? _notifChannel;
 
   @override
   void initState() {
     super.initState();
     _institutionFuture = StudioService.fetchCurrentInstitution();
-    // _loadUnreadCount();
-    // _subscribeToNotifications();
+    _loadUnreadCount();
+    _subscribeToNotifications();
   }
 
-  // @override
-  // void dispose() {
-  //   _notifChannel?.unsubscribe();
-  //   super.dispose();
-  // }
+  @override
+  void dispose() {
+    _notifChannel?.unsubscribe();
+    super.dispose();
+  }
 
-  // Future<void> _loadUnreadCount() async {
-  //   final count = await NotificationService.fetchUnreadCount();
-  //   if (mounted) setState(() => _unreadCount = count);
-  // }
+  Future<void> _loadUnreadCount() async {
+    final count = await NotificationService.fetchUnreadCount();
+    if (mounted) setState(() => _unreadCount = count);
+  }
 
-  // void _subscribeToNotifications() {
-  //   final userId = Supabase.instance.client.auth.currentUser?.id;
-  //   if (userId == null) return;
-  //   _notifChannel = NotificationService.subscribeToNotifications(
-  //     userId: userId,
-  //     onNew: (_) {
-  //       if (mounted) setState(() => _unreadCount++);
-  //     },
-  //   );
-  // }
+  void _subscribeToNotifications() {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) return;
+    _notifChannel = NotificationService.subscribeToNotifications(
+      userId: userId,
+      onNew: (_) {
+        if (mounted) setState(() => _unreadCount++);
+      },
+    );
+  }
 
-  // void _openNotifications() {
-  //   Navigator.of(context).push(
-  //     MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-  //   ).then((_) => _loadUnreadCount());
-  // }
+  void _openNotifications() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+    ).then((_) => _loadUnreadCount());
+  }
 
-  // Widget _bellIcon() {
-  //   return Stack(
-  //     children: [
-  //       IconButton(
-  //         icon: Icon(Icons.notifications_outlined, color: KaliColors.espresso),
-  //         onPressed: _openNotifications,
-  //       ),
-  //       if (_unreadCount > 0)
-  //         Positioned(
-  //           right: 8,
-  //           top: 8,
-  //           child: Container(
-  //             width: 16,
-  //             height: 16,
-  //             decoration: BoxDecoration(
-  //               color: KaliColors.espresso,
-  //               shape: BoxShape.circle,
-  //             ),
-  //             child: Center(
-  //               child: Text(
-  //                 _unreadCount > 9 ? '9+' : '$_unreadCount',
-  //                 style: const TextStyle(
-  //                   color: Colors.white,
-  //                   fontSize: 9,
-  //                   fontWeight: FontWeight.w700,
-  //                 ),
-  //               ),
-  //             ),
-  //           ),
-  //         ),
-  //     ],
-  //   );
-  // }
+  Widget _bellIcon() {
+    return Stack(
+      children: [
+        IconButton(
+          icon: Icon(Icons.notifications_outlined, color: KaliColors.espresso),
+          onPressed: _openNotifications,
+        ),
+        if (_unreadCount > 0)
+          Positioned(
+            right: 8,
+            top: 8,
+            child: Container(
+              width: 16,
+              height: 16,
+              decoration: BoxDecoration(
+                color: KaliColors.espresso,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  _unreadCount > 9 ? '9+' : '$_unreadCount',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
 
   Widget _buildScreen() {
     switch (_currentIndex) {
@@ -192,7 +192,7 @@ class _MainShellState extends State<MainShell> {
             'Argity',
             style: KaliText.body(KaliColors.espresso, size: 15, weight: FontWeight.w600),
           ),
-        // actions: [_bellIcon()],
+        actions: [_bellIcon()],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Divider(color: KaliColors.sand2, thickness: 1, height: 1),
@@ -224,10 +224,10 @@ class _MainShellState extends State<MainShell> {
                   (e) => _buildSidebarItem(index: e.key, item: e.value),
                 ),
             const Spacer(),
-            // Padding(
-            //   padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
-            //   child: _bellIcon(),
-            // ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+              child: _bellIcon(),
+            ),
           ],
         ),
       ),

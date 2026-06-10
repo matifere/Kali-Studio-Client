@@ -48,9 +48,16 @@ class ClassListItem extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(cls.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: KaliText.body(KaliColors.espresso, size: 13)),
                   const SizedBox(height: 2),
-                  Text('${cls.instructor} · ${cls.room}',
+                  Text(
+                      [cls.instructor, cls.room]
+                          .where((s) => s.isNotEmpty)
+                          .join(' · '),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: KaliText.caption(KaliColors.clayDark)),
                 ],
               ),

@@ -1,15 +1,64 @@
+/// Strips technical wrappers (Exception:, AuthException(...), etc.) from a
+/// raw error message.
+String _cleanErrorMessage(String message) {
+  return message
+      .replaceFirst('AuthException(message: ', '')
+      .replaceFirst(RegExp(r', statusCode:.*$'), '')
+      .replaceFirst('Exception: ', '')
+      .trim();
+}
+
+/// True if the message looks like a raw technical error that should never be
+/// shown to the user (exception class names, network internals, type errors).
+bool _looksTechnical(String message) {
+  final technical = RegExp(
+    r'(clientexception|socketexception|timeoutexception|handshakeexception|'
+    r'postgrestexception|functionexception|functionsexception|storageexception|'
+    r'formatexception|httpexception|xmlhttprequest|failed host lookup|'
+    r'connection (refused|reset|closed)|statuscode|stack ?trace|'
+    r"type '.+' is not a subtype|nosuchmethoderror|rangeerror|stateerror|"
+    r'null check operator|instance of|errorobject|jwt|sqlstate|pgrst)',
+    caseSensitive: false,
+  );
+  return technical.hasMatch(message);
+}
+
+/// Converts any caught error into a user-friendly Spanish message.
+///
+/// Known auth and network errors get a specific message. App-thrown
+/// `Exception('mensaje para el usuario')` messages pass through cleaned.
+/// Anything that still looks technical falls back to [fallback] so raw
+/// errors never reach the user.
+String humanizeError(
+  Object error, {
+  String fallback = 'Algo salió mal. Intentá de nuevo.',
+}) {
+  return humanizeAuthError(error.toString(), fallback: fallback);
+}
+
 /// Converts a raw Supabase / AuthException message into a user-friendly string.
 String humanizeAuthError(
   String message, {
   String fallback = 'Algo salió mal. Intentá de nuevo.',
 }) {
-  var clean = message
-      .replaceFirst('AuthException(message: ', '')
-      .replaceFirst(RegExp(r', statusCode:.*$'), '')
-      .replaceFirst('Exception: ', '')
-      .trim()
-      .toLowerCase();
+  final clean = _cleanErrorMessage(message).toLowerCase();
 
+  // ── Network / connectivity ────────────────────────────────────────────────
+  if (clean.contains('socketexception') ||
+      clean.contains('failed host lookup') ||
+      clean.contains('xmlhttprequest') ||
+      clean.contains('connection refused') ||
+      clean.contains('connection reset') ||
+      clean.contains('connection closed') ||
+      clean.contains('network is unreachable') ||
+      clean.contains('no internet')) {
+    return 'No pudimos conectarnos. Revisá tu conexión a internet e intentá de nuevo.';
+  }
+  if (clean.contains('timeoutexception') || clean.contains('timed out')) {
+    return 'La conexión tardó demasiado. Intentá de nuevo en unos segundos.';
+  }
+
+  // ── Auth ──────────────────────────────────────────────────────────────────
   if (clean.contains('email not confirmed')) {
     return 'Necesitás confirmar tu email antes de ingresar. Revisá tu bandeja de entrada.';
   }
@@ -39,13 +88,12 @@ String humanizeAuthError(
   if (clean.contains('too many requests') || clean.contains('rate limit')) {
     return 'Demasiados intentos. Esperá unos minutos e intentá de nuevo.';
   }
+  if (clean.contains('jwt expired') || clean.contains('refresh_token')) {
+    return 'Tu sesión expiró. Volvé a iniciar sesión.';
+  }
 
-  // Fallback: return the original message cleaned but not lowercased
-  final original = message
-      .replaceFirst('AuthException(message: ', '')
-      .replaceFirst(RegExp(r', statusCode:.*$'), '')
-      .replaceFirst('Exception: ', '')
-      .trim();
-
-  return original.isEmpty ? fallback : original;
+  // ── Fallback: show the cleaned message only if it's safe for users ───────
+  final original = _cleanErrorMessage(message);
+  if (original.isEmpty || _looksTechnical(original)) return fallback;
+  return original;
 }

@@ -97,12 +97,12 @@ class BookingService {
           .eq('status', 'confirmed')
           .gte('class_sessions.date', todayStr);
       if (institutionId != null) query = query.eq('class_sessions.institution_id', institutionId);
-      final data = await query.limit(1);
+      final data = await query.limit(50);
 
       final list = ((data as List?) ?? [])
           .map((row) => _fromReservationRow(row as Map<String, dynamic>, userId))
           .toList()
-        ..sort((a, b) => a.sessionDate!.compareTo(b.sessionDate!));
+        ..sort(_byDateAndTime);
 
       return list.firstOrNull;
     } catch (e) {
@@ -116,11 +116,14 @@ class BookingService {
     if (userId == null) return [];
 
     try {
+      final today = DateTime.now();
+      final todayDate = DateTime(today.year, today.month, today.day);
+
       final data = await _supabase
           .from('reservations')
           .select(
             'id, session_id, status, '
-            'class_sessions('
+            'class_sessions!inner('
             'id, date, start_time, end_time, capacity, '
             'schedule_templates(name, description, instructor_name), '
             'reservations(id, user_id, status)'
@@ -128,10 +131,8 @@ class BookingService {
           )
           .eq('user_id', userId)
           .eq('status', 'confirmed')
+          .gte('class_sessions.date', _dateStr(todayDate))
           .limit(500);
-
-      final today = DateTime.now();
-      final todayDate = DateTime(today.year, today.month, today.day);
 
       final list = ((data as List?) ?? [])
           .where((row) => (row as Map<String, dynamic>)['class_sessions'] != null)
@@ -142,7 +143,7 @@ class BookingService {
               !cls.sessionDate!.isBefore(todayDate))
           .toList();
 
-      list.sort((a, b) => a.sessionDate!.compareTo(b.sessionDate!));
+      list.sort(_byDateAndTime);
 
       return list;
     } catch (e) {
@@ -195,11 +196,15 @@ class BookingService {
           .eq('status', 'confirmed')
           .gte('class_sessions.date', from)
           .lte('class_sessions.date', to),
+      // mismo criterio que el RPC book_session_if_available: el plan debe
+      // estar activo y cubrir la fecha de hoy
       _supabase
           .from('subscriptions')
           .select('plan_id, plans(max_reservations_per_week)')
           .eq('user_id', userId)
           .eq('status', 'active')
+          .lte('start_date', _dateStr(DateTime.now()))
+          .gte('end_date', _dateStr(DateTime.now()))
           .order('created_at', ascending: false)
           .limit(1)
           .maybeSingle(),
@@ -262,7 +267,7 @@ class BookingService {
           .from('reservations')
           .select(
             'id, session_id, status, '
-            'class_sessions('
+            'class_sessions!inner('
             'id, date, start_time, end_time, capacity, '
             'schedule_templates(name, description, instructor_name), '
             'reservations(id, user_id, status)'
@@ -285,7 +290,7 @@ class BookingService {
           })
           .map((row) => _fromReservationRow(row as Map<String, dynamic>, userId))
           .toList()
-        ..sort((a, b) => b.sessionDate!.compareTo(a.sessionDate!));
+        ..sort((a, b) => _byDateAndTime(b, a));
 
       return list;
     } catch (e) {
@@ -391,6 +396,14 @@ class BookingService {
       reservationId: reservationId,
       sessionDate: DateTime.tryParse(session['date'] as String? ?? ''),
     );
+  }
+
+  /// Ordena por fecha y, dentro del mismo día, por hora de inicio.
+  /// `time` viene en formato 24 h con cero a la izquierda, así que el
+  /// orden lexicográfico coincide con el cronológico.
+  static int _byDateAndTime(PilatesClass a, PilatesClass b) {
+    final byDate = a.sessionDate!.compareTo(b.sessionDate!);
+    return byDate != 0 ? byDate : a.time.compareTo(b.time);
   }
 
   static String _dateStr(DateTime date) =>

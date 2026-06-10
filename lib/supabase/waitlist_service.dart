@@ -14,7 +14,7 @@ class WaitlistService {
           .from('waitlist')
           .upsert(
             {'user_id': userId, 'session_id': sessionId, 'status': 'waiting'},
-            onConflict: 'user_id, session_id',
+            onConflict: 'user_id,session_id',
           )
           .select('id')
           .single();
@@ -25,15 +25,17 @@ class WaitlistService {
     }
   }
 
-  static Future<void> leaveWaitlist(String waitlistId) async {
+  static Future<bool> leaveWaitlist(String waitlistId) async {
     final userId = _supabase.auth.currentUser?.id;
-    if (userId == null) return;
+    if (userId == null) return false;
     try {
       await _supabase.from('waitlist').delete()
           .eq('id', waitlistId)
           .eq('user_id', userId);
+      return true;
     } catch (e) {
       debugPrint('WaitlistService.leaveWaitlist error: $e');
+      return false;
     }
   }
 
@@ -51,15 +53,23 @@ class WaitlistService {
           .eq('status', 'waiting')
           .inFilter('session_id', sessionIds);
 
-      return {
-        for (final row in ((data as List?) ?? []))
-          row['session_id'] as String: row['id'] as String,
-      };
+      return mapWaitlistRows(data as List?);
     } catch (e) {
       debugPrint('WaitlistService.fetchWaitlistForSessions error: $e');
       return {};
     }
   }
+
+  /// Convierte las filas crudas de `waitlist` en un mapa
+  /// session_id → waitlist_id, ignorando filas malformadas.
+  @visibleForTesting
+  static Map<String, String> mapWaitlistRows(List? rows) => {
+        for (final row in (rows ?? []))
+          if (row is Map &&
+              row['session_id'] is String &&
+              row['id'] is String)
+            row['session_id'] as String: row['id'] as String,
+      };
 
   static Future<void> savePushSubscription(String subscriptionJson) async {
     final userId = _supabase.auth.currentUser?.id;
