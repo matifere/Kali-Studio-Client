@@ -49,15 +49,15 @@ void main() {
       );
     });
 
-    test('throws correct message when weekly limit exceeded', () {
+    test('throws correct message when monthly limit exceeded', () {
       expect(
         () => BookingService.throwIfBookingFailed(
-            {'ok': false, 'error': 'weekly_limit_exceeded'}),
+            {'ok': false, 'error': 'monthly_limit_exceeded'}),
         throwsA(
           isA<Exception>().having(
             (e) => e.toString(),
             'message',
-            contains('Alcanzaste el límite de clases semanales de tu plan.'),
+            contains('Alcanzaste el límite de clases mensuales de tu plan.'),
           ),
         ),
       );

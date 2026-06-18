@@ -367,9 +367,9 @@ class _PlanesScreenState extends State<PlanesScreen> {
                       Row(
                         children: [
                           _infoPill(diasLabel),
-                          if (plan.weeklyClasses != null) ...[
+                          if (plan.monthlyClasses != null) ...[
                             const SizedBox(width: 8),
-                            _infoPill('${plan.weeklyClasses} cl/sem'),
+                            _infoPill('${plan.monthlyClasses} cl/mes'),
                           ],
                         ],
                       ),
@@ -498,11 +498,11 @@ class _PlanesScreenState extends State<PlanesScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-              if (plan.weeklyClasses != null)
+              if (plan.monthlyClasses != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: _planPill(
-                    '${plan.weeklyClasses} clase${plan.weeklyClasses == 1 ? '' : 's'} por semana',
+                    '${plan.monthlyClasses} clase${plan.monthlyClasses == 1 ? '' : 's'} por mes',
                     checkBg, checkIcon,
                   ),
                 ),
@@ -771,7 +771,7 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
               ],
             ),
             const SizedBox(height: 20),
-            if (plan.weeklyClasses != null) ...[
+            if (plan.monthlyClasses != null) ...[
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -785,7 +785,7 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
                         size: 16, color: KaliColors.espresso),
                     const SizedBox(width: 8),
                     Text(
-                      '${plan.weeklyClasses} clase${plan.weeklyClasses == 1 ? '' : 's'} por semana',
+                      '${plan.monthlyClasses} clase${plan.monthlyClasses == 1 ? '' : 's'} por mes',
                       style: KaliText.body(KaliColors.espresso,
                           size: 14, weight: FontWeight.w600),
                     ),
@@ -1009,9 +1009,9 @@ class _PlanDetailSheet extends StatelessWidget {
           _row('Vencimiento', fin),
           _divider(),
           _row('Tiempo restante', diasLabel),
-          if (plan.weeklyClasses != null) ...[
+          if (plan.monthlyClasses != null) ...[
             _divider(),
-            _row('Clases por semana', '${plan.weeklyClasses}'),
+            _row('Clases por mes', '${plan.monthlyClasses}'),
           ],
           const SizedBox(height: 28),
           SizedBox(

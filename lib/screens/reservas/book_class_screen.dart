@@ -34,6 +34,7 @@ class _BookClassScreenState extends State<BookClassScreen> {
   bool _isLoadingSessions = false;
   Set<String> _datesWithSessions = {};
   final Set<String> _fullSessionIds = {};
+  ({int used, int? limit, bool hasPlan})? _monthlyUsage;
 
   Color get _pageBackground => KaliColors.warmWhite;
   Color get _surfaceColor => KaliColors.sand;
@@ -53,6 +54,7 @@ class _BookClassScreenState extends State<BookClassScreen> {
     _visibleMonth = DateTime(now.year, now.month);
     _loadDatesWithSessions(_visibleMonth);
     _loadSessionsForDate(_selectedDate);
+    _loadMonthlyUsage(_visibleMonth);
   }
 
   Future<void> _loadDatesWithSessions(DateTime month) async {
@@ -78,6 +80,14 @@ class _BookClassScreenState extends State<BookClassScreen> {
     }
   }
 
+  Future<void> _loadMonthlyUsage(DateTime month) async {
+    final usage = await BookingService.fetchMonthlyUsage(
+      forDate: DateTime(month.year, month.month, 15),
+    );
+    if (!mounted) return;
+    setState(() => _monthlyUsage = usage);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -92,7 +102,9 @@ class _BookClassScreenState extends State<BookClassScreen> {
             children: [
               const SizedBox(height: 28),
               _buildCalendar(context),
-              const SizedBox(height: 34),
+              const SizedBox(height: 14),
+              _buildMonthlyUsageCard(),
+              const SizedBox(height: 20),
               _buildAvailabilitySection(),
             ],
           ),
@@ -144,6 +156,7 @@ class _BookClassScreenState extends State<BookClassScreen> {
                       DateTime(_visibleMonth.year, _visibleMonth.month - 1);
                   setState(() => _visibleMonth = newMonth);
                   _loadDatesWithSessions(newMonth);
+                  _loadMonthlyUsage(newMonth);
                 },
                 child: Icon(Icons.chevron_left_rounded,
                     color: _mutedText, size: 24),
@@ -155,6 +168,7 @@ class _BookClassScreenState extends State<BookClassScreen> {
                       DateTime(_visibleMonth.year, _visibleMonth.month + 1);
                   setState(() => _visibleMonth = newMonth);
                   _loadDatesWithSessions(newMonth);
+                  _loadMonthlyUsage(newMonth);
                 },
                 child: Icon(Icons.chevron_right_rounded,
                     color: _mutedText, size: 24),
@@ -236,6 +250,64 @@ class _BookClassScreenState extends State<BookClassScreen> {
                 ),
               );
             }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMonthlyUsageCard() {
+    final usage = _monthlyUsage;
+    if (usage == null || !usage.hasPlan || usage.limit == null) {
+      return const SizedBox.shrink();
+    }
+
+    final remaining = (usage.limit! - usage.used).clamp(0, usage.limit!);
+    final progress = (usage.used / usage.limit!).clamp(0.0, 1.0);
+    final monthName = _capitalize(DateFormat('MMMM', 'es').format(_visibleMonth));
+    final isExhausted = remaining == 0;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
+      decoration: BoxDecoration(
+        color: _surfaceColor,
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  isExhausted
+                      ? 'Sin clases restantes en $monthName'
+                      : '$remaining clase${remaining == 1 ? '' : 's'} restante${remaining == 1 ? '' : 's'} en $monthName',
+                  style: KaliText.body(
+                    isExhausted ? KaliColors.clay : _primaryText,
+                    size: 13,
+                    weight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '${usage.used} / ${usage.limit}',
+                style: KaliText.label(_secondaryText).copyWith(fontSize: 11),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: progress,
+              backgroundColor: KaliColors.clay.withValues(alpha: 0.15),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                isExhausted ? KaliColors.clay : KaliColors.espresso,
+              ),
+              minHeight: 5,
+            ),
           ),
         ],
       ),
@@ -432,7 +504,7 @@ class _BookClassScreenState extends State<BookClassScreen> {
 
   Future<void> _bookClass(PilatesClass cls) async {
     try {
-      final usage = await BookingService.fetchWeeklyUsage(forDate: cls.sessionDate);
+      final usage = await BookingService.fetchMonthlyUsage(forDate: cls.sessionDate);
 
       if (!usage.hasPlan) {
         if (!mounted) return;
@@ -455,7 +527,7 @@ class _BookClassScreenState extends State<BookClassScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Alcanzaste el límite de ${usage.limit} clase${usage.limit == 1 ? '' : 's'} semanales de tu plan.',
+              'Alcanzaste el límite de ${usage.limit} clase${usage.limit == 1 ? '' : 's'} mensuales de tu plan.',
               style: KaliText.body(KaliColors.clay),
             ),
             backgroundColor: KaliColors.espresso,
@@ -480,7 +552,10 @@ class _BookClassScreenState extends State<BookClassScreen> {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
-      await _loadSessionsForDate(_selectedDate);
+      await Future.wait([
+        _loadSessionsForDate(_selectedDate),
+        _loadMonthlyUsage(_visibleMonth),
+      ]);
     } catch (e) {
       if (!mounted) return;
       final msg = humanizeError(
@@ -605,7 +680,7 @@ class _BookConfirmSheet extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Solo podés cancelar hasta 24 horas antes de la clase. Pasado ese límite, se descontará una sesión de tu plan semanal.',
+                    'Solo podés cancelar hasta 24 horas antes de la clase. Pasado ese límite, se descontará una sesión de tu plan mensual.',
                     style: KaliText.body(
                       primaryText,
                       size: 13,
@@ -655,7 +730,7 @@ class _WaitlistSheet extends StatelessWidget {
     final info = isJoin
         ? 'La clase está completa. Si se libera un lugar, te inscribimos '
             'automáticamente por orden de llegada, siempre que no superes el '
-            'límite de clases semanales de tu plan. Te avisamos con una notificación.'
+            'límite de clases mensuales de tu plan. Te avisamos con una notificación.'
         : 'Vas a perder tu posición en el orden de espera. Si te anotás de '
             'nuevo más tarde, entrás al final de la lista.';
     final confirmLabel = isJoin ? 'Anotarme en la lista' : 'Salir de la lista';

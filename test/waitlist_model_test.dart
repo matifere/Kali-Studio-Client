@@ -40,7 +40,7 @@ Plan makePlan({
   String description = '',
   double price = 15000,
   String currency = 'ARS',
-  int? weeklyClasses,
+  int? monthlyClasses,
 }) =>
     Plan(
       id: id,
@@ -48,7 +48,7 @@ Plan makePlan({
       description: description,
       price: price,
       currency: currency,
-      weeklyClasses: weeklyClasses,
+      monthlyClasses: monthlyClasses,
     );
 
 UserPlan makeUserPlan({
@@ -239,14 +239,14 @@ void main() {
       );
     });
 
-    test('weekly_limit_exceeded lanza mensaje correcto', () {
+    test('monthly_limit_exceeded lanza mensaje correcto', () {
       expect(
         () => BookingService.throwIfBookingFailed(
-            {'ok': false, 'error': 'weekly_limit_exceeded'}),
+            {'ok': false, 'error': 'monthly_limit_exceeded'}),
         throwsA(isA<Exception>().having(
           (e) => e.toString(),
           'message',
-          contains('Alcanzaste el límite de clases semanales de tu plan.'),
+          contains('Alcanzaste el límite de clases mensuales de tu plan.'),
         )),
       );
     });

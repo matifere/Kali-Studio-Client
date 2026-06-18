@@ -178,15 +178,13 @@ class BookingService {
   }
 
 
-  static Future<({int used, int? limit, bool hasPlan})> fetchWeeklyUsage({DateTime? forDate}) async {
+  static Future<({int used, int? limit, bool hasPlan})> fetchMonthlyUsage({DateTime? forDate}) async {
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) return (used: 0, limit: null, hasPlan: false);
 
     final ref = forDate ?? DateTime.now();
-    final monday = ref.subtract(Duration(days: ref.weekday - 1));
-    final sunday = monday.add(const Duration(days: 6));
-    final from = _dateStr(DateTime(monday.year, monday.month, monday.day));
-    final to = _dateStr(DateTime(sunday.year, sunday.month, sunday.day));
+    final from = _dateStr(DateTime(ref.year, ref.month, 1));
+    final to = _dateStr(DateTime(ref.year, ref.month + 1, 0));
 
     final results = await Future.wait<Object?>([
       _supabase
@@ -196,11 +194,9 @@ class BookingService {
           .eq('status', 'confirmed')
           .gte('class_sessions.date', from)
           .lte('class_sessions.date', to),
-      // mismo criterio que el RPC book_session_if_available: el plan debe
-      // estar activo y cubrir la fecha de hoy
       _supabase
           .from('subscriptions')
-          .select('plan_id, plans(max_reservations_per_week)')
+          .select('plan_id, plans(max_reservations_per_month)')
           .eq('user_id', userId)
           .eq('status', 'active')
           .lte('start_date', _dateStr(DateTime.now()))
@@ -213,7 +209,7 @@ class BookingService {
     final used = ((results[0] as List?) ?? []).length;
     final sub = results[1] as Map<String, dynamic>?;
     final planData = sub?['plans'] as Map<String, dynamic>?;
-    final limit = planData?['max_reservations_per_week'] as int?;
+    final limit = planData?['max_reservations_per_month'] as int?;
 
     return (used: used, limit: limit, hasPlan: sub != null);
   }
@@ -246,7 +242,7 @@ class BookingService {
     if (error == 'full') throw Exception('La clase está llena.');
     if (error == 'no_plan') throw Exception('Necesitás un plan activo para reservar.');
     if (error == 'already_booked') throw Exception('Ya tenés una reserva para esta clase.');
-    if (error == 'weekly_limit_exceeded') throw Exception('Alcanzaste el límite de clases semanales de tu plan.');
+    if (error == 'monthly_limit_exceeded') throw Exception('Alcanzaste el límite de clases mensuales de tu plan.');
     throw Exception('No se pudo reservar.');
   }
 

@@ -25,7 +25,7 @@ class PlanService {
     try {
       var query = _supabase
           .from('plans')
-          .select('id, name, description, price, currency, max_reservations_per_week')
+          .select('id, name, description, price, currency, max_reservations_per_month')
           .eq('is_active', true);
       if (institutionId != null) query = query.eq('institution_id', institutionId);
       final Object raw = await query.order('price', ascending: true);
@@ -76,7 +76,7 @@ class PlanService {
           .from('subscriptions')
           .select(
             'id, plan_id, start_date, end_date, status, '
-            'plans(name, description, price, currency, max_reservations_per_week)',
+            'plans(name, description, price, currency, max_reservations_per_month)',
           )
           .eq('user_id', userId)
           .eq('status', 'active')
@@ -102,7 +102,7 @@ class PlanService {
         price: (plan['price'] as num?)?.toDouble() ?? 0,
         currency: plan['currency'] as String? ?? '',
         maxReservations: null,
-        weeklyClasses: plan['max_reservations_per_week'] as int?,
+        monthlyClasses: plan['max_reservations_per_month'] as int?,
         startDate: startDate,
         endDate: endDate,
         status: data['status'] as String,

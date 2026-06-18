@@ -311,9 +311,9 @@ class _HomeScreenState extends State<HomeScreen>
           const SizedBox(height: 22),
           Row(children: [
             _infoPill(daysLabel),
-            if (plan.weeklyClasses != null) ...[
+            if (plan.monthlyClasses != null) ...[
               const SizedBox(width: 8),
-              _infoPill('${plan.weeklyClasses} cl/sem'),
+              _infoPill('${plan.monthlyClasses} cl/mes'),
             ],
           ]),
           const SizedBox(height: 14),

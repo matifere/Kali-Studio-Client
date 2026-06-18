@@ -5,7 +5,7 @@ class Plan {
   final String description;
   final double price;
   final String currency;
-  final int? weeklyClasses;
+  final int? monthlyClasses;
 
   const Plan({
     required this.id,
@@ -13,7 +13,7 @@ class Plan {
     required this.description,
     required this.price,
     required this.currency,
-    this.weeklyClasses,
+    this.monthlyClasses,
   });
 
   factory Plan.fromMap(Map<String, dynamic> m) => Plan(
@@ -22,7 +22,7 @@ class Plan {
         description: m['description'] as String? ?? '',
         price: (m['price'] as num?)?.toDouble() ?? 0,
         currency: m['currency'] as String? ?? 'ARS',
-        weeklyClasses: m['max_reservations_per_week'] as int?,
+        monthlyClasses: m['max_reservations_per_month'] as int?,
       );
 
   List<String> get features {
@@ -54,7 +54,7 @@ class UserPlan {
   final double price;
   final String currency;
   final int? maxReservations;
-  final int? weeklyClasses;
+  final int? monthlyClasses;
   final DateTime startDate;
   final DateTime endDate;
   final String status;
@@ -70,7 +70,7 @@ class UserPlan {
     required this.endDate,
     required this.status,
     this.maxReservations,
-    this.weeklyClasses,
+    this.monthlyClasses,
   });
 
   bool get isActive => status == 'active';
@@ -87,7 +87,7 @@ class UserPlan {
 ///
 /// La promoción desde la lista de espera es automática (trigger en la BD):
 /// al liberarse un cupo se inscribe al primero en orden de llegada que tenga
-/// plan activo y no supere su límite semanal. Por eso el cliente solo ofrece
+/// plan activo y no supere su límite mensual. Por eso el cliente solo ofrece
 /// anotarse / salir de la lista; nunca "reservar desde la espera".
 enum ClassCardAction { book, joinWaitlist, leaveWaitlist, booked }
 
