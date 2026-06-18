@@ -30,6 +30,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Color get _dividerColor => KaliColors.sand2;
   Color get _chevronColor => KaliColors.clayDark.withValues(alpha: 0.72);
   Color get _avatarBorder => KaliColors.sand2;
+  Color get _dangerColor => const Color(0xFFB3463C);
 
   @override
   void initState() {
@@ -75,6 +76,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       }
                     },
                   ),
+                  _softDivider(),
+                  _buildMenuRow(
+                    icon: Icons.delete_outline_rounded,
+                    title: 'Eliminar cuenta',
+                    iconColor: _dangerColor,
+                    titleColor: _dangerColor,
+                    onTap: _confirmDeleteAccount,
+                  ),
                 ],
               ),
               const SizedBox(height: 28),
@@ -112,6 +121,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       context,
                       MaterialPageRoute(
                           builder: (_) => const ConsentimientoScreen()),
+                    ),
+                  ),
+                  _softDivider(),
+                  _buildMenuRow(
+                    icon: Icons.privacy_tip_outlined,
+                    title: 'Política de privacidad',
+                    onTap: () => launchUrl(
+                      Uri.parse('https://turnos.argity.com/privacy.html'),
+                      mode: LaunchMode.externalApplication,
                     ),
                   ),
                 ],
@@ -199,6 +217,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String title,
     String? trailingText,
     VoidCallback? onTap,
+    Color? iconColor,
+    Color? titleColor,
   }) {
     return InkWell(
       onTap: onTap,
@@ -207,13 +227,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: _mutedIcon),
+            Icon(icon, size: 20, color: iconColor ?? _mutedIcon),
             const SizedBox(width: 14),
             Expanded(
               child: Text(
                 title,
                 style: KaliText.body(
-                  _primaryText,
+                  titleColor ?? _primaryText,
                   size: 14,
                   weight: FontWeight.w400,
                 ),
@@ -360,5 +380,67 @@ class _ProfileScreenState extends State<ProfileScreen> {
       MaterialPageRoute(builder: (_) => const Register()),
       (route) => false,
     );
+  }
+
+  Future<void> _confirmDeleteAccount() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: _surfaceColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(22),
+        ),
+        title: Text(
+          'Eliminar cuenta',
+          style: KaliText.body(_primaryText, size: 18, weight: FontWeight.w700),
+        ),
+        content: Text(
+          'Esta acción es permanente. Se eliminarán tu cuenta y todos tus '
+          'datos: reservas, lista de espera, planes y notificaciones. '
+          'No se puede deshacer.',
+          style: KaliText.body(_secondaryText, size: 14, weight: FontWeight.w400),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(
+              'Cancelar',
+              style: KaliText.body(_secondaryText, size: 14, weight: FontWeight.w600),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(
+              'Eliminar',
+              style: KaliText.body(_dangerColor, size: 14, weight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      await const SupabaseAuthService().deleteAccount();
+
+      if (!mounted) return;
+      Navigator.of(context).pop(); // cerrar el loader
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const Register()),
+        (route) => false,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.of(context).pop(); // cerrar el loader
+      _showMessage(e.toString().replaceFirst('Exception: ', ''));
+    }
   }
 }

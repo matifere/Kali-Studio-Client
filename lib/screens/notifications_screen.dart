@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../supabase/notification_service.dart';
 import '../theme/kali_theme.dart';
+import '../widgets/motion.dart';
 import '../widgets/web_page_wrapper.dart';
 
 class NotificationsScreen extends StatefulWidget {
@@ -77,7 +78,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 Divider(color: KaliColors.sand2, height: 1, indent: 16, endIndent: 16),
             itemBuilder: (context, index) {
               final n = notifications[index];
-              return _NotificationTile(notification: n);
+              return FadeSlideIn(
+                key: ValueKey(n.id),
+                delay: Duration(milliseconds: 45 * (index < 8 ? index : 8)),
+                child: _NotificationTile(notification: n),
+              );
             },
           );
         },

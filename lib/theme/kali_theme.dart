@@ -88,9 +88,20 @@ class KaliText {
 
 // ─── Tema global ──────────────────────────────────────────────────────────────
 class KaliTheme {
+  // Transiciones de página suaves (zoom de Material) en todas las plataformas,
+  // para que los push nativos no se sientan abruptos.
+  static const PageTransitionsTheme _pageTransitions = PageTransitionsTheme(
+    builders: {
+      TargetPlatform.android: ZoomPageTransitionsBuilder(),
+      TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+      TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+    },
+  );
+
   static ThemeData get theme => ThemeData(
         useMaterial3: true,
         scaffoldBackgroundColor: KaliColors.warmWhite,
+        pageTransitionsTheme: _pageTransitions,
         colorScheme: ColorScheme.light(
           primary: KaliColors.espresso,
           secondary: KaliColors.clay,
@@ -107,6 +118,7 @@ class KaliTheme {
   static ThemeData get darkTheme => ThemeData(
         useMaterial3: true,
         scaffoldBackgroundColor: const Color(0xFF161210),
+        pageTransitionsTheme: _pageTransitions,
         colorScheme: const ColorScheme.dark(
           primary: Color(0xFFE8D4C0),
           secondary: Color(0xFFC8A989),

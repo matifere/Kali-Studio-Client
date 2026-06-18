@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:kali_studio/models/models.dart';
 import 'package:kali_studio/theme/kali_theme.dart';
 import 'package:kali_studio/widgets/google_fonts_helper.dart';
+import 'package:kali_studio/widgets/motion.dart';
 
 class ClassListItem extends StatelessWidget {
   final PilatesClass cls;
@@ -11,7 +12,7 @@ class ClassListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return Pressable(
       onTap: onTap,
       child: Container(
         color: Colors.transparent,

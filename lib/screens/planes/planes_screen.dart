@@ -8,6 +8,7 @@ import '../../supabase/plan_service.dart';
 import '../../theme/kali_theme.dart';
 import '../../utils/auth_utils.dart';
 import '../../widgets/google_fonts_helper.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/web_page_wrapper.dart';
 
 class PlanesScreen extends StatefulWidget {
@@ -199,7 +200,7 @@ class _PlanesScreenState extends State<PlanesScreen> {
     required bool enabled,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return Pressable(
       onTap: enabled ? onTap : null,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
@@ -373,7 +374,7 @@ class _PlanesScreenState extends State<PlanesScreen> {
                         ],
                       ),
                       const SizedBox(height: 14),
-                      GestureDetector(
+                      Pressable(
                         onTap: () => _showPlanDetail(plan),
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 12),
@@ -537,7 +538,7 @@ class _PlanesScreenState extends State<PlanesScreen> {
                       .toList(),
                 ),
               ),
-              GestureDetector(
+              Pressable(
                 onTap: onActivate,
                 child: Container(
                   width: double.infinity,

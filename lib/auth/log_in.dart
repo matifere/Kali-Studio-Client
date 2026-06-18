@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:kali_studio/auth/register.dart';
 import 'package:kali_studio/screens/main_shell.dart';
@@ -67,7 +68,12 @@ class _LogInState extends State<LogIn> {
             ],
           ),
           SafeArea(
-            child: Center(
+            child: LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
+                    child: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 480),
                 child: Padding(
@@ -132,6 +138,10 @@ class _LogInState extends State<LogIn> {
                   ],
                 ),
               ),
+              ),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -226,7 +236,10 @@ class _ResetPasswordSheetState extends State<_ResetPasswordSheet> {
     try {
       await Supabase.instance.client.auth.resetPasswordForEmail(
         email,
-        redirectTo: 'https://turnos.argity.com',
+        // Web vuelve al sitio; móvil abre la app vía deep link (custom scheme).
+        // supabase_flutter detecta el link entrante y dispara el evento
+        // passwordRecovery, que _AuthGate ya enruta a NewPasswordScreen.
+        redirectTo: kIsWeb ? 'https://turnos.argity.com' : kAuthDeepLink,
       );
       if (!mounted) return;
       setState(() { _loading = false; _sent = true; });
