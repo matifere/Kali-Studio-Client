@@ -50,7 +50,7 @@ flutter_launcher_icons:
 #   dart run flutter_native_splash:create
 flutter_native_splash:
   color: "#FFFFFF"
-  image: "assets/branding/kali_logo.png"
+  image: "assets/images/argrity_logo.png"
   android_12:
     color: "#FFFFFF"
-    image: "assets/branding/kali_logo.png"
+    image: "assets/images/argrity_logo.png"

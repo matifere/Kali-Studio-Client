@@ -11,7 +11,6 @@ import 'reservas/booking_detail_screen.dart';
 import 'home_screen.dart';
 import 'perfil/profile_screen.dart';
 import 'planes/planes_screen.dart';
-import 'chimpy/chimpy_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -143,8 +142,6 @@ class _MainShellState extends State<MainShell> {
       case 4:
         // ignore: prefer_const_constructors
         return ProfileScreen();
-      case 5:
-        return const ChimpyScreen();
       default:
         return const SizedBox.shrink();
     }
@@ -167,10 +164,6 @@ class _MainShellState extends State<MainShell> {
         label: 'Planes'),
     _NavItem(
         icon: Icons.person_outline, activeIcon: Icons.person, label: 'Perfil'),
-    _NavItem(
-        icon: Icons.emoji_emotions_outlined,
-        activeIcon: Icons.emoji_emotions,
-        label: 'Chimpy'),
   ];
 
   @override
