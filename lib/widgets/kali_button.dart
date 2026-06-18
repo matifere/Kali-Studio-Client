@@ -19,6 +19,12 @@ class KaliButton extends StatefulWidget {
 
 class _KaliButtonState extends State<KaliButton> {
   bool _hovered = false;
+  bool _pressed = false;
+
+  void _setPressed(bool value) {
+    if (widget.onPressed == null || _pressed == value) return;
+    setState(() => _pressed = value);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,22 +40,34 @@ class _KaliButtonState extends State<KaliButton> {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: widget.onPressed,
-        child: AnimatedOpacity(
-          opacity: _hovered ? 0.75 : 1.0,
-          duration: const Duration(milliseconds: 130),
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            decoration: BoxDecoration(
-              color: fillColor,
-              border: Border.all(color: borderColor, width: 1),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Text(
-              widget.text.toUpperCase(),
-              textAlign: TextAlign.center,
-              style: KaliText.label(textColor)
-                  .copyWith(fontSize: 12, letterSpacing: 1.8),
+        onTapDown: (_) => _setPressed(true),
+        onTapUp: (_) => _setPressed(false),
+        onTapCancel: () => _setPressed(false),
+        child: AnimatedScale(
+          scale: _pressed ? 0.97 : 1.0,
+          duration: const Duration(milliseconds: 110),
+          curve: Curves.easeOut,
+          child: AnimatedOpacity(
+            opacity: !enabled
+                ? 0.5
+                : _hovered
+                    ? 0.75
+                    : 1.0,
+            duration: const Duration(milliseconds: 130),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              decoration: BoxDecoration(
+                color: fillColor,
+                border: Border.all(color: borderColor, width: 1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Text(
+                widget.text.toUpperCase(),
+                textAlign: TextAlign.center,
+                style: KaliText.label(textColor)
+                    .copyWith(fontSize: 12, letterSpacing: 1.8),
+              ),
             ),
           ),
         ),

@@ -1,7 +1,12 @@
 import 'dart:async';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kali_studio/auth/new_password_screen.dart';
+import 'package:kali_studio/firebase_options.dart';
+import 'package:kali_studio/services/mobile_push_service.dart';
 import 'package:kali_studio/auth/register_success_screen.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kali_studio/auth/register.dart';
@@ -28,6 +33,16 @@ Future<void> main() async {
 
   await ThemeController.instance.load();
   await Supabase.initialize(url: url, anonKey: anon);
+
+  // Push móvil (FCM). En web el push usa VAPID por separado, así que se omite.
+  if (!kIsWeb) {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    await MobilePushService.instance.init();
+  }
+
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
@@ -44,7 +59,7 @@ class KaliApp extends StatelessWidget {
       animation: ThemeController.instance,
       builder: (context, _) {
         return MaterialApp(
-          title: 'Argity',
+          title: 'Kali Studio',
           theme: KaliTheme.theme,
           darkTheme: KaliTheme.darkTheme,
           themeMode: ThemeController.instance.themeMode,

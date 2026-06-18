@@ -6,6 +6,7 @@ import 'package:kali_studio/supabase/profile_manager.dart';
 import 'package:kali_studio/widgets/google_fonts_helper.dart';
 import '../models/models.dart';
 import '../theme/kali_theme.dart';
+import '../widgets/motion.dart';
 import '../widgets/web_page_wrapper.dart';
 
 // ── Data ─────────────────────────────────────────────────────────────────────
@@ -123,29 +124,47 @@ class _HomeScreenState extends State<HomeScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _sectionLabel('Tu próxima clase'),
-                            const SizedBox(height: 14),
-                            if (isLoading)
-                              _buildLoadingCard()
-                            else if (data?.nextClass != null)
-                              _buildNextClassCard(data!.nextClass!)
-                            else
-                              _buildEmptyCard(
-                                title: 'Sin próxima clase',
-                                subtitle: 'Todavía no tenés clases reservadas.',
+                            FadeSlideIn(
+                              delay: const Duration(milliseconds: 80),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _sectionLabel('Tu próxima clase'),
+                                  const SizedBox(height: 14),
+                                  if (isLoading)
+                                    _buildLoadingCard()
+                                  else if (data?.nextClass != null)
+                                    _buildNextClassCard(data!.nextClass!)
+                                  else
+                                    _buildEmptyCard(
+                                      title: 'Sin próxima clase',
+                                      subtitle:
+                                          'Todavía no tenés clases reservadas.',
+                                    ),
+                                ],
                               ),
+                            ),
                             const SizedBox(height: 28),
-                            _sectionLabel('Tu plan'),
-                            const SizedBox(height: 14),
-                            if (isLoading)
-                              _buildLoadingCard()
-                            else if (data?.plan != null)
-                              _buildPlanCard(data!.plan!)
-                            else
-                              _buildEmptyCard(
-                                title: 'Sin plan activo',
-                                subtitle: 'Todavía no tenés un plan activo.',
+                            FadeSlideIn(
+                              delay: const Duration(milliseconds: 180),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _sectionLabel('Tu plan'),
+                                  const SizedBox(height: 14),
+                                  if (isLoading)
+                                    _buildLoadingCard()
+                                  else if (data?.plan != null)
+                                    _buildPlanCard(data!.plan!)
+                                  else
+                                    _buildEmptyCard(
+                                      title: 'Sin plan activo',
+                                      subtitle:
+                                          'Todavía no tenés un plan activo.',
+                                    ),
+                                ],
                               ),
+                            ),
                           ],
                         ),
                       ),
@@ -342,28 +361,24 @@ class _HomeScreenState extends State<HomeScreen>
   // ── Shared card shell ──────────────────────────────────────────────────────
 
   Widget _buildDarkCard({required Widget child, VoidCallback? onTap}) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
-          decoration: BoxDecoration(
-            color: KaliColors.espresso,
-            borderRadius: BorderRadius.circular(32),
-          ),
-          child: Stack(
-            children: [
-              Positioned(
-                right: -58,
-                top: 12,
-                child: _decorativeCircle(160, alpha: 0.52),
-              ),
-              child,
-            ],
-          ),
+    return Pressable(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+        decoration: BoxDecoration(
+          color: KaliColors.espresso,
+          borderRadius: BorderRadius.circular(32),
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              right: -58,
+              top: 12,
+              child: _decorativeCircle(160, alpha: 0.52),
+            ),
+            child,
+          ],
         ),
       ),
     );
@@ -383,21 +398,18 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _ctaButton({required String label, VoidCallback? onTap}) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: KaliColors.clay,
-            borderRadius: BorderRadius.circular(999),
-          ),
-          child: Text(label,
-              style: KaliText.body(KaliColors.background, size: 14,
-                  weight: FontWeight.w700)),
+    return Pressable(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: KaliColors.clay,
+          borderRadius: BorderRadius.circular(999),
         ),
+        child: Text(label,
+            style: KaliText.body(KaliColors.background, size: 14,
+                weight: FontWeight.w700)),
       ),
     );
   }

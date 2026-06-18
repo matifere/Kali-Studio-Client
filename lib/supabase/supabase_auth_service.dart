@@ -1,5 +1,8 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/mobile_push_service.dart';
+import '../utils/auth_utils.dart';
 import 'profile_manager.dart';
 import 'studio_service.dart';
 
@@ -57,6 +60,9 @@ class SupabaseAuthService {
         email: email,
         password: password,
         data: {'full_name': fullName},
+        // En móvil el link de confirmación abre la app vía deep link; en web
+        // emailRedirectTo se ignora y se usa el Site URL del proyecto.
+        emailRedirectTo: kIsWeb ? null : kAuthDeepLink,
       );
 
       final requiresEmailConfirmation = response.session == null;
@@ -103,6 +109,8 @@ class SupabaseAuthService {
         _ensureProfile(user),
         getInstitutionId(),
       ]);
+      // Registrar el token FCM de este dispositivo para el usuario (no-op en web).
+      unawaited(MobilePushService.instance.syncToken());
     }
   }
 
@@ -125,9 +133,32 @@ class SupabaseAuthService {
   }
 
   Future<void> signOut() async {
+    // Antes de cerrar sesión (mientras el RLS todavía lo permite) borrar el
+    // token FCM de este dispositivo para no recibir push de la cuenta saliente.
+    await MobilePushService.instance.removeToken();
     clearProfileCache();
     StudioService.clearCache();
     await _client.auth.signOut();
+  }
+
+  /// Borra de forma permanente la cuenta del usuario logueado y todos sus
+  /// datos asociados (reservas, lista de espera, suscripciones, pagos,
+  /// notificaciones) vía la Edge Function `delete-account`, y luego cierra
+  /// la sesión local. Requerido por App Store y Google Play.
+  Future<void> deleteAccount() async {
+    if (_client.auth.currentSession == null) {
+      throw Exception('Tu sesión expiró. Volvé a iniciar sesión.');
+    }
+
+    final response = await _client.functions.invoke('delete-account');
+
+    if (response.status != 200) {
+      final err = (response.data as Map<String, dynamic>?)?['error'] as String?
+          ?? 'No pudimos eliminar tu cuenta. Intentá de nuevo.';
+      throw Exception(err);
+    }
+
+    await signOut();
   }
 
   Future<void> _upsertProfile({

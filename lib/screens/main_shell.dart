@@ -11,6 +11,7 @@ import 'reservas/booking_detail_screen.dart';
 import 'home_screen.dart';
 import 'perfil/profile_screen.dart';
 import 'planes/planes_screen.dart';
+import 'chimpy/chimpy_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -95,6 +96,32 @@ class _MainShellState extends State<MainShell> {
     );
   }
 
+  /// Envuelve la pantalla activa con un fade + leve desplazamiento al cambiar
+  /// de pestaña, para que la transición no sea un corte seco.
+  Widget _animatedBody() {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 280),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeIn,
+      transitionBuilder: (child, animation) {
+        return FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 0.012),
+              end: Offset.zero,
+            ).animate(animation),
+            child: child,
+          ),
+        );
+      },
+      child: KeyedSubtree(
+        key: ValueKey(_currentIndex),
+        child: _buildScreen(),
+      ),
+    );
+  }
+
   Widget _buildScreen() {
     switch (_currentIndex) {
       case 0:
@@ -116,6 +143,8 @@ class _MainShellState extends State<MainShell> {
       case 4:
         // ignore: prefer_const_constructors
         return ProfileScreen();
+      case 5:
+        return const ChimpyScreen();
       default:
         return const SizedBox.shrink();
     }
@@ -138,6 +167,10 @@ class _MainShellState extends State<MainShell> {
         label: 'Planes'),
     _NavItem(
         icon: Icons.person_outline, activeIcon: Icons.person, label: 'Perfil'),
+    _NavItem(
+        icon: Icons.emoji_emotions_outlined,
+        activeIcon: Icons.emoji_emotions,
+        label: 'Chimpy'),
   ];
 
   @override
@@ -164,12 +197,7 @@ class _MainShellState extends State<MainShell> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _buildSidebar(),
-            Expanded(
-              child: KeyedSubtree(
-                key: ValueKey(_currentIndex),
-                child: _buildScreen(),
-              ),
-            ),
+            Expanded(child: _animatedBody()),
           ],
         ),
       );
@@ -189,7 +217,7 @@ class _MainShellState extends State<MainShell> {
           ),
         ),
         title: Text(
-            'Argity',
+            'Kali Studio',
             style: KaliText.body(KaliColors.espresso, size: 15, weight: FontWeight.w600),
           ),
         actions: [_bellIcon()],
@@ -198,10 +226,7 @@ class _MainShellState extends State<MainShell> {
           child: Divider(color: KaliColors.sand2, thickness: 1, height: 1),
         ),
       ),
-      body: KeyedSubtree(
-        key: ValueKey(_currentIndex),
-        child: _buildScreen(),
-      ),
+      body: _animatedBody(),
     );
   }
 

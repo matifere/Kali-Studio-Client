@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- La app no hace tracking publicitario (sin IDFA / ATT). -->
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+	<!-- Tipos de datos recolectados por el CÓDIGO DE LA APP en sí. La
+	     recolección vía Supabase (email, nombre, foto) se declara en la
+	     Privacy Nutrition Label de App Store Connect; cada SDK aporta su
+	     propio manifest. Mantener esto sincronizado con la label de ASC. -->
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+	<!-- Reason codes de APIs de Apple que requieren justificación. -->
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<!-- UserDefaults, usado por shared_preferences. -->
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>CA92.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>

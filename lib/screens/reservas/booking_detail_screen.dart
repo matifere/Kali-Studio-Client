@@ -7,6 +7,7 @@ import '../../supabase/booking_service.dart';
 import '../../theme/kali_theme.dart';
 import '../../utils/auth_utils.dart';
 import 'booking_history_screen.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/web_page_wrapper.dart';
 
 class BookingDetailScreen extends StatefulWidget {
@@ -205,27 +206,24 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                       ),
                     ),
                   ),
-                  MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() => _selectedReservation = _reservations.firstOrNull);
-                        _scrollToDetails();
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 18, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: _accentSurface,
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Text(
-                          'Detalles',
-                          style: KaliText.body(
-                            Colors.white,
-                            size: 13,
-                            weight: FontWeight.w700,
-                          ),
+                  Pressable(
+                    onTap: () {
+                      setState(() => _selectedReservation = _reservations.firstOrNull);
+                      _scrollToDetails();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 18, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: _accentSurface,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Text(
+                        'Detalles',
+                        style: KaliText.body(
+                          Colors.white,
+                          size: 13,
+                          weight: FontWeight.w700,
                         ),
                       ),
                     ),
@@ -250,16 +248,20 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
       cards.add(
         Padding(
           padding: EdgeInsets.only(bottom: i == related.length - 1 ? 0 : 14),
-          child: _BookingPreviewCard(
-            title: item.name,
-            badge: _relativeDateBadge(item.sessionDate),
-            dateText: _supportDateText(item),
-            instructor: item.instructor,
-            onPrimaryTap: () {
-              setState(() => _selectedReservation = item);
-              _scrollToDetails();
-            },
-            onSecondaryTap: () { _showCancelConfirmation(item); },
+          child: FadeSlideIn(
+            key: ValueKey(item.id),
+            delay: Duration(milliseconds: 60 * i),
+            child: _BookingPreviewCard(
+              title: item.name,
+              badge: _relativeDateBadge(item.sessionDate),
+              dateText: _supportDateText(item),
+              instructor: item.instructor,
+              onPrimaryTap: () {
+                setState(() => _selectedReservation = item);
+                _scrollToDetails();
+              },
+              onSecondaryTap: () { _showCancelConfirmation(item); },
+            ),
           ),
         ),
       );
@@ -359,7 +361,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             ),
           ),
           const SizedBox(height: 10),
-          GestureDetector(
+          Pressable(
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
@@ -657,32 +659,26 @@ class _BookingPreviewCard extends StatelessWidget {
           const SizedBox(height: 18),
           Row(
             children: [
-              MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: GestureDetector(
-                  onTap: onPrimaryTap,
-                  child: Text(
-                    'Ver detalles',
-                    style: KaliText.body(
-                      actionText,
-                      size: 13,
-                      weight: FontWeight.w700,
-                    ),
+              Pressable(
+                onTap: onPrimaryTap,
+                child: Text(
+                  'Ver detalles',
+                  style: KaliText.body(
+                    actionText,
+                    size: 13,
+                    weight: FontWeight.w700,
                   ),
                 ),
               ),
               const SizedBox(width: 18),
-              MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: GestureDetector(
-                  onTap: onSecondaryTap,
-                  child: Text(
-                    'Cancelar',
-                    style: KaliText.body(
-                      secondaryActionText,
-                      size: 13,
-                      weight: FontWeight.w500,
-                    ),
+              Pressable(
+                onTap: onSecondaryTap,
+                child: Text(
+                  'Cancelar',
+                  style: KaliText.body(
+                    secondaryActionText,
+                    size: 13,
+                    weight: FontWeight.w500,
                   ),
                 ),
               ),

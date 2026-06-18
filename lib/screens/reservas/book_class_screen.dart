@@ -6,6 +6,7 @@ import '../../supabase/booking_service.dart';
 import '../../supabase/waitlist_service.dart';
 import '../../theme/kali_theme.dart';
 import '../../utils/auth_utils.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/web_page_wrapper.dart';
 
 class BookClassScreen extends StatefulWidget {
@@ -137,7 +138,7 @@ class _BookClassScreenState extends State<BookClassScreen> {
                   ),
                 ),
               ),
-              GestureDetector(
+              Pressable(
                 onTap: () {
                   final newMonth =
                       DateTime(_visibleMonth.year, _visibleMonth.month - 1);
@@ -148,7 +149,7 @@ class _BookClassScreenState extends State<BookClassScreen> {
                     color: _mutedText, size: 24),
               ),
               const SizedBox(width: 8),
-              GestureDetector(
+              Pressable(
                 onTap: () {
                   final newMonth =
                       DateTime(_visibleMonth.year, _visibleMonth.month + 1);
@@ -201,7 +202,7 @@ class _BookClassScreenState extends State<BookClassScreen> {
               return SizedBox(
                 width: cellWidth,
                 child: Center(
-                  child: GestureDetector(
+                  child: Pressable(
                     onTap: isPast ? null : () {
                       setState(() => _selectedDate = date);
                       _loadSessionsForDate(date);
@@ -245,34 +246,27 @@ class _BookClassScreenState extends State<BookClassScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Flexible(
-              child: Text(
-                'Horarios Disponibles',
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFontsHelper.cormorant(
-                  _primaryText,
-                  24,
-                  italic: true,
-                  weight: FontWeight.w400,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-              decoration: BoxDecoration(
-                color: _pillBackground,
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                _formattedSelectedDate(),
-                style: KaliText.label(_mutedText)
-                    .copyWith(fontSize: 9, letterSpacing: 1.3),
-              ),
-            ),
-          ],
+        Text(
+          'Horarios Disponibles',
+          style: GoogleFontsHelper.cormorant(
+            _primaryText,
+            24,
+            italic: true,
+            weight: FontWeight.w400,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(
+            color: _pillBackground,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            _formattedSelectedDate(),
+            style: KaliText.label(_mutedText)
+                .copyWith(fontSize: 9, letterSpacing: 1.3),
+          ),
         ),
         const SizedBox(height: 20),
         if (_isLoadingSessions)
@@ -293,17 +287,23 @@ class _BookClassScreenState extends State<BookClassScreen> {
             return Padding(
               padding: EdgeInsets.only(
                   bottom: index == _sessions.length - 1 ? 0 : 14),
-              child: _ScheduleCard(
-                cls: cls,
-                action: action,
-                onTap: switch (action) {
-                  ClassCardAction.book => () => _showBookConfirmation(cls),
-                  ClassCardAction.joinWaitlist => () =>
-                      _showJoinWaitlistConfirmation(cls),
-                  ClassCardAction.leaveWaitlist => () =>
-                      _showLeaveWaitlistConfirmation(cls),
-                  ClassCardAction.booked => null,
-                },
+              child: FadeSlideIn(
+                // key por sesión: al cambiar de fecha la tarjeta se recrea
+                // y vuelve a animar su entrada.
+                key: ValueKey(cls.id),
+                delay: Duration(milliseconds: 50 * index),
+                child: _ScheduleCard(
+                  cls: cls,
+                  action: action,
+                  onTap: switch (action) {
+                    ClassCardAction.book => () => _showBookConfirmation(cls),
+                    ClassCardAction.joinWaitlist => () =>
+                        _showJoinWaitlistConfirmation(cls),
+                    ClassCardAction.leaveWaitlist => () =>
+                        _showLeaveWaitlistConfirmation(cls),
+                    ClassCardAction.booked => null,
+                  },
+                ),
               ),
             );
           }),
@@ -788,7 +788,7 @@ class _BookConfirmButton extends StatelessWidget {
     final bg = filled ? KaliColors.espresso : Colors.transparent;
     final fg = filled ? KaliColors.background : KaliColors.espresso;
 
-    return GestureDetector(
+    return Pressable(
       onTap: onTap,
       child: Container(
         width: double.infinity,
@@ -986,10 +986,9 @@ class _HoverPillState extends State<_HoverPill> {
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
-      cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
+      child: Pressable(
         onTap: widget.onTap,
         child: AnimatedOpacity(
           opacity: _hovered ? 0.72 : 1.0,

@@ -1,3 +1,9 @@
+/// Deep link (custom scheme) usado como `redirectTo` en los flujos de auth de
+/// Supabase en móvil (reset de contraseña, confirmación de email). Debe coincidir
+/// con el intent-filter de AndroidManifest.xml, el CFBundleURLSchemes de
+/// Info.plist y la allow-list de Supabase → Auth → URL Configuration.
+const String kAuthDeepLink = 'com.argity.turnos://login-callback/';
+
 /// Strips technical wrappers (Exception:, AuthException(...), etc.) from a
 /// raw error message.
 String _cleanErrorMessage(String message) {
