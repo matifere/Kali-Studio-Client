@@ -53,6 +53,7 @@ String humanizeAuthError(
   if (clean.contains('socketexception') ||
       clean.contains('failed host lookup') ||
       clean.contains('xmlhttprequest') ||
+      clean.contains('failed to fetch') ||
       clean.contains('connection refused') ||
       clean.contains('connection reset') ||
       clean.contains('connection closed') ||

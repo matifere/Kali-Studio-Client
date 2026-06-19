@@ -640,6 +640,7 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
   bool _awaitingVerification = false;
   String? _alias;
   String? _mpUrl;
+  String? _error;
 
   @override
   void initState() {
@@ -659,18 +660,13 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
       }
     } catch (e) {
       if (!mounted) return;
-      setState(() => _loadingMethod = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(humanizeError(
-            e,
-            fallback: 'No pudimos iniciar el pago. Intentá de nuevo.',
-          )),
-          backgroundColor: KaliColors.espresso,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
+      setState(() {
+        _loadingMethod = false;
+        _error = humanizeError(
+          e,
+          fallback: 'No pudimos iniciar el pago. Intentá de nuevo.',
+        );
+      });
     }
   }
 
@@ -794,7 +790,7 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
               ),
               const SizedBox(height: 12),
             ],
-            if (!_loadingMethod)
+            if (!_loadingMethod && _error == null)
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -823,6 +819,30 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
                 child: Padding(
                   padding: EdgeInsets.symmetric(vertical: 12),
                   child: CircularProgressIndicator(),
+                ),
+              )
+            else if (_error != null)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: KaliColors.sand,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.error_outline_rounded,
+                        size: 18, color: KaliColors.clayDark),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        _error!,
+                        style: KaliText.body(KaliColors.espresso, size: 14)
+                            .copyWith(height: 1.5),
+                      ),
+                    ),
+                  ],
                 ),
               )
             else if (_alias != null) ...[

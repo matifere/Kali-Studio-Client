@@ -42,13 +42,18 @@ class PlanService {
       throw Exception('Tu sesión expiró. Volvé a iniciar sesión.');
     }
 
-    final response = await _supabase.functions.invoke(
-      'create-preference',
-      body: {'plan_id': planId},
-    );
-
-    if (response.status != 200) {
-      final err = (response.data as Map<String, dynamic>?)?['error'] as String?
+    final FunctionResponse response;
+    try {
+      response = await _supabase.functions.invoke(
+        'create-preference',
+        body: {'plan_id': planId},
+      );
+    } on FunctionException catch (e) {
+      // 503 = el estudio no tiene MP token ni alias configurados (ambos null).
+      if (e.status == 503) {
+        throw Exception('Tuvimos un error. Comunicarse con el dueño del gimnasio.');
+      }
+      final err = (e.details is Map ? (e.details as Map)['error'] : null) as String?
           ?? 'No pudimos iniciar el pago. Intentá de nuevo.';
       throw Exception(err);
     }
