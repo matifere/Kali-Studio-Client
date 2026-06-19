@@ -40,8 +40,19 @@
     body {
       margin: 0;
       min-height: 100%;
-      background-color: #FFFFFF;
-          background-size: 100% 100%;
+      background-color: #F5EFE8;
+      background-size: 100% 100%;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background-color: #2C1F14;
+      }
+    }
+
+    @keyframes splashFadeIn {
+      from { opacity: 0; transform: translate(-50%, -50%) scale(0.96); }
+      to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
     }
 
     .center {
@@ -49,8 +60,13 @@
       position: absolute;
       top: 50%;
       left: 50%;
+      max-width: 60%;
+      max-height: 60%;
+      width: auto;
+      height: auto;
       -ms-transform: translate(-50%, -50%);
       transform: translate(-50%, -50%);
+      animation: splashFadeIn 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
     }
 
     .contain {
@@ -92,9 +108,18 @@
   </style>
   <script id="splash-screen-script">
     function removeSplashFromWeb() {
-      document.getElementById("splash")?.remove();
-      document.getElementById("splash-branding")?.remove();
-      document.body.style.background = "transparent";
+      var splash = document.getElementById("splash");
+      var branding = document.getElementById("splash-branding");
+      [splash, branding].forEach(function (el) {
+        if (!el) return;
+        el.style.transition = "opacity 350ms ease";
+        el.style.opacity = "0";
+      });
+      setTimeout(function () {
+        splash?.remove();
+        branding?.remove();
+        document.body.style.background = "transparent";
+      }, 350);
     }
   </script>
 </head>
