@@ -680,7 +680,7 @@ class _BookConfirmSheet extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Solo podés cancelar hasta 24 horas antes de la clase. Pasado ese límite, se descontará una sesión de tu plan mensual.',
+                    'Solo podés cancelar hasta 2 horas antes de la clase. Pasado ese límite, se descontará una sesión de tu plan mensual.',
                     style: KaliText.body(
                       primaryText,
                       size: 13,

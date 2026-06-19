@@ -523,15 +523,15 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     );
   }
 
-  bool _isWithin24Hours(PilatesClass cls) {
+  bool _isWithin2Hours(PilatesClass cls) {
     final classTime = _classDateTime(cls);
     if (classTime == null) return false;
     final diff = classTime.difference(DateTime.now());
-    return diff.inHours < 24;
+    return diff.inHours < 2;
   }
 
   Future<void> _showCancelConfirmation(PilatesClass cls) async {
-    final within24h = _isWithin24Hours(cls);
+    final within2h = _isWithin2Hours(cls);
 
     final confirmed = await showModalBottomSheet<bool>(
       context: context,
@@ -539,7 +539,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
       isScrollControlled: true,
       builder: (_) => _CancelConfirmSheet(
         cls: cls,
-        within24h: within24h,
+        within2h: within2h,
       ),
     );
 
@@ -804,11 +804,11 @@ class _DetailRow extends StatelessWidget {
 
 class _CancelConfirmSheet extends StatelessWidget {
   final PilatesClass cls;
-  final bool within24h;
+  final bool within2h;
 
   const _CancelConfirmSheet({
     required this.cls,
-    required this.within24h,
+    required this.within2h,
   });
 
   @override
@@ -873,7 +873,7 @@ class _CancelConfirmSheet extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Icon(
-                  within24h
+                  within2h
                       ? Icons.block_rounded
                       : Icons.info_outline_rounded,
                   size: 18,
@@ -882,9 +882,9 @@ class _CancelConfirmSheet extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    within24h
-                        ? 'No podés cancelar esta clase. Faltan menos de 24 horas y el período de cancelación ya cerró.'
-                        : 'Una vez confirmada, solo podés cancelar hasta 24 horas antes de la clase.',
+                    within2h
+                        ? 'No podés cancelar esta clase. Faltan menos de 2 horas y el período de cancelación ya cerró.'
+                        : 'Una vez confirmada, solo podés cancelar hasta 2 horas antes de la clase.',
                     style: KaliText.body(
                       primaryText,
                       size: 13,
@@ -896,7 +896,7 @@ class _CancelConfirmSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          if (!within24h) ...[
+          if (!within2h) ...[
             KaliButton(
               text: 'Confirmar cancelación',
               onPressed: () => Navigator.pop(context, true),
@@ -905,7 +905,7 @@ class _CancelConfirmSheet extends StatelessWidget {
             const SizedBox(height: 12),
           ],
           KaliButton(
-            text: within24h ? 'Entendido' : 'Volver',
+            text: within2h ? 'Entendido' : 'Volver',
             onPressed: () => Navigator.pop(context, false),
           ),
           const SizedBox(height: 8),
