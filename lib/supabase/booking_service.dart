@@ -241,6 +241,7 @@ class BookingService {
     final error = result['error'] as String?;
     if (error == 'full') throw Exception('La clase está llena.');
     if (error == 'no_plan') throw Exception('Necesitás un plan activo para reservar.');
+    if (error == 'future_month') throw Exception('Solo podés reservar clases del mes actual.');
     if (error == 'already_booked') throw Exception('Ya tenés una reserva para esta clase.');
     if (error == 'monthly_limit_exceeded') throw Exception('Alcanzaste el límite de clases mensuales de tu plan.');
     throw Exception('No se pudo reservar.');
