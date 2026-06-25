@@ -6,9 +6,10 @@ import '../../supabase/booking_service.dart';
 import '../../supabase/waitlist_service.dart';
 import '../../theme/kali_theme.dart';
 import '../../utils/auth_utils.dart';
+import '../../utils/time_utils.dart';
+import '../../utils/ui_utils.dart';
 import '../../widgets/motion.dart';
 import '../../widgets/web_page_wrapper.dart';
-import '../../utils/ui_utils.dart';
 
 class BookClassScreen extends StatefulWidget {
   const BookClassScreen({super.key});
@@ -603,7 +604,7 @@ class _BookConfirmSheet extends StatelessWidget {
               [
                 if (dateStr.isNotEmpty)
                   dateStr[0].toUpperCase() + dateStr.substring(1),
-                if (cls.time.isNotEmpty) '${cls.time} ${cls.period}',
+                if (cls.time.isNotEmpty) TimeUtils.formatTime12h(cls.time),
               ].join(' · '),
               style: KaliText.body(
                 mutedText,
@@ -735,7 +736,7 @@ class _WaitlistSheet extends StatelessWidget {
               [
                 if (dateStr.isNotEmpty)
                   dateStr[0].toUpperCase() + dateStr.substring(1),
-                if (cls.time.isNotEmpty) '${cls.time} ${cls.period}',
+                if (cls.time.isNotEmpty) TimeUtils.formatTime12h(cls.time),
               ].join(' · '),
               style: KaliText.body(
                 mutedText,
@@ -905,7 +906,7 @@ class _ScheduleCard extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        cls.time,
+                        TimeUtils.formatTime12h(cls.time),
                         maxLines: 1,
                         style: KaliText.body(
                           primaryText,

@@ -4,6 +4,7 @@ import 'package:kali_studio/widgets/google_fonts_helper.dart';
 import '../../models/models.dart';
 import '../../supabase/booking_service.dart';
 import '../../theme/kali_theme.dart';
+import '../../utils/time_utils.dart';
 import '../../widgets/web_page_wrapper.dart';
 
 class BookingHistoryScreen extends StatefulWidget {
@@ -278,7 +279,7 @@ class _HistoryCard extends StatelessWidget {
     final dateStr = cls.sessionDate != null
         ? DateFormat("d 'de' MMM", 'es').format(cls.sessionDate!)
         : '';
-    final timeStr = cls.time.isNotEmpty ? '${cls.time} ${cls.period}' : '';
+    final timeStr = cls.time.isNotEmpty ? TimeUtils.formatTime12h(cls.time) : '';
 
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),

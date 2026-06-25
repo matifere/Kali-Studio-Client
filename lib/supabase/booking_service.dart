@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../models/models.dart';
+import '../utils/time_utils.dart';
 import 'profile_manager.dart';
 import 'waitlist_service.dart';
 
@@ -343,11 +345,11 @@ class BookingService {
       id: row['id'] as String,
       name: row['name'] as String? ?? '',
       instructor: row['instructor_name'] as String? ?? '',
-      time: _formatTime(startTime),
-      period: _timePeriod(startTime),
+      time: TimeUtils.formatTime24h(startTime),
+      period: TimeUtils.timePeriod(startTime),
       room: '',
       level: '',
-      durationMin: _calcDuration(startTime, endTime),
+      durationMin: TimeUtils.calcDuration(startTime, endTime),
       totalSpots: row['capacity'] as int? ?? 0,
       takenSpots: confirmed.length,
       equipment: '',
@@ -373,11 +375,11 @@ class BookingService {
       id: session['id'] as String,
       name: session['name'] as String? ?? '',
       instructor: session['instructor_name'] as String? ?? '',
-      time: _formatTime(startTime),
-      period: _timePeriod(startTime),
+      time: TimeUtils.formatTime24h(startTime),
+      period: TimeUtils.timePeriod(startTime),
       room: '',
       level: '',
-      durationMin: _calcDuration(startTime, endTime),
+      durationMin: TimeUtils.calcDuration(startTime, endTime),
       totalSpots: session['capacity'] as int? ?? 0,
       takenSpots: confirmed.length,
       equipment: '',
@@ -398,27 +400,4 @@ class BookingService {
 
   static String _dateStr(DateTime date) =>
       '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-
-  static String _formatTime(String dbTime) {
-    final parts = dbTime.split(':');
-    final h = int.tryParse(parts[0]) ?? 0;
-    final m = parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0;
-    return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
-  }
-
-  static String _timePeriod(String dbTime) {
-    final h = int.tryParse(dbTime.split(':').first) ?? 0;
-    return h < 12 ? 'AM' : 'PM';
-  }
-
-  static int _calcDuration(String startTime, String endTime) {
-    final sp = startTime.split(':');
-    final ep = endTime.split(':');
-    final startMin =
-        (int.tryParse(sp[0]) ?? 0) * 60 + (int.tryParse(sp[1]) ?? 0);
-    final endMin =
-        (int.tryParse(ep[0]) ?? 0) * 60 + (int.tryParse(ep[1]) ?? 0);
-    final diff = endMin - startMin;
-    return diff > 0 ? diff : 60;
-  }
 }

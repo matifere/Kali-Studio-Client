@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:kali_studio/models/models.dart';
 import 'package:kali_studio/theme/kali_theme.dart';
+import 'package:kali_studio/utils/time_utils.dart';
 import 'package:kali_studio/widgets/google_fonts_helper.dart';
 import 'package:kali_studio/widgets/motion.dart';
 
@@ -25,7 +26,7 @@ class ClassListItem extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(cls.time,
+                  Text(TimeUtils.formatTime12h(cls.time).split(' ').first,
                       style:
                           GoogleFontsHelper.cormorant(KaliColors.espresso, 16)),
                   Text(cls.period, style: KaliText.label(KaliColors.clay)),

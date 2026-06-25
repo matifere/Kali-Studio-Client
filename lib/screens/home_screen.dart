@@ -6,6 +6,7 @@ import 'package:kali_studio/supabase/profile_manager.dart';
 import 'package:kali_studio/widgets/google_fonts_helper.dart';
 import '../models/models.dart';
 import '../theme/kali_theme.dart';
+import '../utils/time_utils.dart';
 import '../widgets/motion.dart';
 import '../widgets/web_page_wrapper.dart';
 
@@ -247,12 +248,12 @@ class _HomeScreenState extends State<HomeScreen>
         children: [
           RichText(
             text: TextSpan(
-              text: cls.time,
+              text: TimeUtils.formatTime12h(cls.time).split(' ').first,
               style: GoogleFontsHelper.cormorant(KaliColors.warmWhite, 42,
                   weight: FontWeight.w400),
               children: [
                 TextSpan(
-                  text: ' ${cls.period}',
+                  text: ' ${TimeUtils.formatTime12h(cls.time).split(' ').last}',
                   style: KaliText.body(
                     KaliColors.warmWhite.withValues(alpha: 0.72),
                     size: 18,

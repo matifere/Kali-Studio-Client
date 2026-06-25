@@ -6,10 +6,11 @@ import '../../models/models.dart';
 import '../../supabase/booking_service.dart';
 import '../../theme/kali_theme.dart';
 import '../../utils/auth_utils.dart';
+import '../../utils/ui_utils.dart';
+import '../../utils/time_utils.dart';
 import 'booking_history_screen.dart';
 import '../../widgets/motion.dart';
 import '../../widgets/web_page_wrapper.dart';
-import '../../utils/ui_utils.dart';
 
 class BookingDetailScreen extends StatefulWidget {
   const BookingDetailScreen({super.key});
@@ -452,8 +453,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
         ? '${DateFormat("d 'de' MMM", 'es').format(cls.sessionDate!)} · '
         : '';
     if (cls.time.isEmpty) return '${datePart}Horario por confirmar';
-    final endHour = _formatEndTime(cls.time, cls.period, cls.durationMin);
-    return '$datePart${cls.time} ${cls.period} - $endHour';
+    return '$datePart${TimeUtils.formatTimeRange12h(cls.time, cls.durationMin)}';
   }
 
   String _supportDateText(PilatesClass cls) {
@@ -461,7 +461,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
         ? '${DateFormat("d 'de' MMM", 'es').format(cls.sessionDate!)} · '
         : '';
     if (cls.time.isEmpty) return '${datePart}Horario por confirmar';
-    return '$datePart${cls.time} ${cls.period}';
+    return '$datePart${TimeUtils.formatTime12h(cls.time)}';
   }
 
   String _relativeDateBadge(DateTime? date) {
@@ -475,24 +475,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     return 'PRÓXIMA SEMANA';
   }
 
-  String _formatEndTime(String startTime, String period, int durationMin) {
-    final parts = startTime.split(':');
-    final hour = int.tryParse(parts.first) ?? 0;
-    final minute = int.tryParse(parts.last) ?? 0;
-    var hour24 = hour % 12;
-    if (period.toUpperCase() == 'PM') {
-      hour24 += 12;
-    }
 
-    final startMinutes = hour24 * 60 + minute;
-    final endMinutes = startMinutes + durationMin;
-    final endHour24 = (endMinutes ~/ 60) % 24;
-    final endMinute = endMinutes % 60;
-    final endPeriod = endHour24 >= 12 ? 'PM' : 'AM';
-    final normalizedHour = endHour24 % 12 == 0 ? 12 : endHour24 % 12;
-
-    return '${normalizedHour.toString().padLeft(2, '0')}:${endMinute.toString().padLeft(2, '0')} $endPeriod';
-  }
 
   void _scrollToDetails() {
     final ctx = _detailsPanelKey.currentContext;
@@ -509,17 +492,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
 
 
   DateTime? _classDateTime(PilatesClass cls) {
-    if (cls.sessionDate == null || cls.time.isEmpty) return null;
-    final parts = cls.time.split(':');
-    final hour = int.tryParse(parts.first) ?? 0;
-    final minute = parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0;
-    return DateTime(
-      cls.sessionDate!.year,
-      cls.sessionDate!.month,
-      cls.sessionDate!.day,
-      hour,
-      minute,
-    );
+    return TimeUtils.combineDateAndTime(cls.sessionDate, cls.time);
   }
 
   bool _isWithin2Hours(PilatesClass cls) {
