@@ -178,7 +178,13 @@ class _BookClassScreenState extends State<BookClassScreen> {
             ],
           ),
           const SizedBox(height: 20),
-          Row(
+          
+          Builder(builder: (context) {
+            final today = DateTime.now();
+            final todayDate = DateTime(today.year, today.month, today.day);
+            return Column(
+              children: [
+                Row(
             children: _weekDays
                 .map(
                   (day) => Expanded(
@@ -198,8 +204,6 @@ class _BookClassScreenState extends State<BookClassScreen> {
             spacing: 0,
             runSpacing: 10,
             children: days.map((date) {
-              final today = DateTime.now();
-              final todayDate = DateTime(today.year, today.month, today.day);
               final isPast = date.isBefore(todayDate);
               final isOutsideMonth = date.month != _visibleMonth.month;
               final isSelected = _isSameDay(date, _selectedDate);
@@ -253,6 +257,9 @@ class _BookClassScreenState extends State<BookClassScreen> {
               );
             }).toList(),
           ),
+          ],
+          );
+          }),
         ],
       ),
     );

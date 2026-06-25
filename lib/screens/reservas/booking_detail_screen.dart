@@ -244,6 +244,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
 
     if (related.isEmpty) return const SizedBox.shrink();
 
+    final today = DateTime.now();
+    final todayDate = DateTime(today.year, today.month, today.day);
+
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -258,7 +261,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             delay: Duration(milliseconds: 60 * index),
             child: _BookingPreviewCard(
               title: item.name,
-              badge: _relativeDateBadge(item.sessionDate),
+              badge: _relativeDateBadge(item.sessionDate, todayDate),
               dateText: _supportDateText(item),
               instructor: item.instructor,
               onPrimaryTap: () {
@@ -467,10 +470,8 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     return '$datePart${TimeUtils.formatTime12h(cls.time)}';
   }
 
-  String _relativeDateBadge(DateTime? date) {
+  String _relativeDateBadge(DateTime? date, DateTime todayDate) {
     if (date == null) return 'PRÓXIMA';
-    final today = DateTime.now();
-    final todayDate = DateTime(today.year, today.month, today.day);
     final diff = date.difference(todayDate).inDays;
     if (diff == 0) return 'HOY';
     if (diff == 1) return 'MAÑANA';
