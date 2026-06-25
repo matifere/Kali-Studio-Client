@@ -4,6 +4,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:kali_studio/auth/new_password_screen.dart';
 import 'package:kali_studio/firebase_options.dart';
 import 'package:kali_studio/services/mobile_push_service.dart';
@@ -22,14 +23,17 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('es');
 
-  const url = String.fromEnvironment(
-    'SUPABASE_URL',
-    defaultValue: 'https://tmfcnvtjzmtpqhzvfxos.supabase.co',
-  );
-  const anon = String.fromEnvironment(
-    'SUPABASE_ANON',
-    defaultValue: 'sb_publishable_TkebjBTlimQS7Uu4HWE-tQ_v3ylhC_b',
-  );
+  await dotenv.load(fileName: ".env");
+  final url = dotenv.env['URL'] ??
+      const String.fromEnvironment(
+        'SUPABASE_URL',
+        defaultValue: '',
+      );
+  final anon = dotenv.env['ANON'] ??
+      const String.fromEnvironment(
+        'SUPABASE_ANON',
+        defaultValue: '',
+      );
 
   await ThemeController.instance.load();
   await Supabase.initialize(url: url, anonKey: anon);
