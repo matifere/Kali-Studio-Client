@@ -21,19 +21,16 @@ class BookingService {
           .from('class_sessions')
           .select(
             'id, date, status, '
-            'name, description, instructor_name, start_time, end_time, capacity, '
-            'reservations(id, user_id, status)',
+            'name, description, instructor_name, start_time, end_time, capacity',
           )
           .eq('date', _dateStr(date))
           .eq('status', 'scheduled');
       if (institutionId != null) query = query.eq('institution_id', institutionId);
       final data = await query.order('start_time', ascending: true);
 
-      final sessions = ((data as List?) ?? [])
-          .map((row) => _fromSessionRow(row as Map<String, dynamic>, userId))
+      final sessionIds = ((data as List?) ?? [])
+          .map((row) => (row as Map<String, dynamic>)['id'] as String)
           .toList();
-
-      final sessionIds = sessions.map((s) => s.id).toList();
 
       final results = await Future.wait<Object?>([
         WaitlistService.fetchWaitlistForSessions(sessionIds),
@@ -41,6 +38,13 @@ class BookingService {
             ? Future.value(<dynamic>[])
             : _supabase.rpc('get_session_confirmed_counts',
                 params: {'p_session_ids': sessionIds}),
+        sessionIds.isEmpty
+            ? Future.value(<dynamic>[])
+            : _supabase
+                .from('reservations')
+                .select('id, session_id, status')
+                .inFilter('session_id', sessionIds)
+                .eq('user_id', userId),
       ]);
 
       final waitlistMap = results[0] as Map<String, String>;
@@ -49,6 +53,25 @@ class BookingService {
           (row as Map<String, dynamic>)['session_id'] as String:
               (row['confirmed_count'] as int? ?? 0),
       };
+
+      final userReservations = results[2] as List;
+      final userResMap = <String, String>{};
+      for (final row in userReservations) {
+        final r = row as Map<String, dynamic>;
+        final status = r['status'] as String;
+        if (status == 'confirmed' || status == 'waitlisted') {
+          userResMap[r['session_id'] as String] = r['id'] as String;
+        }
+      }
+
+      final sessions = ((data as List?) ?? [])
+          .map((row) => _fromSessionRow(
+                row as Map<String, dynamic>,
+                userId,
+                userResMap[(row)['id'] as String],
+                countsMap[(row)['id'] as String] ?? 0,
+              ))
+          .toList();
 
       return sessions
           .map((s) => PilatesClass(
@@ -61,7 +84,7 @@ class BookingService {
                 level: s.level,
                 durationMin: s.durationMin,
                 totalSpots: s.totalSpots,
-                takenSpots: countsMap[s.id] ?? s.takenSpots,
+                takenSpots: s.takenSpots,
                 equipment: s.equipment,
                 description: s.description,
                 isBooked: s.isBooked,
@@ -101,7 +124,7 @@ class BookingService {
       final data = await query.limit(50);
 
       final list = ((data as List?) ?? [])
-          .map((row) => _fromReservationRow(row as Map<String, dynamic>, userId))
+          .map((row) => _fromReservationRow(row as Map<String, dynamic>, userId, 0))
           .toList()
         ..sort(_byDateAndTime);
 
@@ -125,8 +148,7 @@ class BookingService {
           .select(
             'id, session_id, status, '
             'class_sessions!inner('
-            'id, date, name, description, instructor_name, start_time, end_time, capacity, '
-            'reservations(id, user_id, status)'
+            'id, date, name, description, instructor_name, start_time, end_time, capacity'
             ')',
           )
           .eq('user_id', userId)
@@ -134,10 +156,32 @@ class BookingService {
           .gte('class_sessions.date', _dateStr(todayDate))
           .limit(500);
 
-      final list = ((data as List?) ?? [])
+      final validRows = ((data as List?) ?? [])
           .where((row) => (row as Map<String, dynamic>)['class_sessions'] != null)
-          .map((row) =>
-              _fromReservationRow(row as Map<String, dynamic>, userId))
+          .toList();
+
+      final sessionIds = validRows
+          .map((row) => ((row as Map<String, dynamic>)['class_sessions'] as Map<String, dynamic>)['id'] as String)
+          .toSet()
+          .toList();
+
+      final countsData = sessionIds.isEmpty
+          ? <dynamic>[]
+          : await _supabase.rpc('get_session_confirmed_counts',
+              params: {'p_session_ids': sessionIds});
+
+      final countsMap = <String, int>{
+        for (final row in (countsData as List))
+          (row as Map<String, dynamic>)['session_id'] as String:
+              (row['confirmed_count'] as int? ?? 0),
+      };
+
+      final list = validRows
+          .map((row) {
+            final session = (row as Map<String, dynamic>)['class_sessions'] as Map<String, dynamic>;
+            final takenSpots = countsMap[session['id'] as String] ?? 0;
+            return _fromReservationRow(row, userId, takenSpots);
+          })
           .where((cls) =>
               cls.sessionDate != null &&
               !cls.sessionDate!.isBefore(todayDate))
@@ -284,7 +328,7 @@ class BookingService {
             final d = DateTime.tryParse(dateStr ?? '');
             return d != null && d.isBefore(todayDate);
           })
-          .map((row) => _fromReservationRow(row as Map<String, dynamic>, userId))
+          .map((row) => _fromReservationRow(row as Map<String, dynamic>, userId, 0))
           .toList()
         ..sort((a, b) => _byDateAndTime(b, a));
 
@@ -329,15 +373,7 @@ class BookingService {
 
 
   static PilatesClass _fromSessionRow(
-      Map<String, dynamic> row, String userId) {
-    final allReservations = (row['reservations'] as List?) ?? [];
-    final confirmed =
-        allReservations.where((r) => r['status'] == 'confirmed').toList();
-    final mine = confirmed
-        .where((r) => r['user_id'] == userId)
-        .map((r) => r['id'] as String)
-        .firstOrNull;
-
+      Map<String, dynamic> row, String userId, String? myReservationId, int takenSpots) {
     final startTime = row['start_time'] as String? ?? '00:00:00';
     final endTime = row['end_time'] as String? ?? '00:00:00';
 
@@ -351,22 +387,19 @@ class BookingService {
       level: '',
       durationMin: TimeUtils.calcDuration(startTime, endTime),
       totalSpots: row['capacity'] as int? ?? 0,
-      takenSpots: confirmed.length,
+      takenSpots: takenSpots,
       equipment: '',
       description: row['description'] as String? ?? '',
-      isBooked: mine != null,
-      reservationId: mine,
+      isBooked: myReservationId != null,
+      reservationId: myReservationId,
       sessionDate: DateTime.tryParse(row['date'] as String? ?? ''),
     );
   }
 
   static PilatesClass _fromReservationRow(
-      Map<String, dynamic> row, String userId) {
+      Map<String, dynamic> row, String userId, int takenSpots) {
     final reservationId = row['id'] as String;
     final session = row['class_sessions'] as Map<String, dynamic>;
-    final allReservations = (session['reservations'] as List?) ?? [];
-    final confirmed =
-        allReservations.where((r) => r['status'] == 'confirmed').toList();
 
     final startTime = session['start_time'] as String? ?? '00:00:00';
     final endTime = session['end_time'] as String? ?? '00:00:00';
@@ -381,7 +414,7 @@ class BookingService {
       level: '',
       durationMin: TimeUtils.calcDuration(startTime, endTime),
       totalSpots: session['capacity'] as int? ?? 0,
-      takenSpots: confirmed.length,
+      takenSpots: takenSpots,
       equipment: '',
       description: session['description'] as String? ?? '',
       isBooked: true,
