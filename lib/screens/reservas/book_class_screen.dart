@@ -353,34 +353,39 @@ class _BookClassScreenState extends State<BookClassScreen> {
         else if (_sessions.isEmpty)
           _buildEmptyState()
         else
-          ..._sessions.asMap().entries.map((entry) {
-            final index = entry.key;
-            final cls = entry.value;
-            final action =
-                cls.cardAction(forceFull: _fullSessionIds.contains(cls.id));
-            return Padding(
-              padding: EdgeInsets.only(
-                  bottom: index == _sessions.length - 1 ? 0 : 14),
-              child: FadeSlideIn(
-                // key por sesión: al cambiar de fecha la tarjeta se recrea
-                // y vuelve a animar su entrada.
-                key: ValueKey(cls.id),
-                delay: Duration(milliseconds: 50 * index),
-                child: ScheduleCard(
-                  cls: cls,
-                  action: action,
-                  onTap: switch (action) {
-                    ClassCardAction.book => () => _showBookConfirmation(cls),
-                    ClassCardAction.joinWaitlist => () =>
-                        _showJoinWaitlistConfirmation(cls),
-                    ClassCardAction.leaveWaitlist => () =>
-                        _showLeaveWaitlistConfirmation(cls),
-                    ClassCardAction.booked => null,
-                  },
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _sessions.length,
+            padding: EdgeInsets.zero,
+            itemBuilder: (context, index) {
+              final cls = _sessions[index];
+              final action =
+                  cls.cardAction(forceFull: _fullSessionIds.contains(cls.id));
+              return Padding(
+                padding: EdgeInsets.only(
+                    bottom: index == _sessions.length - 1 ? 0 : 14),
+                child: FadeSlideIn(
+                  // key por sesión: al cambiar de fecha la tarjeta se recrea
+                  // y vuelve a animar su entrada.
+                  key: ValueKey(cls.id),
+                  delay: Duration(milliseconds: 50 * index),
+                  child: ScheduleCard(
+                    cls: cls,
+                    action: action,
+                    onTap: switch (action) {
+                      ClassCardAction.book => () => _showBookConfirmation(cls),
+                      ClassCardAction.joinWaitlist => () =>
+                          _showJoinWaitlistConfirmation(cls),
+                      ClassCardAction.leaveWaitlist => () =>
+                          _showLeaveWaitlistConfirmation(cls),
+                      ClassCardAction.booked => null,
+                    },
+                  ),
                 ),
-              ),
-            );
-          }),
+              );
+            },
+          ),
       ],
     );
   }

@@ -94,7 +94,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               else if (hasReservations && heroClass != null) ...[
                 _buildHeroCard(heroClass),
                 const SizedBox(height: 20),
-                ..._buildSupportingCards(heroClass),
+                _buildSupportingCards(heroClass),
                 const SizedBox(height: 28),
                 if (detailsClass != null) _buildDetailsPanel(detailsClass),
               ] else
@@ -237,20 +237,25 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     );
   }
 
-  List<Widget> _buildSupportingCards(PilatesClass first) {
+  Widget _buildSupportingCards(PilatesClass first) {
     final related = _reservations
         .where((item) => item.id != first.id)
         .toList(growable: false);
 
-    final cards = <Widget>[];
-    for (var i = 0; i < related.length; i++) {
-      final item = related[i];
-      cards.add(
-        Padding(
-          padding: EdgeInsets.only(bottom: i == related.length - 1 ? 0 : 14),
+    if (related.isEmpty) return const SizedBox.shrink();
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: related.length,
+      padding: EdgeInsets.zero,
+      itemBuilder: (context, index) {
+        final item = related[index];
+        return Padding(
+          padding: EdgeInsets.only(bottom: index == related.length - 1 ? 0 : 14),
           child: FadeSlideIn(
             key: ValueKey(item.id),
-            delay: Duration(milliseconds: 60 * i),
+            delay: Duration(milliseconds: 60 * index),
             child: _BookingPreviewCard(
               title: item.name,
               badge: _relativeDateBadge(item.sessionDate),
@@ -263,11 +268,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               onSecondaryTap: () { _showCancelConfirmation(item); },
             ),
           ),
-        ),
-      );
-    }
-
-    return cards;
+        );
+      },
+    );
   }
 
   Widget _buildDetailsPanel(PilatesClass cls) {
