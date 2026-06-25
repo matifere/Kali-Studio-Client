@@ -19,7 +19,7 @@ class BookingService {
           .from('class_sessions')
           .select(
             'id, date, status, '
-            'schedule_templates(name, description, instructor_name, start_time, end_time, capacity), '
+            'name, description, instructor_name, start_time, end_time, capacity, '
             'reservations(id, user_id, status)',
           )
           .eq('date', _dateStr(date))
@@ -89,8 +89,7 @@ class BookingService {
           .select(
             'id, '
             'class_sessions!inner('
-            'id, date, '
-            'schedule_templates(name, instructor_name, start_time, end_time)'
+            'id, date, name, instructor_name, start_time, end_time'
             ')',
           )
           .eq('user_id', userId)
@@ -124,8 +123,7 @@ class BookingService {
           .select(
             'id, session_id, status, '
             'class_sessions!inner('
-            'id, date, '
-            'schedule_templates(name, description, instructor_name, start_time, end_time, capacity), '
+            'id, date, name, description, instructor_name, start_time, end_time, capacity, '
             'reservations(id, user_id, status)'
             ')',
           )
@@ -244,7 +242,7 @@ class BookingService {
     if (error == 'future_month') throw Exception('Solo podés reservar clases del mes actual.');
     if (error == 'already_booked') throw Exception('Ya tenés una reserva para esta clase.');
     if (error == 'monthly_limit_exceeded') throw Exception('Alcanzaste el límite de clases mensuales de tu plan.');
-    throw Exception('No se pudo reservar.');
+    throw Exception('No se pudo reservar. Código de error: $error');
   }
 
 
@@ -265,8 +263,7 @@ class BookingService {
           .select(
             'id, session_id, status, '
             'class_sessions!inner('
-            'id, date, '
-            'schedule_templates(name, description, instructor_name, start_time, end_time, capacity), '
+            'id, date, name, description, instructor_name, start_time, end_time, capacity, '
             'reservations(id, user_id, status)'
             ')',
           )
@@ -331,8 +328,6 @@ class BookingService {
 
   static PilatesClass _fromSessionRow(
       Map<String, dynamic> row, String userId) {
-    final template =
-        (row['schedule_templates'] as Map<String, dynamic>?) ?? {};
     final allReservations = (row['reservations'] as List?) ?? [];
     final confirmed =
         allReservations.where((r) => r['status'] == 'confirmed').toList();
@@ -341,22 +336,22 @@ class BookingService {
         .map((r) => r['id'] as String)
         .firstOrNull;
 
-    final startTime = template['start_time'] as String? ?? '00:00:00';
-    final endTime = template['end_time'] as String? ?? '00:00:00';
+    final startTime = row['start_time'] as String? ?? '00:00:00';
+    final endTime = row['end_time'] as String? ?? '00:00:00';
 
     return PilatesClass(
       id: row['id'] as String,
-      name: template['name'] as String? ?? '',
-      instructor: template['instructor_name'] as String? ?? '',
+      name: row['name'] as String? ?? '',
+      instructor: row['instructor_name'] as String? ?? '',
       time: _formatTime(startTime),
       period: _timePeriod(startTime),
       room: '',
       level: '',
       durationMin: _calcDuration(startTime, endTime),
-      totalSpots: template['capacity'] as int? ?? 0,
+      totalSpots: row['capacity'] as int? ?? 0,
       takenSpots: confirmed.length,
       equipment: '',
-      description: template['description'] as String? ?? '',
+      description: row['description'] as String? ?? '',
       isBooked: mine != null,
       reservationId: mine,
       sessionDate: DateTime.tryParse(row['date'] as String? ?? ''),
@@ -367,28 +362,26 @@ class BookingService {
       Map<String, dynamic> row, String userId) {
     final reservationId = row['id'] as String;
     final session = row['class_sessions'] as Map<String, dynamic>;
-    final template =
-        (session['schedule_templates'] as Map<String, dynamic>?) ?? {};
     final allReservations = (session['reservations'] as List?) ?? [];
     final confirmed =
         allReservations.where((r) => r['status'] == 'confirmed').toList();
 
-    final startTime = template['start_time'] as String? ?? '00:00:00';
-    final endTime = template['end_time'] as String? ?? '00:00:00';
+    final startTime = session['start_time'] as String? ?? '00:00:00';
+    final endTime = session['end_time'] as String? ?? '00:00:00';
 
     return PilatesClass(
       id: session['id'] as String,
-      name: template['name'] as String? ?? '',
-      instructor: template['instructor_name'] as String? ?? '',
+      name: session['name'] as String? ?? '',
+      instructor: session['instructor_name'] as String? ?? '',
       time: _formatTime(startTime),
       period: _timePeriod(startTime),
       room: '',
       level: '',
       durationMin: _calcDuration(startTime, endTime),
-      totalSpots: template['capacity'] as int? ?? 0,
+      totalSpots: session['capacity'] as int? ?? 0,
       takenSpots: confirmed.length,
       equipment: '',
-      description: template['description'] as String? ?? '',
+      description: session['description'] as String? ?? '',
       isBooked: true,
       reservationId: reservationId,
       sessionDate: DateTime.tryParse(session['date'] as String? ?? ''),
