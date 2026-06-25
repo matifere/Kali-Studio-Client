@@ -8,6 +8,7 @@ import '../../theme/kali_theme.dart';
 import '../../utils/auth_utils.dart';
 import '../../widgets/motion.dart';
 import '../../widgets/web_page_wrapper.dart';
+import '../../utils/ui_utils.dart';
 
 class BookClassScreen extends StatefulWidget {
   const BookClassScreen({super.key});
@@ -72,9 +73,7 @@ class _BookClassScreenState extends State<BookClassScreen> {
       setState(() => _sessions = sessions);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudieron cargar las clases. Intentá de nuevo.')),
-      );
+      KaliUI.showSnackBar(context, 'No se pudieron cargar las clases. Intentá de nuevo.');
     } finally {
       if (mounted) setState(() => _isLoadingSessions = false);
     }
@@ -442,31 +441,25 @@ class _BookClassScreenState extends State<BookClassScreen> {
   }
 
   Future<void> _showBookConfirmation(PilatesClass cls) async {
-    final confirmed = await showModalBottomSheet<bool>(
+    final confirmed = await KaliUI.showBottomSheet<bool>(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (_) => _BookConfirmSheet(cls: cls),
+      builder: _BookConfirmSheet(cls: cls),
     );
     if (confirmed == true) _bookClass(cls);
   }
 
   Future<void> _showJoinWaitlistConfirmation(PilatesClass cls) async {
-    final confirmed = await showModalBottomSheet<bool>(
+    final confirmed = await KaliUI.showBottomSheet<bool>(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (_) => _WaitlistSheet.join(cls: cls),
+      builder: _WaitlistSheet.join(cls: cls),
     );
     if (confirmed == true) _joinWaitlist(cls);
   }
 
   Future<void> _showLeaveWaitlistConfirmation(PilatesClass cls) async {
-    final confirmed = await showModalBottomSheet<bool>(
+    final confirmed = await KaliUI.showBottomSheet<bool>(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (_) => _WaitlistSheet.leave(cls: cls),
+      builder: _WaitlistSheet.leave(cls: cls),
     );
     if (confirmed == true) _leaveWaitlist(cls);
   }
@@ -494,12 +487,7 @@ class _BookClassScreenState extends State<BookClassScreen> {
   }
 
   void _showSnack(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(message, style: KaliText.body(KaliColors.clay)),
-      backgroundColor: KaliColors.espresso,
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    ));
+    KaliUI.showSnackBar(context, message);
   }
 
   Future<void> _bookClass(PilatesClass cls) async {
@@ -508,50 +496,19 @@ class _BookClassScreenState extends State<BookClassScreen> {
 
       if (!usage.hasPlan) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Necesitás un plan activo para reservar clases.',
-              style: KaliText.body(KaliColors.clay),
-            ),
-            backgroundColor: KaliColors.espresso,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        );
+        KaliUI.showSnackBar(context, 'Necesitás un plan activo para reservar clases.');
         return;
       }
 
       if (usage.limit != null && usage.used >= usage.limit!) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Alcanzaste el límite de ${usage.limit} clase${usage.limit == 1 ? '' : 's'} mensuales de tu plan.',
-              style: KaliText.body(KaliColors.clay),
-            ),
-            backgroundColor: KaliColors.espresso,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        );
+        KaliUI.showSnackBar(context, 'Alcanzaste el límite de ${usage.limit} clase${usage.limit == 1 ? '' : 's'} mensuales de tu plan.');
         return;
       }
 
       await BookingService.createReservation(cls.id);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Reservaste ${cls.name}',
-            style: KaliText.body(KaliColors.clay),
-          ),
-          backgroundColor: KaliColors.espresso,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
+      KaliUI.showSnackBar(context, 'Reservaste ${cls.name}');
       await Future.wait([
         _loadSessionsForDate(_selectedDate),
         _loadMonthlyUsage(_visibleMonth),
@@ -565,14 +522,7 @@ class _BookClassScreenState extends State<BookClassScreen> {
       if (msg == 'La clase está llena.') {
         setState(() => _fullSessionIds.add(cls.id));
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(msg, style: KaliText.body(KaliColors.clay)),
-          backgroundColor: KaliColors.espresso,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
+      KaliUI.showSnackBar(context, msg);
       await _loadSessionsForDate(_selectedDate);
     }
   }

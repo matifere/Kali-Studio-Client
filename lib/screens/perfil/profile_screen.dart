@@ -11,6 +11,7 @@ import '../../widgets/kali_avatar.dart';
 import '../../widgets/web_page_wrapper.dart';
 import 'consentimiento_screen.dart';
 import 'edit_profile_screen.dart';
+import '../../utils/ui_utils.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -342,9 +343,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    KaliUI.showSnackBar(context, message);
   }
 
   Future<void> _handleNotificationsTap() async {

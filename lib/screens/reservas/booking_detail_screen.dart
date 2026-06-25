@@ -9,6 +9,7 @@ import '../../utils/auth_utils.dart';
 import 'booking_history_screen.dart';
 import '../../widgets/motion.dart';
 import '../../widgets/web_page_wrapper.dart';
+import '../../utils/ui_utils.dart';
 
 class BookingDetailScreen extends StatefulWidget {
   const BookingDetailScreen({super.key});
@@ -57,9 +58,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudieron cargar las reservas. Intentá de nuevo.')),
-      );
+      KaliUI.showSnackBar(context, 'No se pudieron cargar las reservas. Intentá de nuevo.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -533,11 +532,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
   Future<void> _showCancelConfirmation(PilatesClass cls) async {
     final within2h = _isWithin2Hours(cls);
 
-    final confirmed = await showModalBottomSheet<bool>(
+    final confirmed = await KaliUI.showBottomSheet<bool>(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (_) => _CancelConfirmSheet(
+      builder: _CancelConfirmSheet(
         cls: cls,
         within2h: within2h,
       ),
@@ -555,29 +552,14 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     try {
       await BookingService.cancelReservation(reservationId);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Reserva cancelada',
-            style: KaliText.body(KaliColors.clay),
-          ),
-          backgroundColor: KaliColors.espresso,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
+      KaliUI.showSnackBar(context, 'Reserva cancelada');
       await _loadReservations();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(humanizeError(
+      KaliUI.showSnackBar(context, humanizeError(
             e,
             fallback: 'No se pudo cancelar la reserva. Intentá de nuevo.',
-          )),
-        ),
-      );
+          ));
     } finally {
       if (mounted) setState(() => _isCancelling = false);
     }

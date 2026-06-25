@@ -5,6 +5,7 @@ import 'package:kali_studio/theme/kali_text_field.dart';
 import 'package:kali_studio/theme/kali_theme.dart';
 import 'package:kali_studio/utils/auth_utils.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../utils/ui_utils.dart';
 
 class LogIn extends StatefulWidget {
   const LogIn({super.key});
@@ -141,11 +142,9 @@ class _LogInState extends State<LogIn> {
   }
 
   void _showResetSheet() {
-    showModalBottomSheet(
+    KaliUI.showBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (_) => _ResetPasswordSheet(prefillEmail: _emailController.text.trim()),
+      builder: _ResetPasswordSheet(prefillEmail: _emailController.text.trim()),
     );
   }
 
@@ -182,12 +181,7 @@ class _LogInState extends State<LogIn> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 5),
-      ),
-    );
+    KaliUI.showSnackBar(context, message);
   }
 }
 
@@ -233,9 +227,7 @@ class _ResetPasswordSheetState extends State<_ResetPasswordSheet> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ocurrió un error. Intentá de nuevo.')),
-      );
+      KaliUI.showSnackBar(context, 'Ocurrió un error. Intentá de nuevo.');
     }
   }
 

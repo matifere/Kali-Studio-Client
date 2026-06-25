@@ -5,6 +5,7 @@ import 'package:kali_studio/supabase/profile_manager.dart';
 import 'package:kali_studio/supabase/studio_service.dart';
 import 'package:kali_studio/theme/kali_theme.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../utils/ui_utils.dart';
 
 class StudioSelectionScreen extends StatefulWidget {
   final VoidCallback? onComplete;
@@ -79,9 +80,7 @@ class _StudioSelectionScreenState extends State<StudioSelectionScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isSaving = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No pudimos guardar tu elección. Intentá nuevamente.')),
-        );
+        KaliUI.showSnackBar(context, 'No pudimos guardar tu elección. Intentá nuevamente.');
       }
     }
   }

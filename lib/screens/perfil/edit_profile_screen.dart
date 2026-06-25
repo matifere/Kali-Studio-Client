@@ -8,6 +8,7 @@ import '../../supabase/profile_manager.dart';
 import '../../theme/kali_theme.dart';
 import '../../widgets/kali_avatar.dart';
 import '../../widgets/web_page_wrapper.dart';
+import '../../utils/ui_utils.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final Profile? profile;
@@ -396,18 +397,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       final mimeType = file.mimeType ?? '';
       if (!_allowedImageTypes.contains(mimeType)) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Solo se permiten imágenes JPG, PNG o WebP.')),
-        );
+        KaliUI.showSnackBar(context, 'Solo se permiten imágenes JPG, PNG o WebP.');
         return;
       }
 
       final bytes = await file.readAsBytes();
       if (bytes.length > _maxAvatarBytes) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('La imagen no puede superar los 5 MB.')),
-        );
+        KaliUI.showSnackBar(context, 'La imagen no puede superar los 5 MB.');
         return;
       }
 
@@ -421,18 +418,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       });
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudo seleccionar la imagen.')),
-      );
+      KaliUI.showSnackBar(context, 'No se pudo seleccionar la imagen.');
     }
   }
 
   Future<void> _showChangePasswordSheet() async {
-    await showModalBottomSheet(
+    await KaliUI.showBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (_) => _ChangePasswordSheet(),
+      builder: _ChangePasswordSheet(),
     );
   }
 
@@ -445,9 +438,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (newEmail != (user.email ?? '')) {
       final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
       if (!emailRegex.hasMatch(newEmail)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('El correo no tiene un formato válido.')),
-        );
+        KaliUI.showSnackBar(context, 'El correo no tiene un formato válido.');
         return;
       }
     }
@@ -484,15 +475,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }).eq('id', user.id);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Perfil actualizado')),
-      );
+      KaliUI.showSnackBar(context, 'Perfil actualizado');
       Navigator.pop(context, true);
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudo guardar el perfil. Intentá de nuevo.')),
-      );
+      KaliUI.showSnackBar(context, 'No se pudo guardar el perfil. Intentá de nuevo.');
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);
@@ -542,17 +529,7 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
       );
       if (!mounted) return;
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Contraseña actualizada',
-            style: KaliText.body(KaliColors.clay),
-          ),
-          backgroundColor: KaliColors.espresso,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
+      KaliUI.showSnackBar(context, 'Contraseña actualizada');
     } catch (e) {
       if (!mounted) return;
       setState(() => _error = 'No se pudo actualizar la contraseña. Intentá de nuevo.');

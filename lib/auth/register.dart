@@ -5,6 +5,7 @@ import 'package:kali_studio/theme/kali_text_field.dart';
 import 'package:kali_studio/theme/kali_theme.dart';
 import 'package:kali_studio/utils/auth_utils.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../utils/ui_utils.dart';
 
 class Register extends StatefulWidget {
   const Register({super.key});
@@ -218,11 +219,6 @@ class _RegisterState extends State<Register> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 5),
-      ),
-    );
+    KaliUI.showSnackBar(context, message);
   }
 }

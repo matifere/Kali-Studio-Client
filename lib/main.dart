@@ -19,6 +19,7 @@ import 'supabase/studio_service.dart';
 import 'supabase/supabase_auth_service.dart';
 import 'theme/kali_theme.dart';
 import 'theme/theme_controller.dart';
+import 'utils/ui_utils.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -125,12 +126,7 @@ class _AuthGateState extends State<_AuthGate> {
     if (profile == null) {
       await Supabase.instance.client.auth.signOut();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Tu cuenta no está habilitada. Contactá al estudio.'),
-            duration: Duration(seconds: 5),
-          ),
-        );
+        KaliUI.showSnackBar(context, 'Tu cuenta no está habilitada. Contactá al estudio.');
       }
     } else {
       _currentProfile = profile;

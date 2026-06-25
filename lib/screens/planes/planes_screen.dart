@@ -10,6 +10,7 @@ import '../../utils/auth_utils.dart';
 import '../../widgets/google_fonts_helper.dart';
 import '../../widgets/motion.dart';
 import '../../widgets/web_page_wrapper.dart';
+import '../../utils/ui_utils.dart';
 
 class PlanesScreen extends StatefulWidget {
   const PlanesScreen({super.key});
@@ -54,20 +55,16 @@ class _PlanesScreenState extends State<PlanesScreen> {
   }
 
   void _showPlanDetail(UserPlan plan) {
-    showModalBottomSheet(
+    KaliUI.showBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (_) => _PlanDetailSheet(plan: plan),
+      builder: _PlanDetailSheet(plan: plan),
     );
   }
 
   Future<void> _showActivateSheet(Plan plan) async {
-    final confirmed = await showModalBottomSheet<bool>(
+    final confirmed = await KaliUI.showBottomSheet<bool>(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (_) => _ActivatePlanSheet(plan: plan),
+      builder: _ActivatePlanSheet(plan: plan),
     );
     if (confirmed == true) {
       HomeScreen.invalidateCache();
@@ -683,28 +680,10 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
       if (!mounted) return;
       if (plan != null && plan.planId == widget.plan.id) {
         Navigator.pop(context, true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('¡Plan activado correctamente!',
-                style: KaliText.body(KaliColors.clay)),
-            backgroundColor: KaliColors.espresso,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        );
+        KaliUI.showSnackBar(context, '¡Plan activado correctamente!');
       } else {
         setState(() => _loading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'El pago aún no fue confirmado. Esperá unos segundos e intentá de nuevo.',
-              style: KaliText.body(KaliColors.warmWhite.withValues(alpha: 0.9)),
-            ),
-            backgroundColor: KaliColors.espresso,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        );
+        KaliUI.showSnackBar(context, 'El pago aún no fue confirmado. Esperá unos segundos e intentá de nuevo.');
       }
     } catch (e) {
       if (!mounted) return;
@@ -876,9 +855,7 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
                     IconButton(
                       onPressed: () {
                         Clipboard.setData(ClipboardData(text: _alias!));
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Alias copiado')),
-                        );
+                        KaliUI.showSnackBar(context, 'Alias copiado');
                       },
                       icon: const Icon(Icons.copy_rounded, size: 18),
                       color: KaliColors.espresso,

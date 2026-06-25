@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:kali_studio/theme/kali_text_field.dart';
 import 'package:kali_studio/theme/kali_theme.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../utils/ui_utils.dart';
 
 class NewPasswordScreen extends StatefulWidget {
   const NewPasswordScreen({super.key});
@@ -58,9 +59,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
   }
 
   void _showSnack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), duration: const Duration(seconds: 4)),
-    );
+    KaliUI.showSnackBar(context, msg);
   }
 
   @override

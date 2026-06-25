@@ -15,8 +15,9 @@
 .DS_Store
 **/.DS_Store
 .firebase/
-
-
+.agents/
+CLAUDE.md
+analysis_report.md
 
 # Flutter repo-specific
 /bin/cache/
