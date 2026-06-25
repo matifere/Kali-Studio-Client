@@ -18,8 +18,8 @@ class BookingService {
       var query = _supabase
           .from('class_sessions')
           .select(
-            'id, date, start_time, end_time, capacity, status, '
-            'schedule_templates(name, description, instructor_name), '
+            'id, date, status, '
+            'schedule_templates(name, description, instructor_name, start_time, end_time, capacity), '
             'reservations(id, user_id, status)',
           )
           .eq('date', _dateStr(date))
@@ -89,8 +89,8 @@ class BookingService {
           .select(
             'id, '
             'class_sessions!inner('
-            'id, date, start_time, end_time, '
-            'schedule_templates(name, instructor_name)'
+            'id, date, '
+            'schedule_templates(name, instructor_name, start_time, end_time)'
             ')',
           )
           .eq('user_id', userId)
@@ -124,8 +124,8 @@ class BookingService {
           .select(
             'id, session_id, status, '
             'class_sessions!inner('
-            'id, date, start_time, end_time, capacity, '
-            'schedule_templates(name, description, instructor_name), '
+            'id, date, '
+            'schedule_templates(name, description, instructor_name, start_time, end_time, capacity), '
             'reservations(id, user_id, status)'
             ')',
           )
@@ -265,8 +265,8 @@ class BookingService {
           .select(
             'id, session_id, status, '
             'class_sessions!inner('
-            'id, date, start_time, end_time, capacity, '
-            'schedule_templates(name, description, instructor_name), '
+            'id, date, '
+            'schedule_templates(name, description, instructor_name, start_time, end_time, capacity), '
             'reservations(id, user_id, status)'
             ')',
           )
@@ -341,8 +341,8 @@ class BookingService {
         .map((r) => r['id'] as String)
         .firstOrNull;
 
-    final startTime = row['start_time'] as String? ?? '00:00:00';
-    final endTime = row['end_time'] as String? ?? '00:00:00';
+    final startTime = template['start_time'] as String? ?? '00:00:00';
+    final endTime = template['end_time'] as String? ?? '00:00:00';
 
     return PilatesClass(
       id: row['id'] as String,
@@ -353,7 +353,7 @@ class BookingService {
       room: '',
       level: '',
       durationMin: _calcDuration(startTime, endTime),
-      totalSpots: row['capacity'] as int? ?? 0,
+      totalSpots: template['capacity'] as int? ?? 0,
       takenSpots: confirmed.length,
       equipment: '',
       description: template['description'] as String? ?? '',
@@ -373,8 +373,8 @@ class BookingService {
     final confirmed =
         allReservations.where((r) => r['status'] == 'confirmed').toList();
 
-    final startTime = session['start_time'] as String? ?? '00:00:00';
-    final endTime = session['end_time'] as String? ?? '00:00:00';
+    final startTime = template['start_time'] as String? ?? '00:00:00';
+    final endTime = template['end_time'] as String? ?? '00:00:00';
 
     return PilatesClass(
       id: session['id'] as String,
@@ -385,7 +385,7 @@ class BookingService {
       room: '',
       level: '',
       durationMin: _calcDuration(startTime, endTime),
-      totalSpots: session['capacity'] as int? ?? 0,
+      totalSpots: template['capacity'] as int? ?? 0,
       takenSpots: confirmed.length,
       equipment: '',
       description: template['description'] as String? ?? '',

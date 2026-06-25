@@ -10,7 +10,8 @@ import 'package:kali_studio/firebase_options.dart';
 import 'package:kali_studio/services/mobile_push_service.dart';
 import 'package:kali_studio/auth/register_success_screen.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:kali_studio/auth/register.dart';
+import 'package:kali_studio/auth/welcome_screen.dart';
+import 'package:kali_studio/auth/studio_selection_screen.dart';
 import 'package:kali_studio/screens/main_shell.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'supabase/profile_manager.dart';
@@ -113,6 +114,8 @@ class _AuthGateState extends State<_AuthGate> {
     });
   }
 
+  Profile? _currentProfile;
+
   Future<void> _checkProfile() async {
     final session = Supabase.instance.client.auth.currentSession;
     if (session == null) return;
@@ -129,6 +132,8 @@ class _AuthGateState extends State<_AuthGate> {
           ),
         );
       }
+    } else {
+      _currentProfile = profile;
     }
     if (mounted) setState(() => _checkingProfile = false);
   }
@@ -151,6 +156,14 @@ class _AuthGateState extends State<_AuthGate> {
             email: pendingRegistration.email,
             requiresEmailConfirmation:
                 pendingRegistration.requiresEmailConfirmation,
+            onComplete: () {
+              SupabaseAuthService.clearPendingRegistration();
+              if (!pendingRegistration.requiresEmailConfirmation) {
+                _checkProfile();
+              } else {
+                setState(() {});
+              }
+            },
           );
         }
 
@@ -166,10 +179,15 @@ class _AuthGateState extends State<_AuthGate> {
 
         final Session? session = Supabase.instance.client.auth.currentSession;
         if (session != null) {
+          if (_currentProfile != null && _currentProfile!.institutionId == null) {
+            return StudioSelectionScreen(
+              onComplete: () => _checkProfile(),
+            );
+          }
           return const MainShell();
         }
 
-        return const Register();
+        return const WelcomeScreen();
       },
     );
   }

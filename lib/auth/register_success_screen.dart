@@ -11,12 +11,14 @@ class RegisterSuccessScreen extends StatefulWidget {
   final String fullName;
   final String email;
   final bool requiresEmailConfirmation;
+  final VoidCallback? onComplete;
 
   const RegisterSuccessScreen({
     super.key,
     required this.fullName,
     required this.email,
     required this.requiresEmailConfirmation,
+    this.onComplete,
   });
 
   @override
@@ -99,22 +101,30 @@ class _RegisterSuccessScreenState extends State<RegisterSuccessScreen> {
 
     SupabaseAuthService.clearPendingRegistration();
     if (!mounted) return;
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(
-        builder: (_) => widget.requiresEmailConfirmation
-            ? const LogIn()
-            : const MainShell(),
-      ),
-      (route) => false,
-    );
+    if (widget.onComplete != null) {
+      widget.onComplete!();
+    } else {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => widget.requiresEmailConfirmation
+              ? const LogIn()
+              : const MainShell(),
+        ),
+        (route) => false,
+      );
+    }
   }
 
   void _goBackToRegister() {
     SupabaseAuthService.clearPendingRegistration();
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const Register()),
-      (route) => false,
-    );
+    if (widget.onComplete != null) {
+      widget.onComplete!();
+    } else {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const Register()),
+        (route) => false,
+      );
+    }
   }
 
   @override

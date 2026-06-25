@@ -45,7 +45,6 @@ class SupabaseAuthService {
     required String fullName,
     required String email,
     required String password,
-    required String studioId,
   }) async {
     // Setear ANTES del signUp para que cuando _AuthGate reciba el evento
     // de auth ya vea pendingRegistration != null y muestre RegisterSuccessScreen
@@ -70,7 +69,7 @@ class SupabaseAuthService {
       final user = response.user;
       if (user != null && !requiresEmailConfirmation) {
         try {
-          await _upsertProfile(userId: user.id, fullName: fullName, institutionId: studioId);
+          await _upsertProfile(userId: user.id, fullName: fullName);
         } catch (e) {
           debugPrint('_upsertProfile error (non-critical): $e');
         }

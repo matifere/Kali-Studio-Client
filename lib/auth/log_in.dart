@@ -1,7 +1,5 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:kali_studio/auth/register.dart';
-import 'package:kali_studio/screens/main_shell.dart';
 import 'package:kali_studio/supabase/supabase_auth_service.dart';
 import 'package:kali_studio/theme/kali_text_field.dart';
 import 'package:kali_studio/theme/kali_theme.dart';
@@ -126,14 +124,6 @@ class _LogInState extends State<LogIn> {
                             ],
                           ))),
                     ),
-                    const Divider(),
-                    TextButton(
-                      child: const Text("Crear cuenta"),
-                      onPressed: () {
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => const Register()));
-                      },
-                    ),
                     const Spacer(),
                   ],
                 ),
@@ -175,10 +165,7 @@ class _LogInState extends State<LogIn> {
 
       if (!mounted) return;
 
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const MainShell()),
-        (route) => false,
-      );
+      Navigator.of(context).popUntil((route) => route.isFirst);
     } on AuthException catch (error) {
       if (!mounted) return;
       _showMessage(humanizeAuthError(error.message,
