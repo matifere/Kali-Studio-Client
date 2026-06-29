@@ -316,7 +316,7 @@ class UpperLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Image.asset(
-      'assets/images/argrity_logo.png',
+      'assets/images/argity_logo.png',
       width: 90,
       height: 90,
       fit: BoxFit.contain,

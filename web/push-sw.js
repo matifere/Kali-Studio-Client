@@ -12,7 +12,7 @@ self.addEventListener('push', function (event) {
 
   const title = typeof data.title === 'string' && data.title.trim()
       ? data.title.trim()
-      : 'Kali Studio';
+      : 'Argity Turnos';
   const body = typeof data.body === 'string' ? data.body : '';
 
   event.waitUntil(

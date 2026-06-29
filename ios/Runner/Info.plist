@@ -15,7 +15,7 @@
 		<key>ITSAppUsesNonExemptEncryption</key>
 		<false/>
 		<key>CFBundleDisplayName</key>
-		<string>Kali Studio</string>
+		<string>Argity Turnos</string>
 		<key>CFBundleExecutable</key>
 		<string>$(EXECUTABLE_NAME)</string>
 		<key>CFBundleIdentifier</key>

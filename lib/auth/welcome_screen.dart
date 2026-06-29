@@ -56,7 +56,7 @@ class WelcomeScreen extends StatelessWidget {
                       const UpperLogo(),
                       const SizedBox(height: 32),
                       Text(
-                        'Kali Studio',
+                        'Argity Turnos',
                         textAlign: TextAlign.center,
                         style: KaliText.loginDisplay(KaliColors.espresso),
                       ),
