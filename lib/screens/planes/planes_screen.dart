@@ -632,7 +632,8 @@ class _ActivatePlanSheet extends StatefulWidget {
 }
 
 class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
-  bool _loadingMethod = true; // fetching payment method on open
+  bool _loadingMethod = false; 
+  bool _hasFetchedMethod = false;
   bool _loading = false;
   bool _awaitingVerification = false;
   String? _alias;
@@ -642,19 +643,25 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
   @override
   void initState() {
     super.initState();
-    _fetchPaymentMethod();
   }
 
   Future<void> _fetchPaymentMethod() async {
+    setState(() {
+      _loadingMethod = true;
+      _error = null;
+    });
     try {
       final preference = await PlanService.createPaymentPreference(widget.plan.id);
       if (!mounted) return;
-      switch (preference) {
-        case MercadoPagoPayment(:final url):
-          setState(() { _loadingMethod = false; _mpUrl = url; });
-        case TransferPayment(:final alias):
-          setState(() { _loadingMethod = false; _alias = alias; });
-      }
+      setState(() {
+        _loadingMethod = false;
+        _hasFetchedMethod = true;
+        if (preference is MercadoPagoPayment) {
+          _mpUrl = preference.url;
+        } else if (preference is TransferPayment) {
+          _alias = preference.alias;
+        }
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -692,6 +699,7 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
   }
 
   String get _infoText {
+    if (!_hasFetchedMethod && _error == null) return 'Al confirmar, generaremos tu link de pago o los datos de transferencia correspondientes a tu gimnasio.';
     if (_alias != null) return 'Hacé la transferencia al alias indicado y avisale a tu instructor para activar tu plan.';
     if (_awaitingVerification) return 'Una vez aprobado el pago, tu plan se activa automáticamente.';
     return 'Serás redirigido a MercadoPago para completar el pago de forma segura.';
@@ -888,7 +896,32 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
                         ),
                 ),
               ),
-            ] else if (!_awaitingVerification)
+            ] else if (!_hasFetchedMethod)
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: _loadingMethod ? null : _fetchPaymentMethod,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: KaliColors.espresso,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: _loadingMethod
+                      ? const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white),
+                        )
+                      : Text(
+                          'Pagar plan',
+                          style: KaliText.body(KaliColors.sand,
+                              size: 14, weight: FontWeight.w700),
+                        ),
+                ),
+              )
+            else if (_mpUrl != null && !_awaitingVerification)
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
@@ -906,7 +939,7 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
                           size: 16, color: Colors.white),
                       const SizedBox(width: 8),
                       Text(
-                        'Continuar con el pago',
+                        'Ir a pagar',
                         style: KaliText.body(KaliColors.sand,
                             size: 14, weight: FontWeight.w700),
                       ),
@@ -914,7 +947,7 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
                   ),
                 ),
               )
-            else
+            else if (_mpUrl != null && _awaitingVerification)
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(

@@ -42,29 +42,20 @@ class PlanService {
       throw Exception('Tu sesión expiró. Volvé a iniciar sesión.');
     }
 
-    final FunctionResponse response;
+    dynamic data;
     try {
-      response = await _supabase.functions.invoke(
-        'create-preference',
-        body: {'plan_id': planId},
+      data = await _supabase.rpc(
+        'create_pending_payment',
+        params: {'p_plan_id': planId},
       );
-    } on FunctionException catch (e) {
-      // 503 = el estudio no tiene MP token ni alias configurados (ambos null).
-      if (e.status == 503) {
-        throw Exception('Tuvimos un error. Comunicarse con el dueño del gimnasio.');
-      }
-      final err = (e.details is Map ? (e.details as Map)['error'] : null) as String?
-          ?? 'No pudimos iniciar el pago. Intentá de nuevo.';
-      throw Exception(err);
+    } on PostgrestException catch (e) {
+      throw Exception(e.message);
+    } catch (e) {
+      throw Exception('No pudimos iniciar el pago. Intentá de nuevo.');
     }
 
-    final data = response.data as Map<String, dynamic>?;
-
-    final alias = data?['alias'] as String?;
+    final alias = (data as Map<String, dynamic>?)?['alias'] as String?;
     if (alias != null) return TransferPayment(alias);
-
-    final url = data?['url'] as String?;
-    if (url != null) return MercadoPagoPayment(url);
 
     throw Exception('No pudimos procesar la respuesta del pago. Intentá de nuevo.');
   }
