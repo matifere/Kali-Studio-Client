@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:kali_studio/theme/kali_text_field.dart';
 import 'package:kali_studio/theme/kali_theme.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../utils/auth_utils.dart';
 import '../utils/ui_utils.dart';
 
 class NewPasswordScreen extends StatefulWidget {
@@ -47,15 +48,29 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
       await Supabase.instance.client.auth.updateUser(
         UserAttributes(password: pass),
       );
-      if (!mounted) return;
-      _showSnack('¡Contraseña actualizada! Ya podés iniciar sesión.');
-      await Supabase.instance.client.auth.signOut();
     } catch (e) {
+      // Solo acá hay un error real: el cambio de contraseña no se aplicó.
       if (!mounted) return;
-      _showSnack('Error al actualizar. Intentá de nuevo.');
-    } finally {
-      if (mounted) setState(() => _loading = false);
+      setState(() => _loading = false);
+      _showSnack(humanizeError(
+        e,
+        fallback: 'No pudimos actualizar la contraseña. Intentá de nuevo.',
+      ));
+      return;
     }
+
+    // Éxito: la contraseña ya quedó cambiada en el servidor. El signOut es solo
+    // para limpiar la sesión de recuperación; cambiar la contraseña rota la
+    // sesión y hace que signOut pueda tirar excepción, pero eso NO es un error
+    // para el usuario (antes mostraba "Error al actualizar" pese a haber
+    // funcionado). Por eso va aparte y se ignora si falla.
+    if (mounted) {
+      _showSnack('¡Contraseña actualizada! Ya podés iniciar sesión.');
+    }
+    try {
+      await Supabase.instance.client.auth.signOut();
+    } catch (_) {/* la contraseña ya se cambió; ignoramos */}
+    if (mounted) setState(() => _loading = false);
   }
 
   void _showSnack(String msg) {

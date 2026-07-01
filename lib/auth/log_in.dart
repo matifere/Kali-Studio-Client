@@ -227,7 +227,9 @@ class _ResetPasswordSheetState extends State<_ResetPasswordSheet> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);
-      KaliUI.showSnackBar(context, 'Ocurrió un error. Intentá de nuevo.');
+      // Mostrar el motivo real (rate limit, email inválido, sin conexión…) en
+      // vez de un genérico: humanizeError ya lo traduce a español seguro.
+      KaliUI.showSnackBar(context, humanizeError(e));
     }
   }
 
