@@ -309,8 +309,7 @@ class BookingService {
           .select(
             'id, session_id, status, '
             'class_sessions!inner('
-            'id, date, name, description, instructor_name, start_time, end_time, capacity, '
-            'reservations(id, user_id, status)'
+            'id, date, name, description, instructor_name, start_time, end_time, capacity'
             ')',
           )
           .eq('user_id', userId)
