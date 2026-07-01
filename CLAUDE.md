@@ -41,13 +41,13 @@ Schema `public`, todo tenant-scoped por `institution_id` con RLS. *(Derivado de 
 - **`book_session_if_available(p_session_id, p_user_id)`** — `SECURITY DEFINER`. Valida tenant, identidad (anti-IDOR/cross-tenant), usuario activo, capacidad, plan activo y **límite mensual**; inserta la reserva `confirmed`. **El cliente reserva SOLO por este RPC** (el insert directo en `reservations` es admin-only por RLS).
 - **`promote_waitlist_on_cancellation()`** — trigger. Al cancelar, promueve al primer alumno en espera elegible (FIFO, respeta el límite mensual), lo notifica y le manda email.
 - **`kali_institution_id()`**, **`kali_is_admin()`** — helpers de RLS.
-- `send_class_reminders()`, `fill_profile_email()`.
+- `send_payment_reminders()` (cron diario: avisa por mail a suscripciones cuyo `end_date` cae a 7 días), `fill_profile_email()`.
 
 ### Modelo de autorización
 Escribir en `class_sessions` / `plans` / `schedule_templates` / `subscriptions` / `reservations` (insert directo) / borrar `profiles` requiere `kali_is_admin()` (role `admin`/`sudo` y activo). Las lecturas se limitan a datos propios o, si sos admin, a toda tu institución.
 
 ### Edge functions (en `supabase/functions/` de este repo)
-`create-preference` (MercadoPago), `delete-account`, `send-class-reminder`, `send-push`, `send-waitlist-email`.
+`create-preference` (MercadoPago), `delete-account`, `send-payment-reminder`, `send-push`, `send-waitlist-email`.
 
 > ⚠️ **Las migraciones del esquema viven SOLO en este repo** (`supabase/migrations/`, con timestamp). Admin no tiene carpeta `migrations`. Cualquier cambio de DB va acá.
 

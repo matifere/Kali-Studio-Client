@@ -1,18 +1,18 @@
-// Manda el recordatorio "tu clase es en 1 hora" a cada reserva confirmada.
-// La invoca el job programado send_class_reminders() (pg_cron -> pg_net), NO el
-// cliente. Por eso valida un secreto compartido en vez de JWT (reusa el mismo
-// WAITLIST_WEBHOOK_SECRET que send-waitlist-email).
+// Manda el aviso "tu plan vence en una semana" a cada alumno con suscripcion
+// activa cuyo end_date cae dentro de 7 dias. La invoca el job programado
+// send_payment_reminders() (pg_cron -> pg_net), NO el cliente. Por eso valida un
+// secreto compartido en vez de JWT (reusa el mismo WAITLIST_WEBHOOK_SECRET que
+// send-waitlist-email y el viejo recordatorio de clases).
 //
-// Deploy:  supabase functions deploy send-class-reminder --no-verify-jwt
+// Deploy:  supabase functions deploy send-payment-reminder --no-verify-jwt
 // Secrets: SENDGRID_API_KEY, EMAIL_FROM, EMAIL_FROM_NAME, WAITLIST_WEBHOOK_SECRET
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 
 interface Payload {
   email: string;
   name?: string;
-  class_name: string;
-  date: string; // ya formateada: DD/MM/YYYY
-  time: string; // ya formateada: HH:MM
+  plan_name: string;
+  end_date: string; // ya formateada: DD/MM/YYYY
 }
 
 serve(async (req) => {
@@ -37,8 +37,8 @@ serve(async (req) => {
     });
   }
 
-  const { email, name, class_name, date, time } = payload;
-  if (!email || !class_name || !date || !time) {
+  const { email, name, plan_name, end_date } = payload;
+  if (!email || !plan_name || !end_date) {
     return new Response(JSON.stringify({ error: 'missing_fields' }), {
       status: 400, headers: { 'Content-Type': 'application/json' },
     });
@@ -55,22 +55,21 @@ serve(async (req) => {
   }
 
   const saludo = name && name.trim().length > 0 ? `Hola ${name},` : 'Hola,';
-  const subject = `Recordatorio: ${class_name} en 1 hora`;
+  const subject = `Tu plan ${plan_name} vence en una semana`;
   const html = `
     <div style="font-family: Arial, sans-serif; font-size: 15px; color: #1a1a1a; line-height: 1.5;">
       <p>${saludo}</p>
-      <p>Te recordamos que tu clase empieza en aproximadamente <strong>1 hora</strong>:</p>
+      <p>Te avisamos que tu plan está por vencer <strong>en una semana</strong>:</p>
       <table style="margin: 16px 0; border-collapse: collapse;">
-        <tr><td style="padding: 4px 12px 4px 0; color: #666;">Clase</td><td style="padding: 4px 0;"><strong>${class_name}</strong></td></tr>
-        <tr><td style="padding: 4px 12px 4px 0; color: #666;">Fecha</td><td style="padding: 4px 0;"><strong>${date}</strong></td></tr>
-        <tr><td style="padding: 4px 12px 4px 0; color: #666;">Hora</td><td style="padding: 4px 0;"><strong>${time} hs</strong></td></tr>
+        <tr><td style="padding: 4px 12px 4px 0; color: #666;">Plan</td><td style="padding: 4px 0;"><strong>${plan_name}</strong></td></tr>
+        <tr><td style="padding: 4px 12px 4px 0; color: #666;">Vence el</td><td style="padding: 4px 0;"><strong>${end_date}</strong></td></tr>
       </table>
-      <p>Si no podés asistir, cancelá desde la app para liberar tu lugar a la lista de espera.</p>
+      <p>Renová tu plan para seguir reservando clases sin interrupciones.</p>
       <p style="color: #888; font-size: 13px; margin-top: 24px;">Este es un mensaje automático, no respondas a este correo.</p>
     </div>`;
-  const text = `${saludo}\n\nTe recordamos que tu clase empieza en aproximadamente 1 hora:\n\n`
-    + `Clase: ${class_name}\nFecha: ${date}\nHora: ${time} hs\n\n`
-    + `Si no podés asistir, cancelá desde la app para liberar tu lugar a la lista de espera.`;
+  const text = `${saludo}\n\nTe avisamos que tu plan está por vencer en una semana:\n\n`
+    + `Plan: ${plan_name}\nVence el: ${end_date}\n\n`
+    + `Renová tu plan para seguir reservando clases sin interrupciones.`;
 
   const res = await fetch('https://api.sendgrid.com/v3/mail/send', {
     method: 'POST',
