@@ -28,16 +28,25 @@ Future<void> main() async {
   await initializeDateFormatting('es');
 
   await dotenv.load(fileName: ".env");
-  final url = dotenv.env['URL'] ??
+  // Mismos nombres de clave en .env (móvil) y --dart-define (web) para evitar
+  // que uno quede vacío: con URL vacía Supabase.initialize no falla, pero la
+  // primera request (el login) tira "No host specified in URI".
+  final url = dotenv.env['SUPABASE_URL'] ??
       const String.fromEnvironment(
         'SUPABASE_URL',
         defaultValue: '',
       );
-  final anon = dotenv.env['ANON'] ??
+  final anon = dotenv.env['SUPABASE_ANON'] ??
       const String.fromEnvironment(
         'SUPABASE_ANON',
         defaultValue: '',
       );
+
+  assert(
+    url.isNotEmpty && anon.isNotEmpty,
+    'Faltan las credenciales de Supabase: revisá que .env (móvil) o los '
+    '--dart-define (web) definan SUPABASE_URL y SUPABASE_ANON.',
+  );
 
   await ThemeController.instance.load();
   await Supabase.initialize(
