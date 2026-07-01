@@ -38,7 +38,19 @@ Future<void> main() async {
       );
 
   await ThemeController.instance.load();
-  await Supabase.initialize(url: url, anonKey: anon);
+  await Supabase.initialize(
+    url: url,
+    anonKey: anon,
+    // Flujo implicit (tokens en el fragment del redirect) en vez de PKCE.
+    // PKCE necesita el code_verifier guardado en el mismo cliente que pidió el
+    // reset; si el link de recuperación se abre en otro navegador/dispositivo el
+    // canje del ?code= falla sin evento visible y "el link no hace nada".
+    // Con implicit el link trae #access_token=...&type=recovery y dispara
+    // passwordRecovery sin depender del verifier. Ver _AuthGate.
+    authOptions: const FlutterAuthClientOptions(
+      authFlowType: AuthFlowType.implicit,
+    ),
+  );
 
   // Push móvil (FCM). En web el push usa VAPID por separado, así que se omite.
   if (!kIsWeb) {
