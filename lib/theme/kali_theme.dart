@@ -41,16 +41,22 @@ class KaliTheme {
     },
   );
 
-  static ThemeData buildTheme(KaliColorsExtension colors) {
+  static ThemeData buildTheme(KaliColorsExtension colors, {bool isDark = false}) {
     return ThemeData(
       useMaterial3: true,
       scaffoldBackgroundColor: colors.warmWhite,
       pageTransitionsTheme: _pageTransitions,
-      colorScheme: ColorScheme.light(
-        primary: colors.espresso,
-        secondary: colors.clay,
-        surface: colors.warmWhite,
-      ),
+      colorScheme: isDark 
+          ? ColorScheme.dark(
+              primary: colors.espresso,
+              secondary: colors.clay,
+              surface: colors.warmWhite,
+            )
+          : ColorScheme.light(
+              primary: colors.espresso,
+              secondary: colors.clay,
+              surface: colors.warmWhite,
+            ),
       appBarTheme: AppBarTheme(
         backgroundColor: colors.espresso,
         foregroundColor: colors.warmWhite,
@@ -61,6 +67,6 @@ class KaliTheme {
     );
   }
 
-  static ThemeData get theme => buildTheme(ThemeController.instance.currentTheme);
-  static ThemeData get darkTheme => buildTheme(KaliColorsExtension.darkTheme);
+  static ThemeData get theme => buildTheme(ThemeController.instance.currentTheme, isDark: false);
+  static ThemeData get darkTheme => buildTheme(ThemeController.instance.currentTheme, isDark: true);
 }

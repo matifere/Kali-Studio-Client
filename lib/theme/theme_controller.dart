@@ -10,6 +10,7 @@ class ThemeController extends ChangeNotifier {
   static const _themeIdKey = 'theme_id';
 
   ThemeMode _themeMode = ThemeMode.light;
+  String _themeId = 'default';
   KaliColorsExtension _currentTheme = KaliColorsExtension.defaultTheme;
 
   ThemeMode get themeMode => _themeMode;
@@ -25,33 +26,34 @@ class ThemeController extends ChangeNotifier {
       _themeMode = ThemeMode.light;
     }
     
-    final savedThemeId = prefs.getString(_themeIdKey) ?? 'default';
-    _applyThemeById(savedThemeId);
+    _themeId = prefs.getString(_themeIdKey) ?? 'default';
+    _updateCurrentTheme();
     notifyListeners();
   }
 
-  void _applyThemeById(String themeId) {
-    switch (themeId) {
+  void _updateCurrentTheme() {
+    switch (_themeId) {
+      case 'ocean':
+        _currentTheme = isDarkMode ? KaliColorsExtension.oceanDarkTheme : KaliColorsExtension.oceanTheme;
+        break;
+      case 'nature':
+        _currentTheme = isDarkMode ? KaliColorsExtension.natureDarkTheme : KaliColorsExtension.natureTheme;
+        break;
+      case 'magenta':
+        _currentTheme = isDarkMode ? KaliColorsExtension.magentaDarkTheme : KaliColorsExtension.magentaTheme;
+        break;
       case 'dark':
         _currentTheme = KaliColorsExtension.darkTheme;
         break;
-      case 'ocean':
-        _currentTheme = KaliColorsExtension.oceanTheme;
-        break;
-      case 'nature':
-        _currentTheme = KaliColorsExtension.natureTheme;
-        break;
-      case 'magenta':
-        _currentTheme = KaliColorsExtension.magentaTheme;
-        break;
       default:
-        _currentTheme = KaliColorsExtension.defaultTheme;
+        _currentTheme = isDarkMode ? KaliColorsExtension.darkTheme : KaliColorsExtension.defaultTheme;
         break;
     }
   }
 
   Future<void> syncTheme(String themeId) async {
-    _applyThemeById(themeId);
+    _themeId = themeId;
+    _updateCurrentTheme();
     notifyListeners();
 
     final prefs = await SharedPreferences.getInstance();
@@ -60,6 +62,7 @@ class ThemeController extends ChangeNotifier {
 
   Future<void> setDarkMode(bool enabled) async {
     _themeMode = enabled ? ThemeMode.dark : ThemeMode.light;
+    _updateCurrentTheme();
     notifyListeners();
 
     final prefs = await SharedPreferences.getInstance();
