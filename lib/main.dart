@@ -142,6 +142,12 @@ class _AuthGateState extends State<_AuthGate> {
       }
     } else {
       _currentProfile = profile;
+      if (profile.institutionId != null) {
+        final studio = await StudioService.fetchCurrentInstitution();
+        if (studio != null && studio.themeId != null) {
+          ThemeController.instance.syncTheme(studio.themeId!);
+        }
+      }
     }
     if (mounted) setState(() => _checkingProfile = false);
   }
