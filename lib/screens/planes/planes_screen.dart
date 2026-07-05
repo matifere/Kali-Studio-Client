@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 import '../home_screen.dart';
@@ -13,7 +14,16 @@ import '../../widgets/web_page_wrapper.dart';
 import '../../utils/ui_utils.dart';
 
 class PlanesScreen extends StatefulWidget {
-  const PlanesScreen({super.key});
+  /// Si se provee, la pantalla funciona en "modo bloqueante": se muestra
+  /// cuando el alumno todavía no tiene un plan activo y debe activar uno para
+  /// entrar a la app. Al activarse un plan con éxito se invoca este callback
+  /// (que re-chequea el estado y lo deja pasar). En uso normal (pestaña dentro
+  /// de la app) queda en null.
+  final VoidCallback? onPlanActivated;
+
+  const PlanesScreen({super.key, this.onPlanActivated});
+
+  bool get isGate => onPlanActivated != null;
 
   @override
   State<PlanesScreen> createState() => _PlanesScreenState();
@@ -68,12 +78,18 @@ class _PlanesScreenState extends State<PlanesScreen> {
     );
     if (confirmed == true) {
       HomeScreen.invalidateCache();
+      // En modo bloqueante, avisamos al gate para que re-chequee y deje entrar.
+      if (widget.onPlanActivated != null) {
+        widget.onPlanActivated!();
+        return;
+      }
       _refreshActivePlan();
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isGate = widget.isGate;
     return Scaffold(
       backgroundColor: KaliColors.warmWhite,
       body: SafeArea(
@@ -84,26 +100,49 @@ class _PlanesScreenState extends State<PlanesScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHero(),
+                _buildHero(isGate),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _sectionLabel('Tu plan actual'),
-                      const SizedBox(height: 14),
-                      _buildActivePlanCard(),
-                      const SizedBox(height: 36),
-                      _sectionLabel('Planes disponibles'),
+                      // En modo bloqueante no tiene plan activo, así que la
+                      // sección "Tu plan actual" se omite.
+                      if (!isGate) ...[
+                        _sectionLabel('Tu plan actual'),
+                        const SizedBox(height: 14),
+                        _buildActivePlanCard(),
+                        const SizedBox(height: 36),
+                      ],
+                      _sectionLabel(
+                          isGate ? 'Elegí tu plan' : 'Planes disponibles'),
                     ],
                   ),
                 ),
                 const SizedBox(height: 14),
                 _buildCarousel(),
                 const SizedBox(height: 32),
+                if (isGate) _buildLogoutButton(),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogoutButton() {
+    return Center(
+      child: TextButton(
+        onPressed: () async {
+          try {
+            await Supabase.instance.client.auth.signOut();
+          } catch (_) {}
+        },
+        child: Text(
+          'Cerrar sesión',
+          style: KaliText.body(KaliColors.clayDark,
+              size: 14, weight: FontWeight.w600),
         ),
       ),
     );
@@ -229,7 +268,7 @@ class _PlanesScreenState extends State<PlanesScreen> {
     );
   }
 
-  Widget _buildHero() {
+  Widget _buildHero(bool isGate) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 22, 20, 28),
@@ -258,13 +297,15 @@ class _PlanesScreenState extends State<PlanesScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'SUSCRIPCIONES',
+                isGate ? 'BIENVENIDA' : 'SUSCRIPCIONES',
                 style: KaliText.label(KaliColors.clay)
                     .copyWith(fontSize: 10, letterSpacing: 1.8),
               ),
               const SizedBox(height: 8),
               Text(
-                'Elegí el plan que mejor se adapta a tu ritmo.',
+                isGate
+                    ? 'Activá un plan para empezar a reservar tus clases.'
+                    : 'Elegí el plan que mejor se adapta a tu ritmo.',
                 style: KaliText.body(
                   KaliColors.warmWhite.withValues(alpha: 0.72),
                   size: 14,

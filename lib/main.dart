@@ -13,7 +13,9 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:kali_studio/auth/welcome_screen.dart';
 import 'package:kali_studio/auth/studio_selection_screen.dart';
 import 'package:kali_studio/screens/main_shell.dart';
+import 'package:kali_studio/screens/planes/planes_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'supabase/plan_service.dart';
 import 'supabase/profile_manager.dart';
 import 'supabase/studio_service.dart';
 import 'supabase/supabase_auth_service.dart';
@@ -128,6 +130,7 @@ class _AuthGateState extends State<_AuthGate> {
   }
 
   Profile? _currentProfile;
+  bool _hasActivePlan = false;
 
   Future<void> _checkProfile() async {
     final session = Supabase.instance.client.auth.currentSession;
@@ -147,6 +150,11 @@ class _AuthGateState extends State<_AuthGate> {
         if (studio != null && studio.themeId != null) {
           ThemeController.instance.syncTheme(studio.themeId!);
         }
+        // Detectamos si el alumno tiene un plan activo. Si no, se lo obliga a
+        // activar uno antes de dejarlo entrar a la app (ver build()).
+        final activePlan = await PlanService.fetchActivePlan();
+        if (!mounted) return;
+        _hasActivePlan = activePlan != null;
       }
     }
     if (mounted) setState(() => _checkingProfile = false);
@@ -196,6 +204,13 @@ class _AuthGateState extends State<_AuthGate> {
           if (_currentProfile != null && _currentProfile!.institutionId == null) {
             return StudioSelectionScreen(
               onComplete: () => _checkProfile(),
+            );
+          }
+          // Sin plan activo no dejamos entrar a la app: mostramos la pantalla
+          // de planes en modo bloqueante hasta que active uno.
+          if (_currentProfile != null && !_hasActivePlan) {
+            return PlanesScreen(
+              onPlanActivated: () => _checkProfile(),
             );
           }
           return const MainShell();
