@@ -42,20 +42,33 @@ class PlanService {
       throw Exception('Tu sesión expiró. Volvé a iniciar sesión.');
     }
 
-    dynamic data;
+    // La edge function decide el método según lo que tenga configurado el
+    // estudio: si hay token MP en el Vault (institutions.mp_token_secret_name,
+    // vía get_institution_mp_token) devuelve {url} → MercadoPago; si no, cae al
+    // payment_alias y devuelve {alias} → transferencia.
+    final FunctionResponse response;
     try {
-      data = await _supabase.rpc(
-        'create_pending_payment',
-        params: {'p_plan_id': planId},
+      response = await _supabase.functions.invoke(
+        'create-preference',
+        body: {'plan_id': planId},
       );
-    } on PostgrestException catch (e) {
-      throw Exception(e.message);
-    } catch (e) {
-      throw Exception('No pudimos iniciar el pago. Intentá de nuevo.');
+    } on FunctionException catch (e) {
+      // 503 = el estudio no configuró ni token MP ni alias.
+      if (e.status == 503) {
+        throw Exception('Tu estudio todavía no configuró un método de pago. Consultá con tu instructor.');
+      }
+      final err = (e.details is Map ? (e.details as Map)['error'] : null) as String?
+          ?? 'No pudimos iniciar el pago. Intentá de nuevo.';
+      throw Exception(err);
     }
 
-    final alias = (data as Map<String, dynamic>?)?['alias'] as String?;
+    final data = response.data as Map<String, dynamic>?;
+
+    final alias = data?['alias'] as String?;
     if (alias != null) return TransferPayment(alias);
+
+    final url = data?['url'] as String?;
+    if (url != null) return MercadoPagoPayment(url);
 
     throw Exception('No pudimos procesar la respuesta del pago. Intentá de nuevo.');
   }
