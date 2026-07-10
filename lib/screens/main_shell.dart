@@ -184,6 +184,7 @@ class _MainShellState extends State<MainShell> {
     }
 
     return Scaffold(
+      extendBody: true,
       backgroundColor: KaliColors.warmWhite,
       appBar: AppBar(
         backgroundColor: KaliColors.warmWhite,
@@ -202,13 +203,26 @@ class _MainShellState extends State<MainShell> {
         ),
       ),
       body: _animatedBody(),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(color: KaliColors.sand2, width: 1),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(36),
+              boxShadow: [
+                BoxShadow(
+                  color: KaliColors.espresso.withValues(alpha: 0.12),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(36),
+              child: _buildBottomNav(),
+            ),
           ),
         ),
-        child: _buildBottomNav(),
       ),
     );
   }
