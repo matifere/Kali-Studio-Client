@@ -11,6 +11,7 @@ class Studio {
   final String? logoUrl;
   final String? themeId;
   final int cancellationHours;
+  final String? consentPdfUrl;
 
   const Studio({
     required this.id,
@@ -21,6 +22,7 @@ class Studio {
     this.logoUrl,
     this.themeId,
     this.cancellationHours = 2,
+    this.consentPdfUrl,
   });
 
   factory Studio.fromMap(Map<String, dynamic> m) => Studio(
@@ -32,6 +34,7 @@ class Studio {
         logoUrl: m['logo_url'] as String?,
         themeId: m['theme_id'] as String?,
         cancellationHours: m['cancellation_hours'] as int? ?? 2,
+        consentPdfUrl: m['consent_pdf_url'] as String?,
       );
 }
 
@@ -49,7 +52,7 @@ class StudioService {
     try {
       final data = await _supabase
           .from('institutions')
-          .select('id, name, slug, address, phone, logo_url, theme_id, cancellation_hours')
+          .select('id, name, slug, address, phone, logo_url, theme_id, cancellation_hours, consent_pdf_url')
           .eq('id', institutionId)
           .maybeSingle();
       if (data == null) return null;

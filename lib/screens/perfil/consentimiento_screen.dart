@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:pdfx/pdfx.dart';
+import '../../supabase/studio_service.dart';
 import '../../theme/kali_theme.dart';
 
 class ConsentimientoScreen extends StatefulWidget {
@@ -15,9 +17,27 @@ class _ConsentimientoScreenState extends State<ConsentimientoScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = PdfControllerPinch(
-      document: PdfDocument.openAsset('assets/docs/consentimiento.pdf'),
-    );
+    _controller = PdfControllerPinch(document: _loadDocument());
+  }
+
+  Future<PdfDocument> _loadDocument() async {
+    // Si la institución cargó su propio consentimiento, se muestra ese.
+    // Si no (o si falla la descarga), se usa el PDF embebido en la app.
+    try {
+      final studio = await StudioService.fetchCurrentInstitution();
+      final url = studio?.consentPdfUrl;
+      if (url != null && url.isNotEmpty) {
+        final response = await http.get(Uri.parse(url));
+        if (response.statusCode == 200) {
+          return PdfDocument.openData(response.bodyBytes);
+        }
+        debugPrint(
+            'Consentimiento: HTTP ${response.statusCode} al descargar $url');
+      }
+    } catch (e) {
+      debugPrint('Consentimiento: error descargando PDF: $e');
+    }
+    return PdfDocument.openAsset('assets/docs/consentimiento.pdf');
   }
 
   @override
