@@ -11,6 +11,7 @@ import '../../widgets/kali_avatar.dart';
 import '../../widgets/web_page_wrapper.dart';
 import 'consentimiento_screen.dart';
 import 'edit_profile_screen.dart';
+import '../planes/planes_screen.dart';
 import '../../utils/ui_utils.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -61,6 +62,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 12),
               _buildCard(
                 children: [
+                  _buildMenuRow(
+                    icon: Icons.card_membership_rounded,
+                    title: 'Mis planes',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const PlanesScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _softDivider(),
                   _buildMenuRow(
                     icon: Icons.person_outline_rounded,
                     title: 'Editar perfil',

@@ -10,7 +10,6 @@ import 'reservas/book_class_screen.dart';
 import 'reservas/booking_detail_screen.dart';
 import 'home_screen.dart';
 import 'perfil/profile_screen.dart';
-import 'planes/planes_screen.dart';
 import 'rutina/rutina_screen.dart';
 
 class MainShell extends StatefulWidget {
@@ -121,7 +120,6 @@ class _MainShellState extends State<MainShell> {
       children: [
         HomeScreen(
           onGoToReservas: () => _onTabTapped(1),
-          onGoToPlanes: () => _onTabTapped(4),
         ),
         // ignore: prefer_const_constructors
         BookingDetailScreen(),
@@ -129,8 +127,6 @@ class _MainShellState extends State<MainShell> {
         BookClassScreen(),
         // ignore: prefer_const_constructors
         RutinaScreen(),
-        // ignore: prefer_const_constructors
-        PlanesScreen(),
         // ignore: prefer_const_constructors
         ProfileScreen(),
       ],
@@ -153,10 +149,6 @@ class _MainShellState extends State<MainShell> {
         icon: Icons.assignment_outlined,
         activeIcon: Icons.assignment,
         label: 'Mi rutina'),
-    _NavItem(
-        icon: Icons.card_membership_outlined,
-        activeIcon: Icons.card_membership,
-        label: 'Planes'),
     _NavItem(
         icon: Icons.person_outline, activeIcon: Icons.person, label: 'Perfil'),
   ];

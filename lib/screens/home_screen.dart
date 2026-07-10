@@ -9,6 +9,7 @@ import '../theme/kali_theme.dart';
 import '../utils/time_utils.dart';
 import '../widgets/motion.dart';
 import '../widgets/web_page_wrapper.dart';
+import 'planes/planes_screen.dart';
 import '../supabase/studio_service.dart';
 
 // ── Data ─────────────────────────────────────────────────────────────────────
@@ -33,9 +34,8 @@ class _HomeData {
 
 class HomeScreen extends StatefulWidget {
   final VoidCallback? onGoToReservas;
-  final VoidCallback? onGoToPlanes;
 
-  const HomeScreen({super.key, this.onGoToReservas, this.onGoToPlanes});
+  const HomeScreen({super.key, this.onGoToReservas});
 
   static _HomeData? _cache;
   static DateTime? _cacheTime;
@@ -366,7 +366,12 @@ class _HomeScreenState extends State<HomeScreen>
             : 'Vence en $days días';
 
     return _buildDarkCard(
-      onTap: widget.onGoToPlanes,
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const PlanesScreen()),
+        );
+      },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -386,7 +391,12 @@ class _HomeScreenState extends State<HomeScreen>
             ],
           ]),
           const SizedBox(height: 14),
-          _ctaButton(label: 'Ver plan', onTap: widget.onGoToPlanes),
+          _ctaButton(label: 'Ver plan', onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const PlanesScreen()),
+            );
+          }),
         ],
       ),
     );

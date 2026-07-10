@@ -92,12 +92,10 @@ class _PlanesScreenState extends State<PlanesScreen> {
     final isGate = widget.isGate;
     return Scaffold(
       backgroundColor: KaliColors.warmWhite,
-      body: SafeArea(
-        bottom: false,
-        child: WebPageWrapper(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.only(bottom: 104),
-            child: Column(
+      body: WebPageWrapper(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.only(bottom: 104),
+          child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildHero(isGate),
@@ -127,7 +125,6 @@ class _PlanesScreenState extends State<PlanesScreen> {
             ),
           ),
         ),
-      ),
     );
   }
 
@@ -271,7 +268,6 @@ class _PlanesScreenState extends State<PlanesScreen> {
   Widget _buildHero(bool isGate) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 22, 20, 28),
       decoration: BoxDecoration(
         color: KaliColors.espresso,
         borderRadius: const BorderRadius.only(
@@ -293,26 +289,48 @@ class _PlanesScreenState extends State<PlanesScreen> {
               ),
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                isGate ? 'BIENVENIDA' : 'SUSCRIPCIONES',
-                style: KaliText.label(KaliColors.clay)
-                    .copyWith(fontSize: 10, letterSpacing: 1.8),
+          SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (!isGate)
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        color: Colors.transparent,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.arrow_back_rounded, color: KaliColors.clay, size: 20),
+                            const SizedBox(width: 8),
+                            Text('Volver', style: KaliText.body(KaliColors.clay, size: 14, weight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  Text(
+                    isGate ? 'BIENVENIDA' : 'SUSCRIPCIONES',
+                    style: KaliText.label(KaliColors.clay)
+                        .copyWith(fontSize: 10, letterSpacing: 1.8),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    isGate
+                        ? 'Activá un plan para empezar a reservar tus clases.'
+                        : 'Elegí el plan que mejor se adapta a tu ritmo.',
+                    style: KaliText.body(
+                      KaliColors.warmWhite.withValues(alpha: 0.72),
+                      size: 14,
+                      weight: FontWeight.w400,
+                    ).copyWith(height: 1.5),
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                isGate
-                    ? 'Activá un plan para empezar a reservar tus clases.'
-                    : 'Elegí el plan que mejor se adapta a tu ritmo.',
-                style: KaliText.body(
-                  KaliColors.warmWhite.withValues(alpha: 0.72),
-                  size: 14,
-                  weight: FontWeight.w400,
-                ).copyWith(height: 1.5),
-              ),
-            ],
+            ),
           ),
         ],
       ),
