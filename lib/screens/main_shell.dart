@@ -24,10 +24,12 @@ class _MainShellState extends State<MainShell> {
   late final Future<Studio?> _institutionFuture;
   int _unreadCount = 0;
   RealtimeChannel? _notifChannel;
+  late final PageController _pageController;
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: _currentIndex);
     _institutionFuture = StudioService.fetchCurrentInstitution();
     _loadUnreadCount();
     _subscribeToNotifications();
@@ -35,8 +37,21 @@ class _MainShellState extends State<MainShell> {
 
   @override
   void dispose() {
+    _pageController.dispose();
     _notifChannel?.unsubscribe();
     super.dispose();
+  }
+
+  void _onTabTapped(int index) {
+    if (_currentIndex == index) return;
+    setState(() => _currentIndex = index);
+    if (_pageController.hasClients) {
+      _pageController.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutCubic,
+      );
+    }
   }
 
   Future<void> _loadUnreadCount() async {
@@ -97,56 +112,26 @@ class _MainShellState extends State<MainShell> {
     );
   }
 
-  /// Envuelve la pantalla activa con un fade + leve desplazamiento al cambiar
-  /// de pestaña, para que la transición no sea un corte seco.
+  /// Envuelve la pantalla activa usando PageView para deslizar horizontalmente.
   Widget _animatedBody() {
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 280),
-      switchInCurve: Curves.easeOutCubic,
-      switchOutCurve: Curves.easeIn,
-      transitionBuilder: (child, animation) {
-        return FadeTransition(
-          opacity: animation,
-          child: SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0, 0.012),
-              end: Offset.zero,
-            ).animate(animation),
-            child: child,
-          ),
-        );
-      },
-      child: KeyedSubtree(
-        key: ValueKey(_currentIndex),
-        child: _buildScreen(),
-      ),
+    return PageView(
+      controller: _pageController,
+      physics: const NeverScrollableScrollPhysics(), // Evitamos scroll táctil para no interferir con las pantallas internas
+      children: [
+        HomeScreen(
+          onGoToReservas: () => _onTabTapped(1),
+          onGoToPlanes: () => _onTabTapped(3),
+        ),
+        // ignore: prefer_const_constructors
+        BookingDetailScreen(),
+        // ignore: prefer_const_constructors
+        BookClassScreen(),
+        // ignore: prefer_const_constructors
+        PlanesScreen(),
+        // ignore: prefer_const_constructors
+        ProfileScreen(),
+      ],
     );
-  }
-
-  Widget _buildScreen() {
-    switch (_currentIndex) {
-      case 0:
-        return HomeScreen(
-          onGoToReservas: () => setState(() => _currentIndex = 1),
-          onGoToPlanes: () => setState(() => _currentIndex = 3),
-        );
-      // const omitido intencionalmente: causa "Trying to render a disposed
-      // EngineFlutterView" en Flutter web al cambiar de tema (ver commit 430c155)
-      case 1:
-        // ignore: prefer_const_constructors
-        return BookingDetailScreen();
-      case 2:
-        // ignore: prefer_const_constructors
-        return BookClassScreen();
-      case 3:
-        // ignore: prefer_const_constructors
-        return PlanesScreen();
-      case 4:
-        // ignore: prefer_const_constructors
-        return ProfileScreen();
-      default:
-        return const SizedBox.shrink();
-    }
   }
 
   final List<_NavItem> _navItems = const [
@@ -338,7 +323,7 @@ class _MainShellState extends State<MainShell> {
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
           onTap: () {
-            setState(() => _currentIndex = index);
+            _onTabTapped(index);
             if (drawerContext != null) Navigator.of(drawerContext).pop();
           },
           child: AnimatedContainer(
@@ -388,14 +373,14 @@ class _MainShellState extends State<MainShell> {
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return IconThemeData(color: KaliColors.espresso, size: 24);
+            return IconThemeData(color: KaliColors.espresso, size: 30); // Ícono más grande
           }
-          return IconThemeData(color: KaliColors.clayDark, size: 24);
+          return IconThemeData(color: KaliColors.clayDark, size: 22); // Íconos restantes más chicos
         }),
       ),
       child: NavigationBar(
         selectedIndex: _currentIndex,
-        onDestinationSelected: (index) => setState(() => _currentIndex = index),
+        onDestinationSelected: _onTabTapped,
         elevation: 0,
         height: 70, // un poco más alto para respirar
         destinations: _navItems.map((item) {
