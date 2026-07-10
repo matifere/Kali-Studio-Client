@@ -25,10 +25,12 @@ class _MainShellState extends State<MainShell> {
   late final Future<Studio?> _institutionFuture;
   int _unreadCount = 0;
   RealtimeChannel? _notifChannel;
+  late final PageController _pageController;
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: _currentIndex);
     _institutionFuture = StudioService.fetchCurrentInstitution();
     _loadUnreadCount();
     _subscribeToNotifications();
@@ -36,8 +38,21 @@ class _MainShellState extends State<MainShell> {
 
   @override
   void dispose() {
+    _pageController.dispose();
     _notifChannel?.unsubscribe();
     super.dispose();
+  }
+
+  void _onTabTapped(int index) {
+    if (_currentIndex == index) return;
+    setState(() => _currentIndex = index);
+    if (_pageController.hasClients) {
+      _pageController.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutCubic,
+      );
+    }
   }
 
   Future<void> _loadUnreadCount() async {
@@ -57,9 +72,11 @@ class _MainShellState extends State<MainShell> {
   }
 
   void _openNotifications() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-    ).then((_) => _loadUnreadCount());
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+        )
+        .then((_) => _loadUnreadCount());
   }
 
   Widget _bellIcon() {
@@ -96,60 +113,30 @@ class _MainShellState extends State<MainShell> {
     );
   }
 
-  /// Envuelve la pantalla activa con un fade + leve desplazamiento al cambiar
-  /// de pestaña, para que la transición no sea un corte seco.
+  /// Envuelve la pantalla activa usando PageView para deslizar horizontalmente.
   Widget _animatedBody() {
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 280),
-      switchInCurve: Curves.easeOutCubic,
-      switchOutCurve: Curves.easeIn,
-      transitionBuilder: (child, animation) {
-        return FadeTransition(
-          opacity: animation,
-          child: SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0, 0.012),
-              end: Offset.zero,
-            ).animate(animation),
-            child: child,
-          ),
-        );
-      },
-      child: KeyedSubtree(
-        key: ValueKey(_currentIndex),
-        child: _buildScreen(),
-      ),
+    return PageView(
+      controller: _pageController,
+      physics: const NeverScrollableScrollPhysics(), // Evitamos scroll táctil para no interferir con las pantallas internas
+      children: [
+        HomeScreen(
+          onGoToReservas: () => _onTabTapped(1),
+          onGoToPlanes: () => _onTabTapped(4),
+        ),
+        // ignore: prefer_const_constructors
+        BookingDetailScreen(),
+        // ignore: prefer_const_constructors
+        BookClassScreen(),
+        // ignore: prefer_const_constructors
+        RutinaScreen(),
+        // ignore: prefer_const_constructors
+        PlanesScreen(),
+        // ignore: prefer_const_constructors
+        ProfileScreen(),
+      ],
     );
   }
 
-  Widget _buildScreen() {
-    switch (_currentIndex) {
-      case 0:
-        return HomeScreen(
-          onGoToReservas: () => setState(() => _currentIndex = 1),
-          onGoToPlanes: () => setState(() => _currentIndex = 4),
-        );
-      // const omitido intencionalmente: causa "Trying to render a disposed
-      // EngineFlutterView" en Flutter web al cambiar de tema (ver commit 430c155)
-      case 1:
-        // ignore: prefer_const_constructors
-        return BookingDetailScreen();
-      case 2:
-        // ignore: prefer_const_constructors
-        return BookClassScreen();
-      case 3:
-        // ignore: prefer_const_constructors
-        return RutinaScreen();
-      case 4:
-        // ignore: prefer_const_constructors
-        return PlanesScreen();
-      case 5:
-        // ignore: prefer_const_constructors
-        return ProfileScreen();
-      default:
-        return const SizedBox.shrink();
-    }
-  }
 
   final List<_NavItem> _navItems = const [
     _NavItem(
@@ -161,7 +148,7 @@ class _MainShellState extends State<MainShell> {
     _NavItem(
         icon: Icons.fitness_center_outlined,
         activeIcon: Icons.fitness_center,
-        label: 'Reservar clases'),
+        label: 'Reservar'),
     _NavItem(
         icon: Icons.assignment_outlined,
         activeIcon: Icons.assignment,
@@ -205,29 +192,57 @@ class _MainShellState extends State<MainShell> {
     }
 
     return Scaffold(
+      extendBody: true,
       backgroundColor: KaliColors.warmWhite,
-      drawer: _buildDrawer(),
-      appBar: AppBar(
-        backgroundColor: KaliColors.warmWhite,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leading: Builder(
-          builder: (ctx) => IconButton(
-            icon: Icon(Icons.menu, color: KaliColors.espresso),
-            onPressed: () => Scaffold.of(ctx).openDrawer(),
+      body: Stack(
+        children: [
+          _animatedBody(),
+          Positioned(
+            top: 0,
+            right: 0,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 12, right: 16),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: KaliColors.warmWhite.withValues(alpha: 0.95),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: _bellIcon(),
+                ),
+              ),
+            ),
           ),
-        ),
-        title: Text(
-            'Argity Turnos',
-            style: KaliText.body(KaliColors.espresso, size: 15, weight: FontWeight.w600),
+        ],
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(36),
+              boxShadow: [
+                BoxShadow(
+                  color: KaliColors.espresso.withValues(alpha: 0.12),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(36),
+              child: _buildBottomNav(),
+            ),
           ),
-        actions: [_bellIcon()],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Divider(color: KaliColors.sand2, thickness: 1, height: 1),
         ),
       ),
-      body: _animatedBody(),
     );
   }
 
@@ -329,7 +344,10 @@ class _MainShellState extends State<MainShell> {
     );
   }
 
-  Widget _buildSidebarItem({required int index, required _NavItem item, BuildContext? drawerContext}) {
+  Widget _buildSidebarItem(
+      {required int index,
+      required _NavItem item,
+      BuildContext? drawerContext}) {
     final isActive = index == _currentIndex;
 
     return Padding(
@@ -338,7 +356,7 @@ class _MainShellState extends State<MainShell> {
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
           onTap: () {
-            setState(() => _currentIndex = index);
+            _onTabTapped(index);
             if (drawerContext != null) Navigator.of(drawerContext).pop();
           },
           child: AnimatedContainer(
@@ -353,13 +371,12 @@ class _MainShellState extends State<MainShell> {
                 Icon(
                   isActive ? item.activeIcon : item.icon,
                   size: 18,
-                  color: isActive
-                      ? KaliColors.warmWhite
-                      : KaliColors.clayDark,
+                  color: isActive ? KaliColors.warmWhite : KaliColors.clayDark,
                 ),
                 const SizedBox(width: 12),
                 Text(
                   item.label,
+                  textAlign: TextAlign.center,
                   style: KaliText.body(
                     isActive ? KaliColors.warmWhite : KaliColors.clayDark,
                     size: 13,
@@ -374,22 +391,38 @@ class _MainShellState extends State<MainShell> {
     );
   }
 
-  Widget _buildDrawer() {
-    return Drawer(
-      backgroundColor: KaliColors.warmWhite,
-      child: Builder(
-        builder: (ctx) => SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildSidebarLogo(),
-              const SizedBox(height: 12),
-              ..._navItems.asMap().entries.map(
-                    (e) => _buildSidebarItem(index: e.key, item: e.value, drawerContext: ctx),
-                  ),
-            ],
-          ),
-        ),
+  Widget _buildBottomNav() {
+    return NavigationBarTheme(
+      data: NavigationBarThemeData(
+        backgroundColor: KaliColors.warmWhite,
+        indicatorColor: KaliColors.espresso.withValues(alpha: 0.15),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return KaliText.body(KaliColors.espresso,
+                size: 11, weight: FontWeight.w700);
+          }
+          return KaliText.body(KaliColors.clayDark,
+              size: 11, weight: FontWeight.w500);
+        }),
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return IconThemeData(color: KaliColors.espresso, size: 30); // Ícono más grande
+          }
+          return IconThemeData(color: KaliColors.clayDark, size: 22); // Íconos restantes más chicos
+        }),
+      ),
+      child: NavigationBar(
+        selectedIndex: _currentIndex,
+        onDestinationSelected: _onTabTapped,
+        elevation: 0,
+        height: 70, // un poco más alto para respirar
+        destinations: _navItems.map((item) {
+          return NavigationDestination(
+            icon: Icon(item.icon),
+            selectedIcon: Icon(item.activeIcon),
+            label: item.label,
+          );
+        }).toList(),
       ),
     );
   }

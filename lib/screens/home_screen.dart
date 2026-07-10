@@ -9,6 +9,7 @@ import '../theme/kali_theme.dart';
 import '../utils/time_utils.dart';
 import '../widgets/motion.dart';
 import '../widgets/web_page_wrapper.dart';
+import '../supabase/studio_service.dart';
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
@@ -17,12 +18,14 @@ class _HomeData {
   final PilatesClass? nextClass;
   final int monthlyCount;
   final UserPlan? plan;
+  final Studio? studio;
 
   const _HomeData({
     required this.profile,
     required this.nextClass,
     required this.monthlyCount,
     required this.plan,
+    required this.studio,
   });
 }
 
@@ -85,12 +88,14 @@ class _HomeScreenState extends State<HomeScreen>
       BookingService.fetchMonthlyReservationCount(now.year, now.month)
           .catchError((_) => 0),
       PlanService.fetchActivePlan().catchError((_) => null),
+      StudioService.fetchCurrentInstitution().catchError((_) => null),
     ]);
     HomeScreen._cache = _HomeData(
       profile: results[0] as Profile?,
       nextClass: results[1] as PilatesClass?,
       monthlyCount: (results[2] as int?) ?? 0,
       plan: results[3] as UserPlan?,
+      studio: results[4] as Studio?,
     );
     HomeScreen._cacheTime = now;
     return HomeScreen._cache!;
@@ -104,11 +109,9 @@ class _HomeScreenState extends State<HomeScreen>
       backgroundColor: KaliColors.warmWhite,
       body: FadeTransition(
         opacity: _fade,
-        child: SafeArea(
-          bottom: false,
-          child: WebPageWrapper(
-            child: FutureBuilder<_HomeData>(
-              future: _dataFuture,
+        child: WebPageWrapper(
+          child: FutureBuilder<_HomeData>(
+            future: _dataFuture,
               builder: (context, snapshot) {
                 final data = snapshot.data;
                 // mientras carga mostramos placeholders, no "Sin plan activo"
@@ -176,7 +179,6 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ),
         ),
-      ),
     );
   }
 
@@ -191,9 +193,11 @@ class _HomeScreenState extends State<HomeScreen>
             ? '1 clase este mes'
             : '$count clases este mes';
 
+    final hasStudioInfo =
+        data?.studio != null && (data?.studio?.logoUrl?.isNotEmpty ?? false);
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 22, 20, 28),
       decoration: BoxDecoration(
         color: KaliColors.espresso,
         borderRadius: const BorderRadius.only(
@@ -208,15 +212,76 @@ class _HomeScreenState extends State<HomeScreen>
             right: -50,
             child: _decorativeCircle(150, alpha: 0.15),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'BIENVENIDA DE VUELTA',
-                style: KaliText.label(KaliColors.clay)
-                    .copyWith(fontSize: 10, letterSpacing: 1.8),
-              ),
-              const SizedBox(height: 8),
+          SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 22, 20, 28),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+              if (hasStudioInfo) ...[
+                FadeSlideIn(
+                  delay: const Duration(milliseconds: 50),
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    margin: const EdgeInsets.only(bottom: 24),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.25),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(999),
+                            child: Image.network(
+                              data!.studio!.logoUrl!,
+                              width: 44,
+                              height: 44,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) =>
+                                  const SizedBox.shrink(),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Entrenando en',
+                              style: KaliText.body(KaliColors.clay,
+                                  size: 12, weight: FontWeight.w500),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              data.studio!.name,
+                              style: KaliText.body(KaliColors.warmWhite,
+                                  size: 16, weight: FontWeight.w700),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(width: 20),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
               RichText(
                 text: TextSpan(
                   text: 'Hola, ',
@@ -234,6 +299,8 @@ class _HomeScreenState extends State<HomeScreen>
               const SizedBox(height: 18),
               _statPill(countLabel),
             ],
+          ),
+          ),
           ),
         ],
       ),
@@ -264,15 +331,16 @@ class _HomeScreenState extends State<HomeScreen>
           ),
           const SizedBox(height: 10),
           Text(cls.name,
-              style: KaliText.body(KaliColors.warmWhite, size: 26,
-                  weight: FontWeight.w500)),
+              style: KaliText.body(KaliColors.warmWhite,
+                  size: 26, weight: FontWeight.w500)),
           const SizedBox(height: 6),
           Text(
               cls.sessionDate != null
-                  ? _capitalize(DateFormat("EEEE d 'de' MMM", 'es').format(cls.sessionDate!))
+                  ? _capitalize(DateFormat("EEEE d 'de' MMM", 'es')
+                      .format(cls.sessionDate!))
                   : '',
-              style: KaliText.body(
-                  KaliColors.warmWhite.withValues(alpha: 0.65), size: 14)),
+              style: KaliText.body(KaliColors.warmWhite.withValues(alpha: 0.65),
+                  size: 14)),
           const SizedBox(height: 22),
           Row(children: [
             if (cls.instructor.isNotEmpty) ...[
@@ -307,8 +375,8 @@ class _HomeScreenState extends State<HomeScreen>
                   weight: FontWeight.w400)),
           const SizedBox(height: 8),
           Text('Vence el $vence',
-              style: KaliText.body(
-                  KaliColors.warmWhite.withValues(alpha: 0.65), size: 14)),
+              style: KaliText.body(KaliColors.warmWhite.withValues(alpha: 0.65),
+                  size: 14)),
           const SizedBox(height: 22),
           Row(children: [
             _infoPill(daysLabel),
@@ -351,8 +419,8 @@ class _HomeScreenState extends State<HomeScreen>
                   weight: FontWeight.w400)),
           const SizedBox(height: 8),
           Text(subtitle,
-              style: KaliText.body(
-                      KaliColors.warmWhite.withValues(alpha: 0.72), size: 14)
+              style: KaliText.body(KaliColors.warmWhite.withValues(alpha: 0.72),
+                      size: 14)
                   .copyWith(height: 1.5)),
         ],
       ),
@@ -409,8 +477,8 @@ class _HomeScreenState extends State<HomeScreen>
           borderRadius: BorderRadius.circular(999),
         ),
         child: Text(label,
-            style: KaliText.body(KaliColors.background, size: 14,
-                weight: FontWeight.w700)),
+            style: KaliText.body(KaliColors.background,
+                size: 14, weight: FontWeight.w700)),
       ),
     );
   }
@@ -453,7 +521,8 @@ class _HomeScreenState extends State<HomeScreen>
                 overflow: TextOverflow.ellipsis,
                 style: KaliText.body(
                     KaliColors.warmWhite.withValues(alpha: 0.88),
-                    size: 13, weight: FontWeight.w500)),
+                    size: 13,
+                    weight: FontWeight.w500)),
           ),
         ],
       ),
