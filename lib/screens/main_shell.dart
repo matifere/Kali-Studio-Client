@@ -56,9 +56,11 @@ class _MainShellState extends State<MainShell> {
   }
 
   void _openNotifications() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-    ).then((_) => _loadUnreadCount());
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+        )
+        .then((_) => _loadUnreadCount());
   }
 
   Widget _bellIcon() {
@@ -157,7 +159,7 @@ class _MainShellState extends State<MainShell> {
     _NavItem(
         icon: Icons.fitness_center_outlined,
         activeIcon: Icons.fitness_center,
-        label: 'Reservar clases'),
+        label: 'Reservar'),
     _NavItem(
         icon: Icons.card_membership_outlined,
         activeIcon: Icons.card_membership,
@@ -198,21 +200,16 @@ class _MainShellState extends State<MainShell> {
 
     return Scaffold(
       backgroundColor: KaliColors.warmWhite,
-      drawer: _buildDrawer(),
       appBar: AppBar(
         backgroundColor: KaliColors.warmWhite,
         elevation: 0,
         scrolledUnderElevation: 0,
-        leading: Builder(
-          builder: (ctx) => IconButton(
-            icon: Icon(Icons.menu, color: KaliColors.espresso),
-            onPressed: () => Scaffold.of(ctx).openDrawer(),
-          ),
-        ),
+        automaticallyImplyLeading: false,
         title: Text(
-            'Argity Turnos',
-            style: KaliText.body(KaliColors.espresso, size: 15, weight: FontWeight.w600),
-          ),
+          'Argity Turnos',
+          style: KaliText.body(KaliColors.espresso,
+              size: 15, weight: FontWeight.w600),
+        ),
         actions: [_bellIcon()],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
@@ -220,6 +217,14 @@ class _MainShellState extends State<MainShell> {
         ),
       ),
       body: _animatedBody(),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(color: KaliColors.sand2, width: 1),
+          ),
+        ),
+        child: _buildBottomNav(),
+      ),
     );
   }
 
@@ -321,7 +326,10 @@ class _MainShellState extends State<MainShell> {
     );
   }
 
-  Widget _buildSidebarItem({required int index, required _NavItem item, BuildContext? drawerContext}) {
+  Widget _buildSidebarItem(
+      {required int index,
+      required _NavItem item,
+      BuildContext? drawerContext}) {
     final isActive = index == _currentIndex;
 
     return Padding(
@@ -345,13 +353,12 @@ class _MainShellState extends State<MainShell> {
                 Icon(
                   isActive ? item.activeIcon : item.icon,
                   size: 18,
-                  color: isActive
-                      ? KaliColors.warmWhite
-                      : KaliColors.clayDark,
+                  color: isActive ? KaliColors.warmWhite : KaliColors.clayDark,
                 ),
                 const SizedBox(width: 12),
                 Text(
                   item.label,
+                  textAlign: TextAlign.center,
                   style: KaliText.body(
                     isActive ? KaliColors.warmWhite : KaliColors.clayDark,
                     size: 13,
@@ -366,22 +373,38 @@ class _MainShellState extends State<MainShell> {
     );
   }
 
-  Widget _buildDrawer() {
-    return Drawer(
-      backgroundColor: KaliColors.warmWhite,
-      child: Builder(
-        builder: (ctx) => SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildSidebarLogo(),
-              const SizedBox(height: 12),
-              ..._navItems.asMap().entries.map(
-                    (e) => _buildSidebarItem(index: e.key, item: e.value, drawerContext: ctx),
-                  ),
-            ],
-          ),
-        ),
+  Widget _buildBottomNav() {
+    return NavigationBarTheme(
+      data: NavigationBarThemeData(
+        backgroundColor: KaliColors.warmWhite,
+        indicatorColor: KaliColors.espresso.withValues(alpha: 0.15),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return KaliText.body(KaliColors.espresso,
+                size: 11, weight: FontWeight.w700);
+          }
+          return KaliText.body(KaliColors.clayDark,
+              size: 11, weight: FontWeight.w500);
+        }),
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return IconThemeData(color: KaliColors.espresso, size: 24);
+          }
+          return IconThemeData(color: KaliColors.clayDark, size: 24);
+        }),
+      ),
+      child: NavigationBar(
+        selectedIndex: _currentIndex,
+        onDestinationSelected: (index) => setState(() => _currentIndex = index),
+        elevation: 0,
+        height: 70, // un poco más alto para respirar
+        destinations: _navItems.map((item) {
+          return NavigationDestination(
+            icon: Icon(item.icon),
+            selectedIcon: Icon(item.activeIcon),
+            label: item.label,
+          );
+        }).toList(),
       ),
     );
   }
