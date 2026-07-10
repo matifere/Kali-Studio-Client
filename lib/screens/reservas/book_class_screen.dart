@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:kali_studio/widgets/google_fonts_helper.dart';
 import '../../models/models.dart';
 import '../../supabase/booking_service.dart';
+import '../../supabase/studio_service.dart';
 import '../../supabase/waitlist_service.dart';
 import '../../theme/kali_theme.dart';
 import '../../utils/auth_utils.dart';
@@ -39,6 +40,7 @@ class _BookClassScreenState extends State<BookClassScreen> {
   Set<String> _datesWithSessions = {};
   final Set<String> _fullSessionIds = {};
   ({int used, int? limit, bool hasPlan})? _monthlyUsage;
+  int _cancellationHours = 2;
 
   Color get _pageBackground => KaliColors.warmWhite;
   Color get _surfaceColor => KaliColors.sand;
@@ -59,6 +61,13 @@ class _BookClassScreenState extends State<BookClassScreen> {
     _loadDatesWithSessions(_visibleMonth);
     _loadSessionsForDate(_selectedDate);
     _loadMonthlyUsage(_visibleMonth);
+    _loadCancellationHours();
+  }
+
+  Future<void> _loadCancellationHours() async {
+    final studio = await StudioService.fetchCurrentInstitution();
+    if (!mounted || studio == null) return;
+    setState(() => _cancellationHours = studio.cancellationHours);
   }
 
   Future<void> _loadDatesWithSessions(DateTime month) async {
@@ -458,7 +467,7 @@ class _BookClassScreenState extends State<BookClassScreen> {
   Future<void> _showBookConfirmation(PilatesClass cls) async {
     final confirmed = await KaliUI.showBottomSheet<bool>(
       context: context,
-      builder: BookConfirmSheet(cls: cls),
+      builder: BookConfirmSheet(cls: cls, cancellationHours: _cancellationHours),
     );
     if (confirmed == true) _bookClass(cls);
   }

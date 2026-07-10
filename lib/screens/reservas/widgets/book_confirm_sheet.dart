@@ -8,8 +8,16 @@ import 'book_confirm_button.dart';
 
 class BookConfirmSheet extends StatelessWidget {
   final PilatesClass cls;
+  final int cancellationHours;
 
-  const BookConfirmSheet({super.key, required this.cls});
+  const BookConfirmSheet({
+    super.key,
+    required this.cls,
+    this.cancellationHours = 2,
+  });
+
+  String get _hoursText =>
+      cancellationHours == 1 ? '1 hora' : '$cancellationHours horas';
 
   @override
   Widget build(BuildContext context) {
@@ -96,7 +104,9 @@ class BookConfirmSheet extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Solo podés cancelar hasta 2 horas antes de la clase. Pasado ese límite, se descontará una sesión de tu plan mensual.',
+                    cancellationHours <= 0
+                        ? 'Podés cancelar tu reserva hasta el inicio de la clase. Si no asistís sin cancelar, se descontará una sesión de tu plan mensual.'
+                        : 'Solo podés cancelar hasta $_hoursText antes de la clase. Pasado ese límite, se descontará una sesión de tu plan mensual.',
                     style: KaliText.body(
                       primaryText,
                       size: 13,

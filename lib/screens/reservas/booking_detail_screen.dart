@@ -4,6 +4,7 @@ import 'package:kali_studio/widgets/google_fonts_helper.dart';
 import 'package:kali_studio/widgets/kali_button.dart';
 import '../../models/models.dart';
 import '../../supabase/booking_service.dart';
+import '../../supabase/studio_service.dart';
 import '../../theme/kali_theme.dart';
 import '../../utils/auth_utils.dart';
 import '../../utils/ui_utils.dart';
@@ -26,6 +27,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
   PilatesClass? _selectedReservation;
   bool _isLoading = true;
   bool _isCancelling = false;
+  int _cancellationHours = 2;
 
   Color get _pageBackground => KaliColors.warmWhite;
   Color get _surfaceColor => KaliColors.sand;
@@ -39,6 +41,13 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
   void initState() {
     super.initState();
     _loadReservations();
+    _loadCancellationHours();
+  }
+
+  Future<void> _loadCancellationHours() async {
+    final studio = await StudioService.fetchCurrentInstitution();
+    if (!mounted || studio == null) return;
+    setState(() => _cancellationHours = studio.cancellationHours);
   }
 
   @override
@@ -499,21 +508,23 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     return TimeUtils.combineDateAndTime(cls.sessionDate, cls.time);
   }
 
-  bool _isWithin2Hours(PilatesClass cls) {
+  bool _isWithinCancellationWindow(PilatesClass cls) {
+    if (_cancellationHours <= 0) return false;
     final classTime = _classDateTime(cls);
     if (classTime == null) return false;
     final diff = classTime.difference(DateTime.now());
-    return diff.inHours < 2;
+    return diff < Duration(hours: _cancellationHours);
   }
 
   Future<void> _showCancelConfirmation(PilatesClass cls) async {
-    final within2h = _isWithin2Hours(cls);
+    final withinWindow = _isWithinCancellationWindow(cls);
 
     final confirmed = await KaliUI.showBottomSheet<bool>(
       context: context,
       builder: _CancelConfirmSheet(
         cls: cls,
-        within2h: within2h,
+        withinWindow: withinWindow,
+        cancellationHours: _cancellationHours,
       ),
     );
 
@@ -763,12 +774,17 @@ class _DetailRow extends StatelessWidget {
 
 class _CancelConfirmSheet extends StatelessWidget {
   final PilatesClass cls;
-  final bool within2h;
+  final bool withinWindow;
+  final int cancellationHours;
 
   const _CancelConfirmSheet({
     required this.cls,
-    required this.within2h,
+    required this.withinWindow,
+    required this.cancellationHours,
   });
+
+  String get _hoursText =>
+      cancellationHours == 1 ? '1 hora' : '$cancellationHours horas';
 
   @override
   Widget build(BuildContext context) {
@@ -832,7 +848,7 @@ class _CancelConfirmSheet extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Icon(
-                  within2h
+                  withinWindow
                       ? Icons.block_rounded
                       : Icons.info_outline_rounded,
                   size: 18,
@@ -841,9 +857,11 @@ class _CancelConfirmSheet extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    within2h
-                        ? 'No podés cancelar esta clase. Faltan menos de 2 horas y el período de cancelación ya cerró.'
-                        : 'Una vez confirmada, solo podés cancelar hasta 2 horas antes de la clase.',
+                    withinWindow
+                        ? 'No podés cancelar esta clase. Faltan menos de $_hoursText y el período de cancelación ya cerró.'
+                        : cancellationHours <= 0
+                            ? 'Podés cancelar tu reserva hasta el inicio de la clase.'
+                            : 'Una vez confirmada, solo podés cancelar hasta $_hoursText antes de la clase.',
                     style: KaliText.body(
                       primaryText,
                       size: 13,
@@ -855,7 +873,7 @@ class _CancelConfirmSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          if (!within2h) ...[
+          if (!withinWindow) ...[
             KaliButton(
               text: 'Confirmar cancelación',
               onPressed: () => Navigator.pop(context, true),
@@ -864,7 +882,7 @@ class _CancelConfirmSheet extends StatelessWidget {
             const SizedBox(height: 12),
           ],
           KaliButton(
-            text: within2h ? 'Entendido' : 'Volver',
+            text: withinWindow ? 'Entendido' : 'Volver',
             onPressed: () => Navigator.pop(context, false),
           ),
           const SizedBox(height: 8),
