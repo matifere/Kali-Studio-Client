@@ -11,6 +11,7 @@ import 'reservas/booking_detail_screen.dart';
 import 'home_screen.dart';
 import 'perfil/profile_screen.dart';
 import 'planes/planes_screen.dart';
+import 'rutina/rutina_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -126,7 +127,7 @@ class _MainShellState extends State<MainShell> {
       case 0:
         return HomeScreen(
           onGoToReservas: () => setState(() => _currentIndex = 1),
-          onGoToPlanes: () => setState(() => _currentIndex = 3),
+          onGoToPlanes: () => setState(() => _currentIndex = 4),
         );
       // const omitido intencionalmente: causa "Trying to render a disposed
       // EngineFlutterView" en Flutter web al cambiar de tema (ver commit 430c155)
@@ -138,8 +139,11 @@ class _MainShellState extends State<MainShell> {
         return BookClassScreen();
       case 3:
         // ignore: prefer_const_constructors
-        return PlanesScreen();
+        return RutinaScreen();
       case 4:
+        // ignore: prefer_const_constructors
+        return PlanesScreen();
+      case 5:
         // ignore: prefer_const_constructors
         return ProfileScreen();
       default:
@@ -158,6 +162,10 @@ class _MainShellState extends State<MainShell> {
         icon: Icons.fitness_center_outlined,
         activeIcon: Icons.fitness_center,
         label: 'Reservar clases'),
+    _NavItem(
+        icon: Icons.assignment_outlined,
+        activeIcon: Icons.assignment,
+        label: 'Mi rutina'),
     _NavItem(
         icon: Icons.card_membership_outlined,
         activeIcon: Icons.card_membership,
