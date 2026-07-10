@@ -186,23 +186,34 @@ class _MainShellState extends State<MainShell> {
     return Scaffold(
       extendBody: true,
       backgroundColor: KaliColors.warmWhite,
-      appBar: AppBar(
-        backgroundColor: KaliColors.warmWhite,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        automaticallyImplyLeading: false,
-        title: Text(
-          'Argity Turnos',
-          style: KaliText.body(KaliColors.espresso,
-              size: 15, weight: FontWeight.w600),
-        ),
-        actions: [_bellIcon()],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Divider(color: KaliColors.sand2, thickness: 1, height: 1),
-        ),
+      body: Stack(
+        children: [
+          _animatedBody(),
+          Positioned(
+            top: 0,
+            right: 0,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 12, right: 16),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: KaliColors.warmWhite.withValues(alpha: 0.95),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: _bellIcon(),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
-      body: _animatedBody(),
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
