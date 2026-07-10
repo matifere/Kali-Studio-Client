@@ -261,41 +261,54 @@ class _MainShellState extends State<MainShell> {
           child: FutureBuilder<Studio?>(
             future: _institutionFuture,
             builder: (context, snapshot) {
-              final logoUrl = snapshot.data?.logoUrl;
-              final isDark = Theme.of(context).brightness == Brightness.dark;
+              final studio = snapshot.data;
+              final logoUrl = studio?.logoUrl;
+              final studioName = studio?.name ?? '';
 
               if (logoUrl != null && logoUrl.isNotEmpty) {
-                final networkImage = Image.network(
-                  logoUrl,
-                  width: double.infinity,
-                  height: 200,
-                  fit: BoxFit.contain,
-                  alignment: Alignment.center,
-                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                );
-                return ClipRect(
-                  child: Align(
-                    alignment: Alignment.topCenter,
-                    heightFactor: 0.82,
-                    child: isDark
-                        ? ColorFiltered(
-                            colorFilter: ColorFilter.mode(
-                                KaliColors.warmWhite, BlendMode.screen),
-                            child: ColorFiltered(
-                              colorFilter: const ColorFilter.matrix(<double>[
-                                -20, 0, 0, 0, 4720,
-                                  0,-20, 0, 0, 4720,
-                                  0,  0,-20, 0, 4720,
-                                  0,  0,  0, 1,    0,
-                              ]),
-                              child: networkImage,
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24.0),
+                  child: Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.network(
+                          logoUrl,
+                          width: 48,
+                          height: 48,
+                          fit: BoxFit.cover,
+                          alignment: Alignment.center,
+                          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              studioName,
+                              style: KaliText.body(
+                                KaliColors.espresso,
+                                size: 16,
+                                weight: FontWeight.w700,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          )
-                        : ColorFiltered(
-                            colorFilter: ColorFilter.mode(
-                                KaliColors.warmWhite, BlendMode.multiply),
-                            child: networkImage,
-                          ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Usando Argity Turnos',
+                              style: KaliText.body(
+                                KaliColors.clayDark,
+                                size: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 );
               }
