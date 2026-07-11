@@ -12,9 +12,12 @@ flutter config --enable-web
 
 # 4. Crear archivo .env temporal para que la compilación de assets no falle
 # Se tomarán las variables de entorno configuradas en Cloudflare Pages
+# Las claves DEBEN llamarse igual que las que lee la app (lib/main.dart):
+# SUPABASE_URL / SUPABASE_ANON. Los valores vienen de las env vars URL/ANON
+# configuradas en Cloudflare Pages.
 cat <<EOF > .env
-URL='${URL}'
-ANON='${ANON}'
+SUPABASE_URL='${URL}'
+SUPABASE_ANON='${ANON}'
 EOF
 
 # 5. Compilar la aplicación para producción
