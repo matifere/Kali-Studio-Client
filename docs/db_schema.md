@@ -4,10 +4,19 @@
 > Snapshot del esquema **vivo** de prod. Es la FUENTE DE VERDAD por encima de
 > `supabase/migrations/` (el historial de migraciones está divergente).
 >
-> Generado: 2026-07-10 13:10 -03
+> Generado: 2026-07-10 21:34 -03
 
 ## Tablas y columnas
 
+- `access_codes.id` uuid NOT NULL default gen_random_uuid()
+- `access_codes.code` text NOT NULL
+- `access_codes.user_id` uuid NOT NULL
+- `access_codes.institution_id` uuid NOT NULL
+- `access_codes.created_by` uuid
+- `access_codes.created_at` timestamp with time zone NOT NULL default now()
+- `access_codes.revoked_at` timestamp with time zone
+- `access_codes.last_used_at` timestamp with time zone
+- `access_codes.use_count` integer NOT NULL default 0
 - `class_sessions.id` uuid NOT NULL default gen_random_uuid()
 - `class_sessions.name` text NOT NULL
 - `class_sessions.description` text
@@ -33,6 +42,13 @@
 - `institutions.mp_token_secret_name` text
 - `institutions.payment_alias` text
 - `institutions.theme_id` text NOT NULL default 'default'::text
+- `institutions.cancellation_hours` integer NOT NULL default 2
+- `institutions.consent_pdf_url` text
+- `mobile_push_tokens.id` uuid NOT NULL default gen_random_uuid()
+- `mobile_push_tokens.user_id` uuid NOT NULL
+- `mobile_push_tokens.token` text NOT NULL
+- `mobile_push_tokens.platform` text NOT NULL
+- `mobile_push_tokens.updated_at` timestamp with time zone NOT NULL default now()
 - `notifications.id` uuid NOT NULL default gen_random_uuid()
 - `notifications.user_id` uuid NOT NULL
 - `notifications.title` text NOT NULL
@@ -90,6 +106,20 @@
 - `reservations.notes` text
 - `reservations.created_at` timestamp with time zone NOT NULL default now()
 - `reservations.updated_at` timestamp with time zone NOT NULL default now()
+- `routine_assignments.id` uuid NOT NULL default gen_random_uuid()
+- `routine_assignments.routine_id` uuid NOT NULL
+- `routine_assignments.user_id` uuid NOT NULL
+- `routine_assignments.assigned_by` uuid
+- `routine_assignments.notes` text
+- `routine_assignments.assigned_at` timestamp with time zone NOT NULL default now()
+- `routines.id` uuid NOT NULL default gen_random_uuid()
+- `routines.institution_id` uuid NOT NULL
+- `routines.name` text NOT NULL
+- `routines.description` text
+- `routines.exercises` jsonb NOT NULL default '[]'::jsonb
+- `routines.created_by` uuid
+- `routines.created_at` timestamp with time zone NOT NULL default now()
+- `routines.updated_at` timestamp with time zone NOT NULL default now()
 - `saas_plans.id` uuid NOT NULL default gen_random_uuid()
 - `saas_plans.name` text NOT NULL
 - `saas_plans.description` text
@@ -137,6 +167,9 @@
 
 ## Políticas RLS
 
+- `access_codes` / **access_codes_delete** (DELETE) USING ((institution_id = kali_institution_id()) AND kali_is_admin())
+- `access_codes` / **access_codes_select** (SELECT) USING ((institution_id = kali_institution_id()) AND kali_is_admin())
+- `access_codes` / **access_codes_update** (UPDATE) USING ((institution_id = kali_institution_id()) AND kali_is_admin()) WITH CHECK ((institution_id = kali_institution_id()) AND kali_is_admin())
 - `class_sessions` / **class_sessions_delete** (DELETE) USING ((institution_id = kali_institution_id()) AND kali_is_admin())
 - `class_sessions` / **class_sessions_insert** (INSERT) WITH CHECK ((institution_id = kali_institution_id()) AND kali_is_admin())
 - `class_sessions` / **class_sessions_select** (SELECT) USING (institution_id = kali_institution_id())
@@ -156,6 +189,10 @@
  LIMIT 1))
 - `institutions` / **studios_read** (SELECT) USING true
 - `institutions` / **studios_read_anon** (SELECT) USING true
+- `mobile_push_tokens` / **mobile_push_tokens_delete** (DELETE) USING (user_id = auth.uid())
+- `mobile_push_tokens` / **mobile_push_tokens_insert** (INSERT) WITH CHECK (user_id = auth.uid())
+- `mobile_push_tokens` / **mobile_push_tokens_select** (SELECT) USING (user_id = auth.uid())
+- `mobile_push_tokens` / **mobile_push_tokens_update** (UPDATE) USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid())
 - `notifications` / **notifications_select** (SELECT) USING (user_id = auth.uid())
 - `notifications` / **notifications_update** (UPDATE) USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid())
 - `payments` / **Admins can insert payments** (INSERT) WITH CHECK (EXISTS ( SELECT 1
@@ -210,6 +247,22 @@
   WHERE ((cs.id = reservations.session_id) AND (cs.institution_id = kali_institution_id())))) AND kali_is_admin())) WITH CHECK ((user_id = auth.uid()) OR ((EXISTS ( SELECT 1
    FROM class_sessions cs
   WHERE ((cs.id = reservations.session_id) AND (cs.institution_id = kali_institution_id())))) AND kali_is_admin()))
+- `routine_assignments` / **routine_assignments_own_read** (SELECT) USING (user_id = auth.uid())
+- `routine_assignments` / **routine_assignments_staff_all** (ALL) USING (EXISTS ( SELECT 1
+   FROM (profiles staff
+     JOIN profiles alumno ON ((alumno.id = routine_assignments.user_id)))
+  WHERE ((staff.id = auth.uid()) AND (staff.role = ANY (ARRAY['sudo'::user_role, 'admin'::user_role])) AND (staff.institution_id = alumno.institution_id)))) WITH CHECK (EXISTS ( SELECT 1
+   FROM (profiles staff
+     JOIN profiles alumno ON ((alumno.id = routine_assignments.user_id)))
+  WHERE ((staff.id = auth.uid()) AND (staff.role = ANY (ARRAY['sudo'::user_role, 'admin'::user_role])) AND (staff.institution_id = alumno.institution_id))))
+- `routines` / **routines_client_read_assigned** (SELECT) USING (EXISTS ( SELECT 1
+   FROM routine_assignments ra
+  WHERE ((ra.routine_id = routines.id) AND (ra.user_id = auth.uid()))))
+- `routines` / **routines_staff_all** (ALL) USING (EXISTS ( SELECT 1
+   FROM profiles
+  WHERE ((profiles.id = auth.uid()) AND (profiles.institution_id = routines.institution_id) AND (profiles.role = ANY (ARRAY['sudo'::user_role, 'admin'::user_role]))))) WITH CHECK (EXISTS ( SELECT 1
+   FROM profiles
+  WHERE ((profiles.id = auth.uid()) AND (profiles.institution_id = routines.institution_id) AND (profiles.role = ANY (ARRAY['sudo'::user_role, 'admin'::user_role])))))
 - `saas_plans` / **Planes SaaS visibles para usuarios autenticados** (SELECT) USING true
 - `subscriptions` / **subscriptions_delete** (DELETE) USING ((EXISTS ( SELECT 1
    FROM plans p
@@ -234,6 +287,7 @@
 ## Triggers
 
 - `class_sessions` → trg_class_sessions_updated_at
+- `notifications` → trg_send_push
 - `payments` → trg_payments_updated_at
 - `plans` → trg_plans_updated_at
 - `profiles` → profiles_fill_email
@@ -534,17 +588,18 @@ $function$
 
 ### create_institution
 ```sql
-CREATE OR REPLACE FUNCTION public.create_institution(inst_name text, inst_slug text, payment_alias text, phone text, address text)
+CREATE OR REPLACE FUNCTION public.create_institution(inst_name text, inst_slug text)
  RETURNS uuid
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public'
 AS $function$
 DECLARE
   new_inst_id uuid;
 BEGIN
   -- Insertar la nueva institución y obtener su ID
-  INSERT INTO institutions (name, slug, payment_alias, phone, address) 
-  VALUES (inst_name, inst_slug, payment_alias, phone, address) 
+  INSERT INTO institutions (name, slug) 
+  VALUES (inst_name, inst_slug) 
   RETURNING id INTO new_inst_id;
   
   -- Actualizar el perfil del usuario con la nueva institución y rol sudo
@@ -560,18 +615,17 @@ $function$
 
 ### create_institution
 ```sql
-CREATE OR REPLACE FUNCTION public.create_institution(inst_name text, inst_slug text)
+CREATE OR REPLACE FUNCTION public.create_institution(inst_name text, inst_slug text, payment_alias text, phone text, address text)
  RETURNS uuid
  LANGUAGE plpgsql
  SECURITY DEFINER
- SET search_path TO 'public'
 AS $function$
 DECLARE
   new_inst_id uuid;
 BEGIN
   -- Insertar la nueva institución y obtener su ID
-  INSERT INTO institutions (name, slug) 
-  VALUES (inst_name, inst_slug) 
+  INSERT INTO institutions (name, slug, payment_alias, phone, address) 
+  VALUES (inst_name, inst_slug, payment_alias, phone, address) 
   RETURNING id INTO new_inst_id;
   
   -- Actualizar el perfil del usuario con la nueva institución y rol sudo
@@ -684,6 +738,65 @@ begin
     select email into new.email from auth.users where id = new.id;
   end if;
   return new;
+end;
+$function$
+
+```
+
+### generate_access_code
+```sql
+CREATE OR REPLACE FUNCTION public.generate_access_code(p_student_id uuid)
+ RETURNS text
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
+AS $function$
+declare
+  v_inst uuid;
+  v_student_inst uuid;
+  v_code text;
+  -- Sin 0/O/1/I/L para que el código se pueda dictar por teléfono sin errores.
+  v_chars constant text := 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  v_bytes bytea;
+  i int;
+begin
+  if not kali_is_admin() then
+    raise exception 'Solo administradores pueden generar códigos de acceso';
+  end if;
+
+  v_inst := kali_institution_id();
+
+  select institution_id into v_student_inst
+  from profiles
+  where id = p_student_id and role = 'client';
+
+  if v_student_inst is null or v_student_inst is distinct from v_inst then
+    raise exception 'Alumno no encontrado en tu institución';
+  end if;
+
+  -- Un solo código activo por alumno: revocar los anteriores.
+  update access_codes
+  set revoked_at = now()
+  where user_id = p_student_id and revoked_at is null;
+
+  loop
+    v_bytes := gen_random_bytes(8);
+    v_code := '';
+    for i in 0..7 loop
+      v_code := v_code
+        || substr(v_chars, 1 + (get_byte(v_bytes, i) % length(v_chars)), 1);
+    end loop;
+
+    begin
+      insert into access_codes (code, user_id, institution_id, created_by)
+      values (v_code, p_student_id, v_inst, auth.uid());
+      exit;
+    exception when unique_violation then
+      -- Colisión (1 en ~10^12): reintentar con otro código.
+    end;
+  end loop;
+
+  return v_code;
 end;
 $function$
 
@@ -1116,6 +1229,51 @@ begin
   end loop;
 exception when others then
   raise warning 'send_payment_reminders: %', sqlerrm;
+end;
+$function$
+
+```
+
+### send_push_on_notification
+```sql
+CREATE OR REPLACE FUNCTION public.send_push_on_notification()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'vault'
+AS $function$
+declare
+  v_secret text;
+  v_url    text := 'https://tmfcnvtjzmtpqhzvfxos.supabase.co/functions/v1/send-push';
+begin
+  select decrypted_secret into v_secret
+  from vault.decrypted_secrets
+  where name = 'push_webhook_secret'
+  limit 1;
+
+  if v_secret is null then
+    return new; -- sin secreto configurado, no rompemos el INSERT
+  end if;
+
+  perform net.http_post(
+    url     := v_url,
+    body    := jsonb_build_object(
+      'user_id', new.user_id,
+      'title',   new.title,
+      'body',    new.body,
+      'data',    jsonb_build_object('type', new.type, 'notification_id', new.id)
+    ),
+    headers := jsonb_build_object(
+      'Content-Type',    'application/json',
+      'x-webhook-secret', v_secret
+    )
+  );
+
+  return new;
+exception when others then
+  -- el push nunca debe impedir que se cree la notificación in-app
+  raise warning 'send_push_on_notification: %', sqlerrm;
+  return new;
 end;
 $function$
 
