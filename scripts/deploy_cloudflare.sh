@@ -25,3 +25,27 @@ EOF
 # usuarios queden con una versión vieja cacheada; la caché la controlan los
 # headers HTTP de web/_headers (no-cache en los archivos de entrada).
 flutter build web --release --pwa-strategy=none
+
+# 6. Reemplazar el flutter_service_worker.js (queda vacío con --pwa-strategy=none)
+# por uno AUTODESTRUCTIVO. Los usuarios que todavía tienen el SW viejo instalado
+# van a buscar este archivo (mismo nombre/URL), y este:
+#   - se activa de inmediato (skipWaiting), sin quedar "en espera"
+#   - borra todas las caches viejas
+#   - se desregistra a sí mismo
+#   - recarga las pestañas abiertas
+# Resultado: se actualizan con UNA sola recarga automática, sin cerrar/reabrir
+# ni borrar caché a mano. Corre una única vez por usuario y después desaparece.
+cat > build/web/flutter_service_worker.js <<'SW'
+self.addEventListener('install', function () { self.skipWaiting(); });
+self.addEventListener('activate', function (event) {
+  event.waitUntil((async function () {
+    try {
+      var keys = await caches.keys();
+      await Promise.all(keys.map(function (k) { return caches.delete(k); }));
+    } catch (e) {}
+    try { await self.registration.unregister(); } catch (e) {}
+    var clients = await self.clients.matchAll({ type: 'window' });
+    clients.forEach(function (c) { c.navigate(c.url); });
+  })());
+});
+SW
