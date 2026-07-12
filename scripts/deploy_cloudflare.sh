@@ -39,13 +39,21 @@ cat > build/web/flutter_service_worker.js <<'SW'
 self.addEventListener('install', function () { self.skipWaiting(); });
 self.addEventListener('activate', function (event) {
   event.waitUntil((async function () {
+    // 1) Borrar las caches viejas de Flutter.
     try {
       var keys = await caches.keys();
       await Promise.all(keys.map(function (k) { return caches.delete(k); }));
     } catch (e) {}
+    // 2) Tomar control de las pestañas abiertas. Sin esto, match() no las
+    //    devuelve y navigate() no tiene permiso para recargarlas.
+    try { await self.clients.claim(); } catch (e) {}
+    // 3) Recargar todas las ventanas (incluí las no controladas todavía).
+    try {
+      var wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      wins.forEach(function (c) { try { c.navigate(c.url); } catch (e) {} });
+    } catch (e) {}
+    // 4) Desregistrarse: en la próxima carga ya no hay SW.
     try { await self.registration.unregister(); } catch (e) {}
-    var clients = await self.clients.matchAll({ type: 'window' });
-    clients.forEach(function (c) { c.navigate(c.url); });
   })());
 });
 SW
