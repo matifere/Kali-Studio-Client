@@ -21,4 +21,7 @@ SUPABASE_ANON='${ANON}'
 EOF
 
 # 5. Compilar la aplicación para producción
-flutter build web --release
+# --pwa-strategy=none: NO generar el service worker de Flutter. Evita que los
+# usuarios queden con una versión vieja cacheada; la caché la controlan los
+# headers HTTP de web/_headers (no-cache en los archivos de entrada).
+flutter build web --release --pwa-strategy=none

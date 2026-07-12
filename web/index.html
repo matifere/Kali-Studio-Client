@@ -128,9 +128,38 @@
   -->
   <script src="flutter_bootstrap.js" async=""></script>
   <script>
+    // La app se compila con --pwa-strategy=none: NO hay service worker de
+    // Flutter. La caché la controlan los headers HTTP (web/_headers: no-cache
+    // en index.html / flutter_bootstrap.js / main.dart.js), así cada deploy se
+    // ve al instante sin que el usuario tenga que borrar nada.
+    //
+    // Este bloque rescata a los usuarios que quedaron con el SW viejo cacheando
+    // una versión anterior: lo desregistra, limpia sus caches y recarga UNA vez.
+    // No toca push-sw.js (scope /push/), que sigue manejando las notificaciones.
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.addEventListener('controllerchange', function () {
-        window.location.reload();
+      navigator.serviceWorker.getRegistrations().then(function (regs) {
+        var killed = false;
+        regs.forEach(function (reg) {
+          var sw = reg.active || reg.waiting || reg.installing;
+          if (sw && sw.scriptURL &&
+              sw.scriptURL.indexOf('flutter_service_worker.js') !== -1) {
+            reg.unregister();
+            killed = true;
+          }
+        });
+        if (killed) {
+          if (window.caches && caches.keys) {
+            caches.keys().then(function (keys) {
+              keys.forEach(function (k) {
+                if (k.indexOf('flutter') !== -1) caches.delete(k);
+              });
+            });
+          }
+          if (!sessionStorage.getItem('kaliSwCleaned')) {
+            sessionStorage.setItem('kaliSwCleaned', '1');
+            window.location.reload();
+          }
+        }
       });
     }
   </script>
