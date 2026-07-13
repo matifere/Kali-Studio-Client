@@ -113,46 +113,7 @@ class SupabaseAuthService {
     }
   }
 
-  /// Inicia sesión solo con el código de acceso generado por el admin.
-  ///
-  /// La Edge Function `login-with-code` valida el código con service role y
-  /// devuelve un token_hash de magiclink; verifyOTP lo canjea por una sesión
-  /// real del alumno. La institución no se elige: sale del perfil del usuario
-  /// dueño del código.
-  Future<void> signInWithCode(String code) async {
-    late final FunctionResponse response;
-    try {
-      response = await _client.functions.invoke(
-        'login-with-code',
-        body: {'code': code},
-      );
-    } on FunctionException catch (e) {
-      final details = e.details;
-      final message = details is Map ? details['error'] as String? : null;
-      throw AuthException(
-          message ?? 'Código inválido o vencido. Pedile uno nuevo a tu gimnasio.');
-    }
 
-    final tokenHash = (response.data as Map?)?['token_hash'] as String?;
-    if (tokenHash == null) {
-      throw const AuthException(
-          'No pudimos validar el código. Intentá de nuevo.');
-    }
-
-    final authResponse = await _client.auth.verifyOTP(
-      type: OtpType.magiclink,
-      tokenHash: tokenHash,
-    );
-
-    final user = authResponse.user;
-    if (user != null) {
-      await Future.wait([
-        _ensureProfile(user),
-        getInstitutionId(),
-      ]);
-      unawaited(MobilePushService.instance.syncToken());
-    }
-  }
 
   Future<void> _ensureProfile(User user) async {
     try {

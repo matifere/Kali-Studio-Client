@@ -17,20 +17,15 @@ class LogIn extends StatefulWidget {
 class _LogInState extends State<LogIn> {
   final _emailController = TextEditingController();
   final _passController = TextEditingController();
-  final _codeController = TextEditingController();
   final _authService = const SupabaseAuthService();
 
   bool _showPassword = false;
   bool _isLoading = false;
-  // true = login con código de acceso (generado por el gimnasio en el admin),
-  // false = login clásico con email y contraseña.
-  bool _useAccessCode = false;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passController.dispose();
-    _codeController.dispose();
     super.dispose();
   }
 
@@ -92,38 +87,28 @@ class _LogInState extends State<LogIn> {
                       textAlign: TextAlign.center,
                       style: KaliText.loginDisplay(KaliColors.espresso),
                     ),
-                    if (!_useAccessCode) ...[
-                      KaliTextField(
-                        label: 'CORREO ELECTRÓNICO',
-                        hint: 'tu@ejemplo.com',
-                        suffixIcon: Icons.mail_outline_rounded,
-                        controller: _emailController,
-                      ),
-                      KaliTextField(
-                        label: 'CONTRASEÑA',
-                        hint: '• • • • • • • •',
-                        suffixIcon: _showPassword
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
-                        obscureText: !_showPassword,
-                        controller: _passController,
-                        actionLabel: '¿Olvidaste tu contraseña?',
-                        onActionTap: () => _showResetSheet(),
-                        onSuffixTap: () {
-                          setState(() => _showPassword = !_showPassword);
-                        },
-                      ),
-                    ] else
-                      KaliTextField(
-                        label: 'CÓDIGO DE ACCESO',
-                        hint: 'Ej. ABCD-1234',
-                        suffixIcon: Icons.key_rounded,
-                        controller: _codeController,
-                      ),
+                    KaliTextField(
+                      label: 'CORREO ELECTRÓNICO',
+                      hint: 'tu@ejemplo.com',
+                      suffixIcon: Icons.mail_outline_rounded,
+                      controller: _emailController,
+                    ),
+                    KaliTextField(
+                      label: 'CONTRASEÑA',
+                      hint: '• • • • • • • •',
+                      suffixIcon: _showPassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      obscureText: !_showPassword,
+                      controller: _passController,
+                      actionLabel: '¿Olvidaste tu contraseña?',
+                      onActionTap: () => _showResetSheet(),
+                      onSuffixTap: () {
+                        setState(() => _showPassword = !_showPassword);
+                      },
+                    ),
                     FilledButton(
-                      onPressed: _isLoading
-                          ? null
-                          : (_useAccessCode ? _handleCodeLogin : _handleLogin),
+                      onPressed: _isLoading ? null : _handleLogin,
                       child: SizedBox(
                           width: double.infinity,
                           child: Center(
@@ -139,19 +124,6 @@ class _LogInState extends State<LogIn> {
                               if (!_isLoading) const Icon(Icons.arrow_forward)
                             ],
                           ))),
-                    ),
-                    TextButton(
-                      onPressed: _isLoading
-                          ? null
-                          : () => setState(
-                              () => _useAccessCode = !_useAccessCode),
-                      child: Text(
-                        _useAccessCode
-                            ? 'Ingresar con email y contraseña'
-                            : 'Ingresar con código de acceso',
-                        style: KaliText.body(KaliColors.clayDark,
-                            size: 14, weight: FontWeight.w600),
-                      ),
                     ),
                     const Spacer(),
                   ],
@@ -208,38 +180,7 @@ class _LogInState extends State<LogIn> {
     }
   }
 
-  Future<void> _handleCodeLogin() async {
-    final code = _codeController.text.trim();
 
-    if (code.isEmpty) {
-      _showMessage('Ingresá tu código de acceso.');
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    try {
-      await _authService.signInWithCode(code);
-
-      if (!mounted) return;
-
-      Navigator.of(context).popUntil((route) => route.isFirst);
-    } on AuthException catch (error) {
-      if (!mounted) return;
-      _showMessage(humanizeAuthError(error.message,
-          fallback:
-              'Código inválido o vencido. Pedile uno nuevo a tu gimnasio.'));
-    } catch (error) {
-      if (!mounted) return;
-      _showMessage(humanizeAuthError(error.toString(),
-          fallback:
-              'No pudimos iniciar sesión con el código. Intentá de nuevo.'));
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
 
   void _showMessage(String message) {
     KaliUI.showSnackBar(context, message);
