@@ -4,12 +4,18 @@
 // cacheada (la que tenía el login roto). En la respuesta del documento HTML,
 // y solo si el navegador todavía no fue reseteado, manda:
 //
-//   Clear-Site-Data: "cache", "storage"
+//   Clear-Site-Data: "storage"
 //
-// que borra: HTTP cache, CacheStorage, IndexedDB/localStorage y los service
-// workers registrados. Acto seguido setea una cookie para NO repetirlo (así no
-// quedan en un loop de deslogueo). Los usuarios se deslogean una sola vez y
-// vuelven a entrar contra el build nuevo, que ya loguea bien.
+// que borra: CacheStorage (donde el SW guardaba la app vieja), IndexedDB/
+// localStorage (la sesión) y los service workers registrados. Acto seguido
+// setea una cookie para NO repetirlo (así no quedan en un loop de deslogueo).
+// Los usuarios se deslogean una sola vez y vuelven a entrar contra el build
+// nuevo, que ya loguea bien.
+//
+// OJO: NO se incluye "cache". Ese directivo limpia el HTTP cache del que
+// depende la navegación en curso y puede dejar la primera carga EN BLANCO
+// (bug conocido de Chrome). Además es redundante: los archivos de entrada ya
+// salen con no-cache (web/_headers), así que el HTTP cache ya se revalida solo.
 //
 // Nota: a los usuarios que todavía tienen el SW viejo de Flutter este header no
 // los alcanza (el SW sirve la navegación desde su propia caché, sin pegarle a
@@ -35,7 +41,7 @@ export async function onRequest(context) {
     if (!ct.includes('text/html')) return response;
 
     const out = new Response(response.body, response);
-    out.headers.set('Clear-Site-Data', '"cache", "storage"');
+    out.headers.set('Clear-Site-Data', '"storage"');
     out.headers.append(
       'Set-Cookie',
       COOKIE + '=' + RESET_ID + '; Path=/; Max-Age=31536000; Secure; SameSite=Lax; HttpOnly',
