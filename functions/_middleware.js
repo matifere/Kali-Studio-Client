@@ -32,6 +32,20 @@ export async function onRequest(context) {
   const response = await next();
 
   try {
+    // Rescate de builds rotos: la app vieja (compilada con SUPABASE_URL vacía)
+    // POSTea el login a ESTE origen (/auth/v1/token) y recibe un 405 inútil.
+    // Esas rutas solo las pide un build roto (el build sano le pega a
+    // *.supabase.co), así que la respuesta lleva Clear-Site-Data para que el
+    // propio intento de login le borre el SW y la caché; al reintentar carga
+    // fresco. Sin cookie: si el navegador ignora el header (Safari < 17), no
+    // quemamos el reset del HTML.
+    const url = new URL(request.url);
+    if (url.pathname.startsWith('/auth/v1/') || url.pathname.startsWith('/rest/v1/')) {
+      const rescue = new Response(response.body, response);
+      rescue.headers.set('Clear-Site-Data', '"storage"');
+      return rescue;
+    }
+
     // ¿Ya fue reseteado este navegador?
     const cookies = request.headers.get('Cookie') || '';
     if (cookies.includes(COOKIE + '=' + RESET_ID)) return response;
