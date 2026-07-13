@@ -5,6 +5,7 @@ import 'package:kali_studio/supabase/profile_manager.dart';
 import 'package:kali_studio/theme/kali_theme.dart';
 import 'package:kali_studio/theme/kali_text_field.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 import '../utils/ui_utils.dart';
 
 class StudioSelectionScreen extends StatefulWidget {
@@ -132,9 +133,17 @@ class _StudioSelectionScreenState extends State<StudioSelectionScreen> {
                         hint: 'Ej. GIMNASIO-123',
                         suffixIcon: Icons.qr_code_scanner_rounded,
                         controller: _codeController,
-                        onSuffixTap: () {
-                          // TODO: Implementar escáner QR a futuro
-                          KaliUI.showSnackBar(context, 'El escáner QR estará disponible muy pronto.');
+                        onSuffixTap: () async {
+                          final scannedCode = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SimpleBarcodeScannerPage(),
+                            ),
+                          );
+                          if (scannedCode is String && scannedCode.isNotEmpty && scannedCode != '-1') {
+                            _codeController.text = scannedCode;
+                            _handleContinue();
+                          }
                         },
                       ),
                       const SizedBox(height: 24),

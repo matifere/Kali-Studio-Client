@@ -27,5 +27,9 @@ if ($VapidPublicKey) {
 puro flutter @buildArgs
 if ($LASTEXITCODE -ne 0) { Write-Error "Build fallido."; exit 1 }
 
+Write-Host "Generando version.json..." -ForegroundColor Cyan
+$Version = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+Set-Content -Path "build\web\version.json" -Value "{ `"version`": `"$Version`" }"
+
 Write-Host "Desplegando a Firebase..." -ForegroundColor Cyan
 firebase deploy --only hosting

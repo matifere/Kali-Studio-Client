@@ -19,6 +19,7 @@ import 'supabase/plan_service.dart';
 import 'supabase/profile_manager.dart';
 import 'supabase/studio_service.dart';
 import 'supabase/supabase_auth_service.dart';
+import 'services/version_service.dart';
 import 'theme/kali_theme.dart';
 import 'theme/theme_controller.dart';
 import 'utils/ui_utils.dart';
@@ -49,6 +50,7 @@ Future<void> main() async {
   );
 
   await ThemeController.instance.load();
+  VersionService.instance.init();
   await Supabase.initialize(
     url: url,
     anonKey: anon,

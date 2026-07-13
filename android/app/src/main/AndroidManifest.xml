@@ -1,6 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Notificaciones push (Android 13+ exige solicitarlo en runtime). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
     <application
         android:label="Argity Turnos"
         android:name="${applicationName}"
