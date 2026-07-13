@@ -39,10 +39,17 @@ export async function onRequest(context) {
     // propio intento de login le borre el SW y la caché; al reintentar carga
     // fresco. Sin cookie: si el navegador ignora el header (Safari < 17), no
     // quemamos el reset del HTML.
+    //
+    // Acá SÍ va "cache": el HTTP cache guarda los /assets/* de la época
+    // "immutable" (hasta 1 año, sin revalidar) y es donde vive el assets/.env
+    // roto que deja al usuario en el loop del 405. El bug de la carga en
+    // blanco de Chrome aplica a limpiar el cache en la respuesta de una
+    // NAVEGACIÓN; esto es la respuesta de un fetch (el POST del login), no hay
+    // navegación en vuelo, así que es seguro.
     const url = new URL(request.url);
     if (url.pathname.startsWith('/auth/v1/') || url.pathname.startsWith('/rest/v1/')) {
       const rescue = new Response(response.body, response);
-      rescue.headers.set('Clear-Site-Data', '"storage"');
+      rescue.headers.set('Clear-Site-Data', '"cache", "storage"');
       return rescue;
     }
 

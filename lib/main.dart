@@ -32,16 +32,16 @@ Future<void> main() async {
   // Mismos nombres de clave en .env (móvil) y --dart-define (web) para evitar
   // que uno quede vacío: con URL vacía Supabase.initialize no falla, pero la
   // primera request (el login) tira "No host specified in URI".
-  final url = dotenv.env['SUPABASE_URL'] ??
-      const String.fromEnvironment(
-        'SUPABASE_URL',
-        defaultValue: '',
-      );
-  final anon = dotenv.env['SUPABASE_ANON'] ??
-      const String.fromEnvironment(
-        'SUPABASE_ANON',
-        defaultValue: '',
-      );
+  //
+  // Gana el --dart-define (compilado en main.dart.js, que se sirve con
+  // no-store) y el .env queda de fallback. Al revés era vulnerable en web: el
+  // .env se baja como asset HTTP (assets/.env) y hay navegadores que lo tienen
+  // cacheado un año de la época "immutable" — un .env viejo/roto pisaba las
+  // credenciales buenas y dejaba al usuario clavado en el login (405).
+  const defineUrl = String.fromEnvironment('SUPABASE_URL', defaultValue: '');
+  const defineAnon = String.fromEnvironment('SUPABASE_ANON', defaultValue: '');
+  final url = defineUrl.isNotEmpty ? defineUrl : (dotenv.env['SUPABASE_URL'] ?? '');
+  final anon = defineAnon.isNotEmpty ? defineAnon : (dotenv.env['SUPABASE_ANON'] ?? '');
 
   assert(
     url.isNotEmpty && anon.isNotEmpty,

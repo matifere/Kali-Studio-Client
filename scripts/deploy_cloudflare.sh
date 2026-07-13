@@ -24,7 +24,14 @@ EOF
 # --pwa-strategy=none: NO generar el service worker de Flutter. Evita que los
 # usuarios queden con una versión vieja cacheada; la caché la controlan los
 # headers HTTP de web/_headers (no-cache en los archivos de entrada).
-flutter build web --release --pwa-strategy=none
+#
+# Las credenciales van TAMBIÉN por --dart-define: quedan compiladas en
+# main.dart.js (que se sirve con no-store), así un assets/.env viejo cacheado
+# en el navegador no puede dejar a la app sin SUPABASE_URL (main.dart prioriza
+# el dart-define sobre el .env).
+flutter build web --release --pwa-strategy=none \
+  --dart-define=SUPABASE_URL="${URL}" \
+  --dart-define=SUPABASE_ANON="${ANON}"
 
 # 6. Reemplazar el flutter_service_worker.js (queda vacío con --pwa-strategy=none)
 # por uno AUTODESTRUCTIVO. Los usuarios que todavía tienen el SW viejo instalado
