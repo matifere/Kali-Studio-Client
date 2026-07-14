@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:kali_studio/auth/log_in.dart' show LogIn, UpperLogo;
 import 'package:kali_studio/supabase/supabase_auth_service.dart';
 import 'package:kali_studio/theme/kali_text_field.dart';
@@ -149,7 +150,69 @@ class _RegisterState extends State<Register> {
                                   ),
                                 ),
                               ),
-                              const Divider(),
+                              const SizedBox(height: 16),
+                              Column(
+                                children: [
+                                  const Row(
+                                    spacing: 4,
+                                    children: [
+                                      Expanded(child: Divider()),
+                                      Text("o"),
+                                      Expanded(child: Divider()),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    height: 54,
+                                    child: ElevatedButton.icon(
+                                      onPressed: _isLoading ? null : _handleGoogleLogin,
+                                      icon: _isLoading
+                                          ? const SizedBox.shrink()
+                                          : Image.network(
+                                              'https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-512.png',
+                                              height: 24,
+                                            ),
+                                      label: _isLoading
+                                          ? SizedBox(
+                                              width: 24,
+                                              height: 24,
+                                              child: CircularProgressIndicator(
+                                                color: KaliColors.clay,
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                          : Text(
+                                              "REGISTRARSE CON GOOGLE",
+                                              style: KaliText.label(KaliColors.espresso).copyWith(
+                                                fontSize: 12,
+                                                letterSpacing: 2,
+                                              ),
+                                            ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.white,
+                                        foregroundColor: KaliColors.espresso,
+                                        elevation: 0,
+                                        side: BorderSide(color: Colors.grey.shade300),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(27),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                children: [
+                                  const Expanded(child: Divider()),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                                    child: Text("O", style: KaliText.body(KaliColors.clayDark, size: 12)),
+                                  ),
+                                  const Expanded(child: Divider()),
+                                ],
+                              ),
                               TextButton(
                                 onPressed: () => Navigator.of(context).pushReplacement(
                                     MaterialPageRoute(builder: (context) => const LogIn())),
@@ -213,6 +276,21 @@ class _RegisterState extends State<Register> {
       if (!mounted) return;
       _showMessage(humanizeAuthError(error.toString(),
           fallback: 'No pudimos crear la cuenta. Intentá de nuevo.'));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleGoogleLogin() async {
+    setState(() => _isLoading = true);
+    try {
+      await Supabase.instance.client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: kIsWeb ? Uri.base.origin : null,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      _showMessage('No pudimos iniciar sesión con Google. Intentá de nuevo.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

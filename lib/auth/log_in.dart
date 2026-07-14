@@ -125,6 +125,58 @@ class _LogInState extends State<LogIn> {
                             ],
                           ))),
                     ),
+                    const SizedBox(height: 16),
+                    Column(
+                      children: [
+                        const Row(
+                          spacing: 4,
+                          children: [
+                            Expanded(child: Divider()),
+                            Text("o"),
+                            Expanded(child: Divider()),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 54,
+                          child: ElevatedButton.icon(
+                            onPressed: _isLoading ? null : _handleGoogleLogin,
+                            icon: _isLoading
+                                ? const SizedBox.shrink()
+                                : Image.network(
+                                    'https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-512.png',
+                                    height: 24,
+                                  ),
+                            label: _isLoading
+                                ? SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      color: KaliColors.clay,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Text(
+                                    "INICIAR SESIÓN CON GOOGLE",
+                                    style: KaliText.label(KaliColors.espresso).copyWith(
+                                      fontSize: 12,
+                                      letterSpacing: 2,
+                                    ),
+                                  ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: KaliColors.espresso,
+                              elevation: 0,
+                              side: BorderSide(color: Colors.grey.shade300),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(27),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                     const Spacer(),
                   ],
                 ),
@@ -180,7 +232,20 @@ class _LogInState extends State<LogIn> {
     }
   }
 
-
+  Future<void> _handleGoogleLogin() async {
+    setState(() => _isLoading = true);
+    try {
+      await Supabase.instance.client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: kIsWeb ? Uri.base.origin : null,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      _showMessage('No pudimos iniciar sesión con Google. Intentá de nuevo.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   void _showMessage(String message) {
     KaliUI.showSnackBar(context, message);
