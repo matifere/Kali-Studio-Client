@@ -284,10 +284,9 @@ class _RegisterState extends State<Register> {
   Future<void> _handleGoogleLogin() async {
     setState(() => _isLoading = true);
     try {
-      await Supabase.instance.client.auth.signInWithOAuth(
-        OAuthProvider.google,
-        redirectTo: kIsWeb ? Uri.base.origin : null,
-      );
+      await _authService.signInWithGoogle();
+      if (!mounted) return;
+      Navigator.of(context).popUntil((route) => route.isFirst);
     } catch (error) {
       if (!mounted) return;
       _showMessage('No pudimos iniciar sesión con Google. Intentá de nuevo.');

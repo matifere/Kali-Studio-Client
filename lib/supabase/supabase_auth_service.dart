@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../services/mobile_push_service.dart';
 import '../utils/auth_utils.dart';
 import 'profile_manager.dart';
@@ -109,6 +110,55 @@ class SupabaseAuthService {
         getInstitutionId(),
       ]);
       // Registrar el token FCM de este dispositivo para el usuario (no-op en web).
+      unawaited(MobilePushService.instance.syncToken());
+    }
+  }
+
+  Future<void> signInWithGoogle() async {
+    if (kIsWeb) {
+      await _client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: Uri.base.origin,
+      );
+      return;
+    }
+
+    const webClientId = '570467255202-7q4o2iu30b9472ih7js33dub6ib4hbeq.apps.googleusercontent.com';
+    const iosClientId = '570467255202-832rn924ttbehk3s2v9hdgjeh5j8fb95.apps.googleusercontent.com';
+
+    final GoogleSignIn googleSignIn = GoogleSignIn(
+      serverClientId: webClientId,
+      clientId: iosClientId,
+    );
+
+    final googleUser = await googleSignIn.signIn();
+    if (googleUser == null) {
+      throw const AuthException('Inicio de sesión con Google cancelado por el usuario.');
+    }
+
+    final googleAuth = await googleUser.authentication;
+    final accessToken = googleAuth.accessToken;
+    final idToken = googleAuth.idToken;
+
+    if (accessToken == null) {
+      throw const AuthException('No se pudo obtener el Access Token de Google.');
+    }
+    if (idToken == null) {
+      throw const AuthException('No se pudo obtener el ID Token de Google.');
+    }
+
+    final response = await _client.auth.signInWithIdToken(
+      provider: OAuthProvider.google,
+      idToken: idToken,
+      accessToken: accessToken,
+    );
+
+    final user = response.user;
+    if (user != null) {
+      await Future.wait([
+        _ensureProfile(user),
+        getInstitutionId(),
+      ]);
       unawaited(MobilePushService.instance.syncToken());
     }
   }

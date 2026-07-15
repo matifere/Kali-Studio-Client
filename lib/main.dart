@@ -147,7 +147,15 @@ class _AuthGateState extends State<_AuthGate> {
     final session = Supabase.instance.client.auth.currentSession;
     if (session == null) return;
     setState(() => _checkingProfile = true);
-    final profile = await obtenerPerfil();
+    
+    Profile? profile = await obtenerPerfil();
+    int retries = 3;
+    while (profile == null && retries > 0) {
+      await Future.delayed(const Duration(milliseconds: 1000));
+      profile = await obtenerPerfil();
+      retries--;
+    }
+
     if (!mounted) return;
     if (profile == null) {
       await Supabase.instance.client.auth.signOut();

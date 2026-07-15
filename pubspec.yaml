@@ -24,6 +24,7 @@ dependencies:
   flutter_dotenv: ^6.0.1
   universal_html: ^2.3.0
   simple_barcode_scanner: ^0.3.0
+  google_sign_in: ^6.2.2
 dev_dependencies:
   flutter_test:
     sdk: flutter
