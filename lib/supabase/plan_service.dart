@@ -44,18 +44,27 @@ class PlanService {
 
     dynamic data;
     try {
-      data = await _supabase.rpc(
-        'create_pending_payment',
-        params: {'p_plan_id': planId},
+      final res = await _supabase.functions.invoke(
+        'create-preference',
+        body: {'plan_id': planId},
       );
-    } on PostgrestException catch (e) {
-      throw Exception(e.message);
+      data = res.data;
+    } on FunctionException catch (e) {
+      throw Exception(e.details ?? 'No pudimos iniciar el pago. Intentá de nuevo.');
     } catch (e) {
       throw Exception('No pudimos iniciar el pago. Intentá de nuevo.');
     }
 
-    final alias = (data as Map<String, dynamic>?)?['alias'] as String?;
-    if (alias != null) return TransferPayment(alias);
+    if (data is Map<String, dynamic>) {
+      final url = data['url'] as String?;
+      if (url != null) return MercadoPagoPayment(url);
+
+      final alias = data['alias'] as String?;
+      if (alias != null) return TransferPayment(alias);
+      
+      final error = data['error'] as String?;
+      if (error != null) throw Exception(error);
+    }
 
     throw Exception('No pudimos procesar la respuesta del pago. Intentá de nuevo.');
   }

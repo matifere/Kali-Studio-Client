@@ -83,20 +83,19 @@ serve(async (req) => {
     let transferAlias: string | null = null;
 
     if (institutionId) {
-      // 1. Try institution MP token from vault
-      const { data: vaultToken, error: vaultError } = await supabase.rpc('get_institution_mp_token', {
-        p_institution_id: institutionId,
-      });
-      console.log('vaultToken present:', !!vaultToken, 'vaultError:', vaultError?.message);
-      mpAccessToken = vaultToken as string | null;
+      // 1. Get MP token or alias from institutions table
+      const { data: inst } = await supabase
+        .from('institutions')
+        .select('mp_token_secret_name, payment_alias')
+        .eq('id', institutionId)
+        .maybeSingle();
+      
+      if (inst?.mp_token_secret_name && (inst.mp_token_secret_name.startsWith('APP_USR-') || inst.mp_token_secret_name.startsWith('TEST-'))) {
+        console.log('Using raw token from mp_token_secret_name');
+        mpAccessToken = inst.mp_token_secret_name;
+      }
 
-      // 2. If no MP token, check institution alias
       if (!mpAccessToken) {
-        const { data: inst } = await supabase
-          .from('institutions')
-          .select('payment_alias')
-          .eq('id', institutionId)
-          .maybeSingle();
         transferAlias = inst?.payment_alias ?? null;
         console.log('payment_alias present:', !!transferAlias);
       }
@@ -231,6 +230,7 @@ serve(async (req) => {
           unit_price: Number(plan.price),
           currency_id: plan.currency ?? 'ARS',
         }],
+        marketplace_fee: Number((Number(plan.price) * 0.05).toFixed(2)),
         external_reference: paymentId,
         back_urls: {
           success: 'https://turnos.argity.com',
