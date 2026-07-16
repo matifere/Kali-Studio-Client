@@ -230,7 +230,6 @@ serve(async (req) => {
           unit_price: Number(plan.price),
           currency_id: plan.currency ?? 'ARS',
         }],
-        marketplace_fee: Number((Number(plan.price) * 0.05).toFixed(2)),
         external_reference: subscriptionId,
         back_urls: {
           success: 'https://turnos.argity.com',
