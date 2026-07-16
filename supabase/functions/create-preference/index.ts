@@ -231,14 +231,14 @@ serve(async (req) => {
           currency_id: plan.currency ?? 'ARS',
         }],
         marketplace_fee: Number((Number(plan.price) * 0.05).toFixed(2)),
-        external_reference: paymentId,
+        external_reference: subscriptionId,
         back_urls: {
           success: 'https://turnos.argity.com',
           failure: 'https://turnos.argity.com',
           pending: 'https://turnos.argity.com',
         },
         auto_return: 'approved',
-        notification_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/mp-webhook`,
+        notification_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/mp-client-webhook?institution_id=${institutionId}`,
       }),
     });
 
