@@ -96,35 +96,35 @@ class _PlanesScreenState extends State<PlanesScreen> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: 104),
           child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHero(isGate),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // En modo bloqueante no tiene plan activo, así que la
-                      // sección "Tu plan actual" se omite.
-                      if (!isGate) ...[
-                        _sectionLabel('Tu plan actual'),
-                        const SizedBox(height: 14),
-                        _buildActivePlanCard(),
-                        const SizedBox(height: 36),
-                      ],
-                      _sectionLabel(
-                          isGate ? 'Elegí tu plan' : 'Planes disponibles'),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHero(isGate),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // En modo bloqueante no tiene plan activo, así que la
+                    // sección "Tu plan actual" se omite.
+                    if (!isGate) ...[
+                      _sectionLabel('Tu plan actual'),
+                      const SizedBox(height: 14),
+                      _buildActivePlanCard(),
+                      const SizedBox(height: 36),
                     ],
-                  ),
+                    _sectionLabel(
+                        isGate ? 'Elegí tu plan' : 'Planes disponibles'),
+                  ],
                 ),
-                const SizedBox(height: 14),
-                _buildCarousel(),
-                const SizedBox(height: 32),
-                if (isGate) _buildLogoutButton(),
-              ],
-            ),
+              ),
+              const SizedBox(height: 14),
+              _buildCarousel(),
+              const SizedBox(height: 32),
+              if (isGate) _buildLogoutButton(),
+            ],
           ),
         ),
+      ),
     );
   }
 
@@ -305,9 +305,12 @@ class _PlanesScreenState extends State<PlanesScreen> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.arrow_back_rounded, color: KaliColors.clay, size: 20),
+                            Icon(Icons.arrow_back_rounded,
+                                color: KaliColors.clay, size: 20),
                             const SizedBox(width: 8),
-                            Text('Volver', style: KaliText.body(KaliColors.clay, size: 14, weight: FontWeight.w600)),
+                            Text('Volver',
+                                style: KaliText.body(KaliColors.clay,
+                                    size: 14, weight: FontWeight.w600)),
                           ],
                         ),
                       ),
@@ -364,20 +367,20 @@ class _PlanesScreenState extends State<PlanesScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Sin plan activo',
-                    style: GoogleFontsHelper.cormorant(
-                        KaliColors.warmWhite, 28, weight: FontWeight.w400)),
+                    style: GoogleFontsHelper.cormorant(KaliColors.warmWhite, 28,
+                        weight: FontWeight.w400)),
                 const SizedBox(height: 8),
                 Text(
                   'Activá un plan desde la sección de abajo.',
                   style: KaliText.body(
-                      KaliColors.warmWhite.withValues(alpha: 0.65), size: 14),
+                      KaliColors.warmWhite.withValues(alpha: 0.65),
+                      size: 14),
                 ),
               ],
             ),
           );
         }
-        final vence =
-            DateFormat("d 'de' MMMM", 'es').format(plan.endDate);
+        final vence = DateFormat("d 'de' MMMM", 'es').format(plan.endDate);
         final dias = plan.daysRemaining;
         final diasLabel = dias == 0
             ? 'Vence hoy'
@@ -410,7 +413,8 @@ class _PlanesScreenState extends State<PlanesScreen> {
                 children: [
                   Text(plan.name,
                       style: GoogleFontsHelper.cormorant(
-                          KaliColors.warmWhite, 38, weight: FontWeight.w400)),
+                          KaliColors.warmWhite, 38,
+                          weight: FontWeight.w400)),
                   const SizedBox(height: 8),
                   Text('Vence el $vence',
                       style: KaliText.body(
@@ -464,9 +468,8 @@ class _PlanesScreenState extends State<PlanesScreen> {
     final textSecondary = featured
         ? KaliColors.warmWhite.withValues(alpha: 0.65)
         : KaliColors.clayDark;
-    final checkBg = featured
-        ? Colors.white.withValues(alpha: 0.12)
-        : KaliColors.sand2;
+    final checkBg =
+        featured ? Colors.white.withValues(alpha: 0.12) : KaliColors.sand2;
     final checkIcon = featured
         ? KaliColors.warmWhite.withValues(alpha: 0.80)
         : KaliColors.clayDark;
@@ -477,9 +480,7 @@ class _PlanesScreenState extends State<PlanesScreen> {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(32),
-        border: featured
-            ? null
-            : Border.all(color: KaliColors.sand2, width: 1),
+        border: featured ? null : Border.all(color: KaliColors.sand2, width: 1),
       ),
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
       child: Stack(
@@ -503,8 +504,8 @@ class _PlanesScreenState extends State<PlanesScreen> {
               if (featured)
                 Container(
                   margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: KaliColors.clay,
                     borderRadius: BorderRadius.circular(999),
@@ -524,8 +525,8 @@ class _PlanesScreenState extends State<PlanesScreen> {
                       children: [
                         Text(
                           plan.name,
-                          style: GoogleFontsHelper.cormorant(
-                            textPrimary, 32, weight: FontWeight.w400),
+                          style: GoogleFontsHelper.cormorant(textPrimary, 32,
+                              weight: FontWeight.w400),
                         ),
                         Text(
                           plan.description,
@@ -541,8 +542,8 @@ class _PlanesScreenState extends State<PlanesScreen> {
                     children: [
                       Text(
                         '\$${plan.formattedPrice}',
-                        style: GoogleFontsHelper.cormorant(
-                          textPrimary, 34, weight: FontWeight.w400),
+                        style: GoogleFontsHelper.cormorant(textPrimary, 34,
+                            weight: FontWeight.w400),
                       ),
                       Text(
                         plan.currency,
@@ -559,7 +560,8 @@ class _PlanesScreenState extends State<PlanesScreen> {
                   padding: const EdgeInsets.only(bottom: 12),
                   child: _planPill(
                     '${plan.monthlyClasses} clase${plan.monthlyClasses == 1 ? '' : 's'} por mes',
-                    checkBg, checkIcon,
+                    checkBg,
+                    checkIcon,
                   ),
                 ),
               Expanded(
@@ -691,7 +693,7 @@ class _ActivatePlanSheet extends StatefulWidget {
 }
 
 class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
-  bool _loadingMethod = false; 
+  bool _loadingMethod = false;
   bool _hasFetchedMethod = false;
   bool _loading = false;
   bool _awaitingVerification = false;
@@ -711,7 +713,8 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
       _error = null;
     });
     try {
-      final preference = await PlanService.createPaymentPreference(widget.plan.id);
+      final preference =
+          await PlanService.createPaymentPreference(widget.plan.id);
       if (!mounted) return;
       setState(() {
         _loadingMethod = false;
@@ -747,7 +750,8 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
         KaliUI.showSnackBar(context, '¡Plan activado correctamente!');
       } else {
         setState(() => _loading = false);
-        KaliUI.showSnackBar(context, 'El pago aún no fue confirmado. Esperá unos segundos e intentá de nuevo.');
+        KaliUI.showSnackBar(context,
+            'El pago aún no fue confirmado. Esperá unos segundos e intentá de nuevo.');
       }
     } catch (e) {
       if (!mounted) return;
@@ -756,9 +760,12 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
   }
 
   String get _infoText {
-    if (!_hasFetchedMethod && _error == null) return 'Al confirmar, generaremos tu link de pago o los datos de transferencia correspondientes a tu gimnasio.';
-    if (_alias != null) return 'Hacé la transferencia al alias indicado y avisale a tu instructor para activar tu plan.';
-    if (_awaitingVerification) return 'Una vez aprobado el pago, tu plan se activa automáticamente.';
+    if (!_hasFetchedMethod && _error == null)
+      return 'Al confirmar, generaremos tu link de pago o los datos de transferencia correspondientes a tu gimnasio.';
+    if (_alias != null)
+      return 'Hacé la transferencia al alias indicado y avisale a tu instructor para activar tu plan.';
+    if (_awaitingVerification)
+      return 'Una vez aprobado el pago, tu plan se activa automáticamente.';
     return 'Serás redirigido a MercadoPago para completar el pago de forma segura.';
   }
 
@@ -766,7 +773,8 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
   Widget build(BuildContext context) {
     final plan = widget.plan;
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding:
+          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
         decoration: BoxDecoration(
           color: KaliColors.warmWhite,
@@ -790,8 +798,8 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
             const SizedBox(height: 24),
             Text(
               plan.name,
-              style: GoogleFontsHelper.cormorant(
-                  KaliColors.espresso, 34, weight: FontWeight.w400),
+              style: GoogleFontsHelper.cormorant(KaliColors.espresso, 34,
+                  weight: FontWeight.w400),
             ),
             const SizedBox(height: 4),
             Row(
@@ -799,8 +807,8 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
               children: [
                 Text(
                   '\$${plan.formattedPrice}',
-                  style: GoogleFontsHelper.cormorant(
-                      KaliColors.espresso, 28, weight: FontWeight.w400),
+                  style: GoogleFontsHelper.cormorant(KaliColors.espresso, 28,
+                      weight: FontWeight.w400),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 4, left: 4),
@@ -814,7 +822,8 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
             if (plan.monthlyClasses != null) ...[
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
                   color: KaliColors.sand,
                   borderRadius: BorderRadius.circular(18),
@@ -972,15 +981,16 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
                   child: SizedBox(
                     width: double.infinity,
                     child: TextButton(
-                      onPressed: _loading ? null : () => setState(() => _showAlias = true),
+                      onPressed: _loading
+                          ? null
+                          : () => setState(() => _showAlias = true),
                       child: Text('O prefiero transferir manualmente',
                           style: KaliText.body(KaliColors.clayDark,
                               size: 14, weight: FontWeight.w500)),
                     ),
                   ),
                 ),
-            ]
-            else if (_alias != null) ...[
+            ] else if (_alias != null) ...[
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -997,8 +1007,9 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'ATENCIÓN: El pago mediante alias no es automático. Deberás esperar a que el administrador del estudio revise su cuenta bancaria y apruebe el pago manualmente. Kali Studio no tiene control sobre los tiempos de esta aprobación.',
-                        style: KaliText.body(const Color(0xFF856404), size: 13, weight: FontWeight.w600)
+                        'ATENCIÓN: El pago mediante alias no es automático. Deberás esperar a que el administrador del estudio revise su cuenta bancaria y apruebe el pago manualmente. Argity Turnos no tiene control sobre los tiempos de esta aprobación.',
+                        style: KaliText.body(const Color(0xFF856404),
+                                size: 13, weight: FontWeight.w600)
                             .copyWith(height: 1.4),
                       ),
                     ),
@@ -1008,7 +1019,8 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
               const SizedBox(height: 16),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
                   color: KaliColors.sand,
                   borderRadius: BorderRadius.circular(18),
@@ -1075,7 +1087,9 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
                   child: SizedBox(
                     width: double.infinity,
                     child: TextButton(
-                      onPressed: _loading ? null : () => setState(() => _showAlias = false),
+                      onPressed: _loading
+                          ? null
+                          : () => setState(() => _showAlias = false),
                       child: Text('Volver a opciones automáticas',
                           style: KaliText.body(KaliColors.clayDark,
                               size: 14, weight: FontWeight.w500)),
@@ -1139,8 +1153,8 @@ class _PlanDetailSheet extends StatelessWidget {
           const SizedBox(height: 24),
           Text(
             plan.name,
-            style: GoogleFontsHelper.cormorant(
-                KaliColors.espresso, 34, weight: FontWeight.w400),
+            style: GoogleFontsHelper.cormorant(KaliColors.espresso, 34,
+                weight: FontWeight.w400),
           ),
           const SizedBox(height: 20),
           _row('Estado', _statusLabel(plan.status)),
@@ -1171,10 +1185,14 @@ class _PlanDetailSheet extends StatelessWidget {
 
   String _statusLabel(String status) {
     switch (status) {
-      case 'active':   return 'Activo';
-      case 'pending':  return 'Pendiente';
-      case 'expired':  return 'Vencido';
-      default:         return status;
+      case 'active':
+        return 'Activo';
+      case 'pending':
+        return 'Pendiente';
+      case 'expired':
+        return 'Vencido';
+      default:
+        return status;
     }
   }
 
