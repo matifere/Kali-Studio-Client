@@ -95,10 +95,8 @@ serve(async (req) => {
         mpAccessToken = inst.mp_token_secret_name;
       }
 
-      if (!mpAccessToken) {
-        transferAlias = inst?.payment_alias ?? null;
-        console.log('payment_alias present:', !!transferAlias);
-      }
+      transferAlias = inst?.payment_alias ?? null;
+      console.log('payment_alias present:', !!transferAlias);
     }
 
     if (!mpAccessToken && !transferAlias) {
@@ -209,7 +207,7 @@ serve(async (req) => {
     console.log('subscription:', subscriptionId, 'payment:', paymentId, 'reused:', !createdSubscription);
 
     // ── Alias / transfer path ─────────────────────────────────────────────────
-    if (transferAlias) {
+    if (!mpAccessToken && transferAlias) {
       return new Response(JSON.stringify({ alias: transferAlias }), {
         status: 200, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
       });
@@ -262,7 +260,7 @@ serve(async (req) => {
       .update({ preference_id: preference.id })
       .eq('id', paymentId);
 
-    return new Response(JSON.stringify({ url: preference.init_point }), {
+    return new Response(JSON.stringify({ url: preference.init_point, alias: transferAlias }), {
       status: 200, headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
     });
 

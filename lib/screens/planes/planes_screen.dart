@@ -698,6 +698,7 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
   String? _alias;
   String? _mpUrl;
   String? _error;
+  bool _showAlias = false;
 
   @override
   void initState() {
@@ -715,11 +716,8 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
       setState(() {
         _loadingMethod = false;
         _hasFetchedMethod = true;
-        if (preference is MercadoPagoPayment) {
-          _mpUrl = preference.url;
-        } else if (preference is TransferPayment) {
-          _alias = preference.alias;
-        }
+        _mpUrl = preference.mpUrl;
+        _alias = preference.alias;
       });
     } catch (e) {
       if (!mounted) return;
@@ -891,7 +889,123 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
                   ],
                 ),
               )
+            else if (!_hasFetchedMethod)
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: _loadingMethod ? null : _fetchPaymentMethod,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: KaliColors.espresso,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: _loadingMethod
+                      ? const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white),
+                        )
+                      : Text(
+                          'Pagar plan',
+                          style: KaliText.body(KaliColors.sand,
+                              size: 14, weight: FontWeight.w700),
+                        ),
+                ),
+              )
+            else if (_mpUrl != null && !_showAlias) ...[
+              if (!_awaitingVerification)
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: _loading ? null : _openMp,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: KaliColors.espresso,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.open_in_new_rounded,
+                            size: 16, color: Colors.white),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Ir a pagar',
+                          style: KaliText.body(KaliColors.sand,
+                              size: 14, weight: FontWeight.w700),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: _loading ? null : _verify,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: KaliColors.espresso,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: _loading
+                        ? const SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white),
+                          )
+                        : Text(
+                            'Ya pagué, verificar',
+                            style: KaliText.body(KaliColors.sand,
+                                size: 14, weight: FontWeight.w700),
+                          ),
+                  ),
+                ),
+              if (_alias != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: TextButton(
+                      onPressed: _loading ? null : () => setState(() => _showAlias = true),
+                      child: Text('O prefiero transferir manualmente',
+                          style: KaliText.body(KaliColors.clayDark,
+                              size: 14, weight: FontWeight.w500)),
+                    ),
+                  ),
+                ),
+            ]
             else if (_alias != null) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF3CD),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: const Color(0xFFFFEEBA)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.warning_rounded,
+                        size: 20, color: Color(0xFF856404)),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'ATENCIÓN: El pago mediante alias no es automático. Deberás esperar a que el administrador del estudio revise su cuenta bancaria y apruebe el pago manualmente. Kali Studio no tiene control sobre los tiempos de esta aprobación.',
+                        style: KaliText.body(const Color(0xFF856404), size: 13, weight: FontWeight.w600)
+                            .copyWith(height: 1.4),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -955,82 +1069,20 @@ class _ActivatePlanSheetState extends State<_ActivatePlanSheet> {
                         ),
                 ),
               ),
-            ] else if (!_hasFetchedMethod)
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: _loadingMethod ? null : _fetchPaymentMethod,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: KaliColors.espresso,
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                  ),
-                  child: _loadingMethod
-                      ? const SizedBox(
-                          height: 18,
-                          width: 18,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white),
-                        )
-                      : Text(
-                          'Pagar plan',
-                          style: KaliText.body(KaliColors.sand,
-                              size: 14, weight: FontWeight.w700),
-                        ),
-                ),
-              )
-            else if (_mpUrl != null && !_awaitingVerification)
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: _loading ? null : _openMp,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: KaliColors.espresso,
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.open_in_new_rounded,
-                          size: 16, color: Colors.white),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Ir a pagar',
-                        style: KaliText.body(KaliColors.sand,
-                            size: 14, weight: FontWeight.w700),
-                      ),
-                    ],
+              if (_mpUrl != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: TextButton(
+                      onPressed: _loading ? null : () => setState(() => _showAlias = false),
+                      child: Text('Volver a opciones automáticas',
+                          style: KaliText.body(KaliColors.clayDark,
+                              size: 14, weight: FontWeight.w500)),
+                    ),
                   ),
                 ),
-              )
-            else if (_mpUrl != null && _awaitingVerification)
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: _loading ? null : _verify,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: KaliColors.espresso,
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                  ),
-                  child: _loading
-                      ? const SizedBox(
-                          height: 18,
-                          width: 18,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white),
-                        )
-                      : Text(
-                          'Ya pagué, verificar',
-                          style: KaliText.body(KaliColors.sand,
-                              size: 14, weight: FontWeight.w700),
-                        ),
-                ),
-              ),
+            ],
             const SizedBox(height: 10),
             SizedBox(
               width: double.infinity,

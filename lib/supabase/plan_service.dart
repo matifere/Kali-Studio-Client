@@ -3,18 +3,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/models.dart';
 import 'profile_manager.dart';
 
-sealed class PaymentPreference {
-  const PaymentPreference();
-}
-
-class MercadoPagoPayment extends PaymentPreference {
-  final String url;
-  const MercadoPagoPayment(this.url) : super();
-}
-
-class TransferPayment extends PaymentPreference {
-  final String alias;
-  const TransferPayment(this.alias) : super();
+class PaymentPreference {
+  final String? mpUrl;
+  final String? alias;
+  const PaymentPreference({this.mpUrl, this.alias});
 }
 
 class PlanService {
@@ -57,13 +49,14 @@ class PlanService {
 
     if (data is Map<String, dynamic>) {
       final url = data['url'] as String?;
-      if (url != null) return MercadoPagoPayment(url);
-
       final alias = data['alias'] as String?;
-      if (alias != null) return TransferPayment(alias);
-      
       final error = data['error'] as String?;
+
       if (error != null) throw Exception(error);
+      
+      if (url != null || alias != null) {
+        return PaymentPreference(mpUrl: url, alias: alias);
+      }
     }
 
     throw Exception('No pudimos procesar la respuesta del pago. Intentá de nuevo.');
