@@ -45,6 +45,11 @@ flutter_launcher_icons:
   image_path: "assets/images/LOGO_NARANJA_PADDED.png"
   android: true
   ios: true
+  web:
+    generate: true
+    image_path: "assets/images/LOGO_NARANJA_PADDED.png"
+    background_color: "#FFFFFF"
+    theme_color: "#F5A623"
   remove_alpha_ios: true
   min_sdk_android: 24
   adaptive_icon_background: "#FFFFFF"
