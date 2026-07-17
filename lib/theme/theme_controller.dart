@@ -42,6 +42,9 @@ class ThemeController extends ChangeNotifier {
       case 'magenta':
         _currentTheme = isDarkMode ? KaliColorsExtension.magentaDarkTheme : KaliColorsExtension.magentaTheme;
         break;
+      case 'classic':
+        _currentTheme = isDarkMode ? KaliColorsExtension.classicDarkTheme : KaliColorsExtension.classicTheme;
+        break;
       case 'dark':
         _currentTheme = KaliColorsExtension.darkTheme;
         break;

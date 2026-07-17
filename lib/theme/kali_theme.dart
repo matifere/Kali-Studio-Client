@@ -16,6 +16,9 @@ class KaliColors {
   static Color get sageLight => _ext.sageLight;
   static Color get warmWhite => _ext.warmWhite;
   static Color get background => _ext.background;
+  static Color get error => _ext.error;
+  static Color get warning => _ext.warning;
+  static Color get success => _ext.success;
 }
 
 class KaliText {

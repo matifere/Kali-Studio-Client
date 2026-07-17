@@ -13,6 +13,9 @@ class KaliColorsExtension extends ThemeExtension<KaliColorsExtension> {
   final Color sageLight;
   final Color warmWhite;
   final Color background;
+  final Color error;
+  final Color warning;
+  final Color success;
 
   const KaliColorsExtension({
     required this.typography,
@@ -26,77 +29,130 @@ class KaliColorsExtension extends ThemeExtension<KaliColorsExtension> {
     required this.sageLight,
     required this.warmWhite,
     required this.background,
+    required this.error,
+    required this.warning,
+    required this.success,
   });
 
   // ─── Variantes predefinidas ───────────────────────────────────────────────
 
+  // Default theme (Argity)
   static final KaliColorsExtension defaultTheme = KaliColorsExtension(
-    espresso: Color(0xFF2C1F14),
-    espressoL: Color(0xFF3D2B1A),
-    clay: Color(0xFFC4A882),
-    clayDark: Color(0xFFA08060),
-    sand: Color(0xFFF5F0E8),
-    sand2: Color(0xFFEDE6D8),
-    sage: Color(0xFF8A9E88),
-    sageLight: Color(0xFFD4DDD3),
-    warmWhite: Color(0xFFFAF7F2),
-    background: Color(0xFFE8E2D8),
+    espresso: const Color(0xFF1A1814),
+    espressoL: const Color(0xFF5B4730),
+    clay: const Color(0xFFF5A623),
+    clayDark: const Color(0xFFE8960C),
+    sand: const Color(0xFFFDFAF5),
+    sand2: const Color(0xFFE8E0D2),
+    sage: const Color(0xFFEDE8DF),
+    sageLight: const Color(0xFFA08F7D),
+    warmWhite: const Color(0xFFFAF7F2),
+    background: const Color(0xFFF1EDE6),
+    error: const Color(0xFFFF5F57),
+    warning: const Color(0xFFFFBD2E),
+    success: const Color(0xFF28CA41),
     typography: KaliTypography.defaultTypography,
   );
 
   static final KaliColorsExtension darkTheme = KaliColorsExtension(
-    espresso: Color(0xFFF5F0E8),
-    espressoL: Color(0xFF37474F),
-    clay: Color(0xFFC4A882), // Accent keeping brand identity
-    clayDark: Color(0xFFA08060),
-    sand: Color(0xFF2C2C2C),
-    sand2: Color(0xFF1A1A1A),
-    sage: Color(0xFF455A64),
-    sageLight: Color(0xFF37474F),
-    warmWhite: Color(0xFF121212),
-    background: Color(0xFF000000),
+    espresso: const Color(0xFFFAF7F2),
+    espressoL: const Color(0xFFE8E0D2),
+    clay: const Color(0xFFF5A623),
+    clayDark: const Color(0xFFE8960C),
+    sand: const Color(0xFF2C2620),
+    sand2: const Color(0xFF383025),
+    sage: const Color(0xFF3D362C),
+    sageLight: const Color(0xFF7A6550),
+    warmWhite: const Color(0xFF1A1814),
+    background: const Color(0xFF25211B),
+    error: const Color(0xFFFF5F57),
+    warning: const Color(0xFFFFBD2E),
+    success: const Color(0xFF28CA41),
+    typography: KaliTypography.darkTypography,
+  );
+
+  static final KaliColorsExtension classicTheme = KaliColorsExtension(
+    espresso: const Color(0xFF2C1F14),
+    espressoL: const Color(0xFF3D2B1A),
+    clay: const Color(0xFFC4A882),
+    clayDark: const Color(0xFFA08060),
+    sand: const Color(0xFFF5F0E8),
+    sand2: const Color(0xFFEDE6D8),
+    sage: const Color(0xFF8A9E88),
+    sageLight: const Color(0xFFD4DDD3),
+    warmWhite: const Color(0xFFFAF7F2),
+    background: const Color(0xFFE8E2D8),
+    error: const Color(0xFFFF5F57),
+    warning: const Color(0xFFFFBD2E),
+    success: const Color(0xFF28CA41),
+    typography: KaliTypography.defaultTypography,
+  );
+
+  static final KaliColorsExtension classicDarkTheme = KaliColorsExtension(
+    espresso: const Color(0xFFF5F0E8),
+    espressoL: const Color(0xFF37474F),
+    clay: const Color(0xFFC4A882),
+    clayDark: const Color(0xFFA08060),
+    sand: const Color(0xFF2C2C2C),
+    sand2: const Color(0xFF1A1A1A),
+    sage: const Color(0xFF455A64),
+    sageLight: const Color(0xFF37474F),
+    warmWhite: const Color(0xFF121212),
+    background: const Color(0xFF000000),
+    error: const Color(0xFFFF5F57),
+    warning: const Color(0xFFFFBD2E),
+    success: const Color(0xFF28CA41),
     typography: KaliTypography.darkTypography,
   );
 
   static final KaliColorsExtension oceanTheme = KaliColorsExtension(
-    espresso: Color(0xFF0D47A1),
-    espressoL: Color(0xFF1565C0),
-    clay: Color(0xFF42A5F5),
-    clayDark: Color(0xFF1E88E5),
-    sand: Color(0xFFE3F2FD),
-    sand2: Color(0xFFBBDEFB),
-    sage: Color(0xFF26A69A),
-    sageLight: Color(0xFF80CBC4),
-    warmWhite: Color(0xFFFFFFFF),
-    background: Color(0xFFF1F5F9),
+    espresso: const Color(0xFF0D47A1),
+    espressoL: const Color(0xFF1565C0),
+    clay: const Color(0xFF42A5F5),
+    clayDark: const Color(0xFF1E88E5),
+    sand: const Color(0xFFE3F2FD),
+    sand2: const Color(0xFFBBDEFB),
+    sage: const Color(0xFF26A69A),
+    sageLight: const Color(0xFF80CBC4),
+    warmWhite: const Color(0xFFFFFFFF),
+    background: const Color(0xFFF1F5F9),
+    error: const Color(0xFFFF5F57),
+    warning: const Color(0xFFFFBD2E),
+    success: const Color(0xFF28CA41),
     typography: KaliTypography.oceanTypography,
   );
 
   static final KaliColorsExtension natureTheme = KaliColorsExtension(
-    espresso: Color(0xFF1B3B2B), // Deep Forest
-    espressoL: Color(0xFF2E5945),
-    clay: Color(0xFF83B594),     // Mint/Sage
-    clayDark: Color(0xFF5E8E6F),
-    sand: Color(0xFFE6EFEB),     // Pale Mint Surface
-    sand2: Color(0xFFD6E3DD),
-    sage: Color(0xFF88A66D),
-    sageLight: Color(0xFFB4C9BE),
-    warmWhite: Color(0xFFF4F7F5),
-    background: Color(0xFFEAF0EC),
+    espresso: const Color(0xFF1B3B2B),
+    espressoL: const Color(0xFF2E5945),
+    clay: const Color(0xFF83B594),
+    clayDark: const Color(0xFF5E8E6F),
+    sand: const Color(0xFFE6EFEB),
+    sand2: const Color(0xFFD6E3DD),
+    sage: const Color(0xFF88A66D),
+    sageLight: const Color(0xFFB4C9BE),
+    warmWhite: const Color(0xFFF4F7F5),
+    background: const Color(0xFFEAF0EC),
+    error: const Color(0xFFFF5F57),
+    warning: const Color(0xFFFFBD2E),
+    success: const Color(0xFF28CA41),
     typography: KaliTypography.natureTypography,
   );
 
   static final KaliColorsExtension magentaTheme = KaliColorsExtension(
-    espresso: Color(0xFF3B1B2B), // Deep Berry
-    espressoL: Color(0xFF5A2C44),
-    clay: Color(0xFFD17C9B),     // Vivid Dusty Rose
-    clayDark: Color(0xFFA65876),
-    sand: Color(0xFFF6E8EE),     // Pale Pink Surface
-    sand2: Color(0xFFEAD2DD),
-    sage: Color(0xFF9E7C88),
-    sageLight: Color(0xFFC7AFB8),
-    warmWhite: Color(0xFFF9F5F6),
-    background: Color(0xFFF0EAEB),
+    espresso: const Color(0xFF3B1B2B),
+    espressoL: const Color(0xFF5A2C44),
+    clay: const Color(0xFFD17C9B),
+    clayDark: const Color(0xFFA65876),
+    sand: const Color(0xFFF6E8EE),
+    sand2: const Color(0xFFEAD2DD),
+    sage: const Color(0xFF9E7C88),
+    sageLight: const Color(0xFFC7AFB8),
+    warmWhite: const Color(0xFFF9F5F6),
+    background: const Color(0xFFF0EAEB),
+    error: const Color(0xFFFF5F57),
+    warning: const Color(0xFFFFBD2E),
+    success: const Color(0xFF28CA41),
     typography: KaliTypography.magentaTypography,
   );
 
@@ -111,6 +167,9 @@ class KaliColorsExtension extends ThemeExtension<KaliColorsExtension> {
     sageLight: const Color(0xFF334155),
     warmWhite: const Color(0xFF0F172A),
     background: const Color(0xFF020617),
+    error: const Color(0xFFFF5F57),
+    warning: const Color(0xFFFFBD2E),
+    success: const Color(0xFF28CA41),
     typography: KaliTypography.oceanTypography,
   );
 
@@ -125,6 +184,9 @@ class KaliColorsExtension extends ThemeExtension<KaliColorsExtension> {
     sageLight: const Color(0xFF374151),
     warmWhite: const Color(0xFF111827),
     background: const Color(0xFF030712),
+    error: const Color(0xFFFF5F57),
+    warning: const Color(0xFFFFBD2E),
+    success: const Color(0xFF28CA41),
     typography: KaliTypography.natureTypography,
   );
 
@@ -139,6 +201,9 @@ class KaliColorsExtension extends ThemeExtension<KaliColorsExtension> {
     sageLight: const Color(0xFF3F3F46),
     warmWhite: const Color(0xFF18181B),
     background: const Color(0xFF09090B),
+    error: const Color(0xFFFF5F57),
+    warning: const Color(0xFFFFBD2E),
+    success: const Color(0xFF28CA41),
     typography: KaliTypography.magentaTypography,
   );
 
@@ -154,6 +219,9 @@ class KaliColorsExtension extends ThemeExtension<KaliColorsExtension> {
     Color? sageLight,
     Color? warmWhite,
     Color? background,
+    Color? error,
+    Color? warning,
+    Color? success,
     KaliTypography? typography,
   }) {
     return KaliColorsExtension(
@@ -167,6 +235,9 @@ class KaliColorsExtension extends ThemeExtension<KaliColorsExtension> {
       sageLight: sageLight ?? this.sageLight,
       warmWhite: warmWhite ?? this.warmWhite,
       background: background ?? this.background,
+      error: error ?? this.error,
+      warning: warning ?? this.warning,
+      success: success ?? this.success,
       typography: typography ?? this.typography,
     );
   }
@@ -190,6 +261,9 @@ class KaliColorsExtension extends ThemeExtension<KaliColorsExtension> {
       sageLight: Color.lerp(sageLight, other.sageLight, t)!,
       warmWhite: Color.lerp(warmWhite, other.warmWhite, t)!,
       background: Color.lerp(background, other.background, t)!,
+      error: Color.lerp(error, other.error, t)!,
+      warning: Color.lerp(warning, other.warning, t)!,
+      success: Color.lerp(success, other.success, t)!,
       typography: typography.lerp(other.typography, t),
     );
   }
