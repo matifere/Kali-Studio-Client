@@ -4,7 +4,7 @@
 > Snapshot del esquema **vivo** de prod. Es la FUENTE DE VERDAD por encima de
 > `supabase/migrations/` (el historial de migraciones está divergente).
 >
-> Generado: 2026-07-10 21:34 -03
+> Generado: 2026-07-23 12:20 -03
 
 ## Tablas y columnas
 
@@ -44,6 +44,7 @@
 - `institutions.theme_id` text NOT NULL default 'default'::text
 - `institutions.cancellation_hours` integer NOT NULL default 2
 - `institutions.consent_pdf_url` text
+- `institutions.join_code` text
 - `mobile_push_tokens.id` uuid NOT NULL default gen_random_uuid()
 - `mobile_push_tokens.user_id` uuid NOT NULL
 - `mobile_push_tokens.token` text NOT NULL
@@ -183,9 +184,12 @@
    FROM profiles
   WHERE (profiles.id = auth.uid())
  LIMIT 1))
-- `institutions` / **institutions_update_sudo** (UPDATE) USING (id = ( SELECT profiles.institution_id
+- `institutions` / **institutions_update_admin_sudo** (UPDATE) USING (id = ( SELECT profiles.institution_id
    FROM profiles
-  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'sudo'::user_role))
+  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['sudo'::user_role, 'admin'::user_role])))
+ LIMIT 1)) WITH CHECK (id = ( SELECT profiles.institution_id
+   FROM profiles
+  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['sudo'::user_role, 'admin'::user_role])))
  LIMIT 1))
 - `institutions` / **studios_read** (SELECT) USING true
 - `institutions` / **studios_read_anon** (SELECT) USING true
@@ -234,11 +238,9 @@
 - `reservations` / **reservations_delete** (DELETE) USING ((user_id = auth.uid()) OR ((EXISTS ( SELECT 1
    FROM class_sessions cs
   WHERE ((cs.id = reservations.session_id) AND (cs.institution_id = kali_institution_id())))) AND kali_is_admin()))
-- `reservations` / **reservations_insert** (INSERT) WITH CHECK (((user_id = auth.uid()) AND (EXISTS ( SELECT 1
+- `reservations` / **reservations_insert** (INSERT) WITH CHECK ((EXISTS ( SELECT 1
    FROM class_sessions cs
-  WHERE ((cs.id = reservations.session_id) AND (cs.institution_id = kali_institution_id()))))) OR ((EXISTS ( SELECT 1
-   FROM class_sessions cs
-  WHERE ((cs.id = reservations.session_id) AND (cs.institution_id = kali_institution_id())))) AND kali_is_admin()))
+  WHERE ((cs.id = reservations.session_id) AND (cs.institution_id = kali_institution_id())))) AND kali_is_admin())
 - `reservations` / **reservations_select** (SELECT) USING ((user_id = auth.uid()) OR (EXISTS ( SELECT 1
    FROM class_sessions cs
   WHERE ((cs.id = reservations.session_id) AND (cs.institution_id = kali_institution_id())))))
@@ -308,6 +310,7 @@ CREATE OR REPLACE FUNCTION public.book_session_if_available(p_session_id uuid, p
  RETURNS json
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path TO 'public'
 AS $function$
 declare
   v_tz             constant text := 'America/Argentina/Buenos_Aires';
@@ -343,8 +346,7 @@ begin
     return json_build_object('ok', false, 'error', 'inactive');
   end if;
 
-  -- No reservar por adelantado de un mes calendario futuro (fecha local Argentina,
-  -- no current_date que es UTC). date_trunc compara mes Y anio.
+  -- date_trunc compara mes Y anio, asi que enero del ano que viene tambien cae.
   if date_trunc('month', v_session_date) > date_trunc('month', v_today) then
     return json_build_object('ok', false, 'error', 'future_month');
   end if;
@@ -356,7 +358,6 @@ begin
   select count(*) into v_confirmed from reservations where session_id = p_session_id and status = 'confirmed';
   if v_confirmed >= v_capacity then return json_build_object('ok', false, 'error', 'full'); end if;
 
-  -- Plan activo en la fecha de la clase (no en el "hoy").
   select count(*) into v_has_plan from subscriptions
   where user_id = p_user_id and status = 'active' and v_session_date between start_date and end_date;
   if v_has_plan = 0 then return json_build_object('ok', false, 'error', 'no_plan'); end if;
@@ -928,6 +929,33 @@ $function$
 
 ```
 
+### join_institution
+```sql
+CREATE OR REPLACE FUNCTION public.join_institution(p_code text)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
+AS $function$
+DECLARE
+  v_inst_id uuid;
+BEGIN
+  -- Buscamos si existe el código
+  SELECT id INTO v_inst_id FROM public.institutions WHERE join_code = p_code;
+  
+  IF v_inst_id IS NULL THEN
+    RAISE EXCEPTION 'Código de gimnasio inválido';
+  END IF;
+
+  -- Actualizamos el perfil del usuario autenticado
+  UPDATE public.profiles 
+  SET institution_id = v_inst_id 
+  WHERE id = auth.uid();
+END;
+$function$
+
+```
+
 ### kali_institution_id
 ```sql
 CREATE OR REPLACE FUNCTION public.kali_institution_id()
@@ -1044,12 +1072,15 @@ begin
     return new;
   end if;
 
-  -- Fecha local Argentina, no current_date (UTC): entre las 21:00 y las 00:00
-  -- hora local, current_date ya es "manana" y las clases de hoy quedaban fuera.
   v_today := (now() at time zone v_tz)::date;
 
   select * into v_session from class_sessions where id = new.session_id;
   if not found or v_session.status <> 'scheduled' or v_session.date < v_today then
+    return new;
+  end if;
+
+  -- Misma regla que el RPC: nadie puede quedar confirmado en un mes futuro.
+  if date_trunc('month', v_session.date) > date_trunc('month', v_today) then
     return new;
   end if;
 
@@ -1070,7 +1101,6 @@ begin
     order by w.created_at asc
     for update skip locked
   loop
-    -- plan activo que cubra la fecha de la clase
     select p.max_reservations_per_month into v_limit
     from subscriptions s
     join plans p on p.id = s.plan_id
@@ -1090,8 +1120,6 @@ begin
       if v_used >= v_limit then continue; end if;
     end if;
 
-    -- ya tenia reserva confirmada en esta sesion: limpiar la fila huerfana
-    -- y seguir buscando al proximo elegible
     if exists (
       select 1 from reservations
       where user_id = v_waiter.user_id and session_id = new.session_id
@@ -1101,8 +1129,6 @@ begin
       continue;
     end if;
 
-    -- reservations NO tiene institution_id en prod: no incluir esa columna.
-    -- El on conflict revive la fila cancelada si existia (UNIQUE user_id, session_id).
     insert into reservations (user_id, session_id, status)
     values (v_waiter.user_id, new.session_id, 'confirmed')
     on conflict (user_id, session_id) do update
@@ -1120,7 +1146,6 @@ begin
       'waitlist'
     );
 
-    -- Mail best-effort: si falla, la promocion ya quedo hecha igual.
     begin
       select email, full_name into v_email, v_name
       from profiles where id = v_waiter.user_id;
@@ -1151,13 +1176,11 @@ begin
       raise warning 'send-waitlist-email no enviado: %', sqlerrm;
     end;
 
-    -- Una cancelacion libera UN lugar: promover a uno solo y cortar.
     exit;
   end loop;
 
   return new;
 exception when others then
-  -- la promocion nunca debe impedir la cancelacion original
   raise warning 'promote_waitlist_on_cancellation: %', sqlerrm;
   return new;
 end;

@@ -52,6 +52,16 @@ class _BookClassScreenState extends State<BookClassScreen> {
   Color get _calendarSelectedBackground => KaliColors.espresso;
   Color get _calendarSelectedText => KaliColors.background;
 
+  /// Mes calendario actual. Solo se puede reservar dentro de él: el RPC
+  /// `book_session_if_available` rechaza los meses futuros con `future_month`,
+  /// así que el calendario no deja ni llegar a esos días.
+  DateTime get _currentMonth {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month);
+  }
+
+  bool get _canGoToNextMonth => _visibleMonth.isBefore(_currentMonth);
+
   @override
   void initState() {
     super.initState();
@@ -174,15 +184,20 @@ class _BookClassScreenState extends State<BookClassScreen> {
               ),
               const SizedBox(width: 8),
               Pressable(
-                onTap: () {
-                  final newMonth =
-                      DateTime(_visibleMonth.year, _visibleMonth.month + 1);
-                  setState(() => _visibleMonth = newMonth);
-                  _loadDatesWithSessions(newMonth);
-                  _loadMonthlyUsage(newMonth);
-                },
+                onTap: !_canGoToNextMonth
+                    ? null
+                    : () {
+                        final newMonth = DateTime(
+                            _visibleMonth.year, _visibleMonth.month + 1);
+                        setState(() => _visibleMonth = newMonth);
+                        _loadDatesWithSessions(newMonth);
+                        _loadMonthlyUsage(newMonth);
+                      },
                 child: Icon(Icons.chevron_right_rounded,
-                    color: _mutedText, size: 24),
+                    color: _canGoToNextMonth
+                        ? _mutedText
+                        : _mutedText.withValues(alpha: 0.25),
+                    size: 24),
               ),
             ],
           ),
@@ -215,6 +230,11 @@ class _BookClassScreenState extends State<BookClassScreen> {
             children: days.map((date) {
               final isPast = date.isBefore(todayDate);
               final isOutsideMonth = date.month != _visibleMonth.month;
+              // Los días de relleno de la grilla pueden caer en el mes que
+              // viene: no son reservables aunque no sean pasado.
+              final isFutureMonth =
+                  DateTime(date.year, date.month).isAfter(_currentMonth);
+              final isDisabled = isPast || isOutsideMonth || isFutureMonth;
               final isSelected = _isSameDay(date, _selectedDate);
               final hasClasses =
                   _datesWithSessions.contains(_dateStr(date));
@@ -222,7 +242,7 @@ class _BookClassScreenState extends State<BookClassScreen> {
               Color textColor;
               if (isSelected) {
                 textColor = _calendarSelectedText;
-              } else if (isPast || isOutsideMonth) {
+              } else if (isDisabled) {
                 textColor = _calendarDayMuted;
               } else {
                 textColor = _primaryText;
@@ -232,7 +252,7 @@ class _BookClassScreenState extends State<BookClassScreen> {
                 width: cellWidth,
                 child: Center(
                   child: Pressable(
-                    onTap: isPast ? null : () {
+                    onTap: isDisabled ? null : () {
                       setState(() => _selectedDate = date);
                       _loadSessionsForDate(date);
                     },
@@ -244,7 +264,7 @@ class _BookClassScreenState extends State<BookClassScreen> {
                         shape: BoxShape.circle,
                         color: isSelected
                             ? _calendarSelectedBackground
-                            : (hasClasses && !isPast && !isOutsideMonth)
+                            : (hasClasses && !isDisabled)
                                 ? KaliColors.clay.withValues(alpha: 0.18)
                                 : Colors.transparent,
                       ),
