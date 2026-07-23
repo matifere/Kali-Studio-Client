@@ -43,18 +43,15 @@ class VersionService {
           if (isInit || _currentVersion == null) {
             // Guardamos la versión actual
             _currentVersion = fetchedVersion;
-            debugPrint('Version inicial de web: $_currentVersion');
           } else if (_currentVersion != fetchedVersion) {
             // ¡Hay una versión nueva! Forzamos la recarga de la página.
             // Esto actualizará los assets cacheados sin desloguear al usuario.
-            debugPrint('Nueva versión detectada. Recargando web...');
             html.window.location.reload();
           }
         }
       }
     } catch (e) {
       // Ignorar errores de red silenciosamente, puede estar sin internet
-      debugPrint('Error al verificar versión: $e');
     }
   }
 

@@ -31,11 +31,9 @@ class _ConsentimientoScreenState extends State<ConsentimientoScreen> {
         if (response.statusCode == 200) {
           return PdfDocument.openData(response.bodyBytes);
         }
-        debugPrint(
-            'Consentimiento: HTTP ${response.statusCode} al descargar $url');
       }
-    } catch (e) {
-      debugPrint('Consentimiento: error descargando PDF: $e');
+    } catch (_) {
+      // error no crítico: se ignora
     }
     return PdfDocument.openAsset('assets/docs/consentimiento.pdf');
   }

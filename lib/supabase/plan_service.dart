@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/models.dart';
 import 'profile_manager.dart';
@@ -24,7 +23,6 @@ class PlanService {
       if (raw is! List) return [];
       return raw.map((e) => Plan.fromMap(e as Map<String, dynamic>)).toList();
     } catch (e) {
-      debugPrint('PlanService.fetchAvailablePlans error: $e');
       return [];
     }
   }
@@ -106,7 +104,6 @@ class PlanService {
         status: data['status'] as String,
       );
     } catch (e) {
-      debugPrint('PlanService.fetchActivePlan error: $e');
       return null;
     }
   }

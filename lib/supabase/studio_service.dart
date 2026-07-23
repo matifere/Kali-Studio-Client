@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'profile_manager.dart';
 
@@ -59,7 +58,6 @@ class StudioService {
       _cachedInstitution = Studio.fromMap(data);
       return _cachedInstitution;
     } catch (e) {
-      debugPrint('StudioService.fetchCurrentInstitution error: $e');
       return null;
     }
   }
@@ -76,7 +74,6 @@ class StudioService {
           .map((e) => Studio.fromMap(e as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      debugPrint('StudioService.fetchStudios error: $e');
       return [];
     }
   }

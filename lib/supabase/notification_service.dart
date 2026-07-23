@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AppNotification {
@@ -47,7 +46,6 @@ class NotificationService {
       if (raw is! List) return [];
       return raw.map((e) => AppNotification.fromMap(e as Map<String, dynamic>)).toList();
     } catch (e) {
-      debugPrint('NotificationService.fetchNotifications error: $e');
       return [];
     }
   }
@@ -65,7 +63,6 @@ class NotificationService {
 
       return ((data as List?) ?? []).length;
     } catch (e) {
-      debugPrint('NotificationService.fetchUnreadCount error: $e');
       return 0;
     }
   }
@@ -79,8 +76,8 @@ class NotificationService {
           .update({'is_read': true})
           .eq('id', id)
           .eq('user_id', userId);
-    } catch (e) {
-      debugPrint('NotificationService.markAsRead error: $e');
+    } catch (_) {
+      // error no crítico: se ignora
     }
   }
 
@@ -94,8 +91,8 @@ class NotificationService {
           .update({'is_read': true})
           .eq('user_id', userId)
           .eq('is_read', false);
-    } catch (e) {
-      debugPrint('NotificationService.markAllAsRead error: $e');
+    } catch (_) {
+      // error no crítico: se ignora
     }
   }
 

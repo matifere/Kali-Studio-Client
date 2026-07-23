@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Rutina asignada al alumno (routine_assignments + routines).
@@ -45,7 +44,6 @@ class RoutineService {
         assignedAt: DateTime.tryParse(data['assigned_at'] as String? ?? ''),
       );
     } catch (e) {
-      debugPrint('RoutineService.fetchMyRoutine error: $e');
       return null;
     }
   }

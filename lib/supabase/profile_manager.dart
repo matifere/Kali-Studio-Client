@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Profile {
@@ -94,7 +93,6 @@ Future<Profile?> obtenerPerfil() async {
       institutionId: userData['institution_id'] as String?,
     );
   } catch (e) {
-    debugPrint('obtenerPerfil error: $e');
     return null;
   }
 }

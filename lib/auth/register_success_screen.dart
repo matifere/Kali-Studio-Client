@@ -94,8 +94,8 @@ class _RegisterSuccessScreenState extends State<RegisterSuccessScreen> {
         await Supabase.instance.client
             .from('profiles')
             .update({'patologias': patologias}).eq('id', user.id);
-      } catch (e) {
-        debugPrint('patologias save error (non-critical): $e');
+      } catch (_) {
+        // error no crítico: se ignora
       }
     }
 

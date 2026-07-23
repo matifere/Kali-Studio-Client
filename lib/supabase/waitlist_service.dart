@@ -20,7 +20,6 @@ class WaitlistService {
           .single();
       return data['id'] as String?;
     } catch (e) {
-      debugPrint('WaitlistService.joinWaitlist error: $e');
       return null;
     }
   }
@@ -34,7 +33,6 @@ class WaitlistService {
           .eq('user_id', userId);
       return true;
     } catch (e) {
-      debugPrint('WaitlistService.leaveWaitlist error: $e');
       return false;
     }
   }
@@ -55,7 +53,6 @@ class WaitlistService {
 
       return mapWaitlistRows(data as List?);
     } catch (e) {
-      debugPrint('WaitlistService.fetchWaitlistForSessions error: $e');
       return {};
     }
   }
@@ -87,8 +84,8 @@ class WaitlistService {
         },
         onConflict: 'user_id',
       );
-    } catch (e) {
-      debugPrint('WaitlistService.savePushSubscription error: $e');
+    } catch (_) {
+      // error no crítico: se ignora
     }
   }
 }

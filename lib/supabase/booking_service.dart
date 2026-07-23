@@ -95,7 +95,6 @@ class BookingService {
               ))
           .toList();
     } catch (e) {
-      debugPrint('BookingService.fetchSessionsForDate error: $e');
       rethrow;
     }
   }
@@ -130,7 +129,6 @@ class BookingService {
 
       return list.firstOrNull;
     } catch (e) {
-      debugPrint('BookingService.fetchNextReservation error: $e');
       return null;
     }
   }
@@ -191,7 +189,6 @@ class BookingService {
 
       return list;
     } catch (e) {
-      debugPrint('BookingService.fetchUserReservations error: $e');
       rethrow;
     }
   }
@@ -216,7 +213,6 @@ class BookingService {
           .map((d) => (d as Map<String, dynamic>)['date'] as String)
           .toSet();
     } catch (e) {
-      debugPrint('BookingService.fetchDatesWithSessions error: $e');
       return {};
     }
   }
@@ -333,7 +329,6 @@ class BookingService {
 
       return list;
     } catch (e) {
-      debugPrint('BookingService.fetchPastReservationsForMonth error: $e');
       rethrow;
     }
   }
@@ -356,7 +351,6 @@ class BookingService {
           .lte('class_sessions.date', _dateStr(last));
       return ((data as List?) ?? []).length;
     } catch (e) {
-      debugPrint('BookingService.fetchMonthlyReservationCount error: $e');
       return 0;
     }
   }

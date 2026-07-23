@@ -89,8 +89,8 @@ class MobilePushService {
     try {
       final token = await FirebaseMessaging.instance.getToken();
       if (token != null) await _saveToken(token);
-    } catch (e) {
-      debugPrint('MobilePushService.syncToken error: $e');
+    } catch (_) {
+      // error no crítico: se ignora
     }
   }
 
@@ -107,8 +107,8 @@ class MobilePushService {
         },
         onConflict: 'user_id,platform',
       );
-    } catch (e) {
-      debugPrint('MobilePushService._saveToken error: $e');
+    } catch (_) {
+      // error no crítico: se ignora
     }
   }
 
@@ -120,8 +120,8 @@ class MobilePushService {
       final token = await FirebaseMessaging.instance.getToken();
       if (token == null) return;
       await _client.from('mobile_push_tokens').delete().eq('token', token);
-    } catch (e) {
-      debugPrint('MobilePushService.removeToken error: $e');
+    } catch (_) {
+      // error no crítico: se ignora
     }
   }
 

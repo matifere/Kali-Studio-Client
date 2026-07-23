@@ -21,7 +21,6 @@ class PushNotificationService {
       final result = await _jsRequestPermission().toDart;
       return result.toDart == 'granted';
     } catch (e) {
-      debugPrint('PushNotificationService.requestPermission error: $e');
       return false;
     }
   }
@@ -32,7 +31,6 @@ class PushNotificationService {
       final result = await _jsSubscribe(_vapidKey).toDart;
       return (result as JSString?)?.toDart;
     } catch (e) {
-      debugPrint('PushNotificationService.subscribe error: $e');
       return null;
     }
   }

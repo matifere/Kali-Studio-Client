@@ -71,8 +71,8 @@ class SupabaseAuthService {
       if (user != null && !requiresEmailConfirmation) {
         try {
           await _upsertProfile(userId: user.id, fullName: fullName);
-        } catch (e) {
-          debugPrint('_upsertProfile error (non-critical): $e');
+        } catch (_) {
+          // error no crítico: se ignora
         }
       }
 
@@ -178,8 +178,8 @@ class SupabaseAuthService {
             (user.userMetadata?['full_name'] as String?)?.trim() ?? '';
         await _upsertProfile(userId: user.id, fullName: fullName);
       }
-    } catch (e) {
-      debugPrint('_ensureProfile error (non-critical): $e');
+    } catch (_) {
+      // error no crítico: se ignora
     }
   }
 
